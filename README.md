@@ -6,4 +6,4 @@ Make sure create a .env file in the root directory with the following variables:
 - CLIENT_ID= register your app with twitch on https://dev.twitch.tv/console/apps/create - for name, give it the channel name (ComplementsBot in our case), OAuth Redirect URLs: https:localhost:8000, Category: Chat Bot; then go to 'Manage' and copy the Client ID 
 - BOT_NICK= give it the channel name (ComplementsBot)
 - BOT_PREFIX= messages beginning with this shoul be listened out for by the bot; this is usually '!'.
-- CHANNEL= give it the channel name (ComplementsBot)
+- CHANNEL= give it the name of the channel where you want the bot to be active
