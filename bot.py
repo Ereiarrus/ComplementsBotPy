@@ -8,7 +8,11 @@ DEFAULT_CMD_PREFIX = '!'
 DEFAULT_TTS_IGNORE_PREFIX = "! "
 OWNER_NICK = 'ereiarrus'
 BOT_NICK = "complementsbot"
-DEFAULT_COMPLEMENT_CHANCE = 10.0/3.0
+DEFAULT_COMPLEMENT_CHANCE = 10.0 / 3.0
+
+custom_data = {"channel_name":
+                   {"cmd_prefix": "!", "tts_ignore_prefix": "! ", "complement_chance": 10.0 / 3.0,
+                    "extra_complements": []}}
 
 channels_to_join_lock = Lock()
 CHANNELS_TO_JOIN = set(os.environ['CHANNELS'].split(':'))
