@@ -2,7 +2,6 @@
 Make sure you have Python installed (Python 3.10.6 was used): https://www.python.org/downloads/
 
 Twitch channel: https://www.twitch.tv/complementsbot
-Also check out https://www.twitch.tv/ereiarrus (if I ever decide to stream...)
 
 Make sure create a .env file in the root directory with the following variables:
 - TMI_TOKEN= get your token from https://twitchapps.com/tmi/
@@ -37,3 +36,8 @@ These commands work in any channel I'm in, but must be used by the channel owner
 - !addcomplement <complement> - add a custom complement for to your own channel
 - !removecomplement <complement> - remove a complement from your own channel
 - !listcomplements - lists all complements which have been added
+
+Also check out https://www.twitch.tv/ereiarrus (if I ever decide to stream...)
+And my youtube channel: https://www.youtube.com/channel/UChejDismPBRIXFUNC-hB_bQ
+
+Donations to my PayPal are appreciated, but never necessary: me.he.jey+ereiarrus@gmail.com
