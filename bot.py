@@ -34,17 +34,18 @@ class Bot(commands.Bot):
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
-        elif (random.random() * 100) <= COMPLEMENT_CHANCE:
-            await ctx.channel.send(self.complement_msg(ctx))
+        # elif (random.random() * 100) <= COMPLEMENT_CHANCE:
+        elif True:
+            await ctx.channel.send(self.complement_msg(ctx, ctx.author.name))
 
     def choose_complement(self):
         return random.choice(self.COMPLEMENTS_LIST)
 
-    def complement_msg(self, ctx):
+    def complement_msg(self, ctx, who=None):
         split_msg = ctx.content.split()
-        who = ctx.author.name
-        if len(split_msg) > 1:
-            who = split_msg[1].strip()
+
+        if not who:
+            who = ctx.author.name
 
         should_at = who[0] != "@"
         atted_user = who
@@ -54,7 +55,65 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def complement(self, ctx):
-        await ctx.channel.send(self.complement_msg(ctx.message))
+        msg = ctx.message.content.strip()
+        args = msg.split()
+        who = ctx.message.author.name
+        if len(args) > 1:
+            who = args[1]
+        await ctx.channel.send(self.complement_msg(ctx.message, who))
+
+    # -------------------- bot channel only commands --------------------
+    @commands.command()
+    async def joinme(self, ctx):
+        # I will join your channel!
+        pass
+
+    @commands.command()
+    async def leaveme(self, ctx):
+        # I will leave your channel
+        pass
+
+    @commands.command()
+    async def about(self, ctx):
+        # learn all about me
+        pass
+
+    @commands.command()
+    async def count(self, ctx):
+        # see how many channels I'm in
+        pass
+
+    @commands.command()
+    async def ignoreme(self, ctx):
+        # no longer complement the user
+        pass
+
+    @commands.command()
+    async def unignoreme(self, ctx):
+        # undo ignoreme
+        pass
+
+    # -------------------- any channel, but must be by owner --------------------
+
+    @commands.command()
+    async def setchance(self, ctx):
+        # change how likely it is that person sending message gets complemented
+        pass
+
+    @commands.command()
+    async def addcomplement(self, ctx):
+        # add a custom complement for owner's channel
+        pass
+
+    @commands.command()
+    async def removecomplement(self, ctx):
+        # remove a custom comple
+        pass
+
+    @commands.command()
+    async def listcomplements(self, ctx):
+        # see how many channels I'm in
+        pass
 
 
 if __name__ == "__main__":

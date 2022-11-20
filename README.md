@@ -7,3 +7,29 @@ Make sure create a .env file in the root directory with the following variables:
 - BOT_NICK= give it the channel name (ComplementsBot)
 - BOT_PREFIX= messages beginning with this shoul be listened out for by the bot; this is usually '!'.
 - CHANNEL= give it the name of the channel where you want the bot to be active
+
+
+
+I complement the sender of a message with a 5% chance. I currently have about 50 ways to complement you. 
+Source code: https://github.com/Ereiarrus/ComplementsBotPy
+
+The following commands have been implemented:
+
+Say these commands in my channel chat here:
+- !complement \[username\] - If username present, complement that user; otherwise, get a complement yourself!
+
+The following commands have not been implemented yet, but are planned to be:
+
+Say these commands in my channel chat here:
+- !joinme - I will join your channel
+- !leaveme - I will leave your channel
+- !about - Learn all about me
+- !count - Check out how many channels I'm in
+- !ignoreme - I will never complement you
+- !unignoreme - undo !ignoreme
+
+These commands work in any channel I'm in, but must be used by the channel owner:
+- !setchance - change how likely it is that person sending message gets complemented
+- !addcomplement <complement> - add a custom complement for to your own channel
+- !removecomplement <complement> - remove a complement from your own channel
+- !listcomplements - lists all complements, including the default and channel owner added ones
