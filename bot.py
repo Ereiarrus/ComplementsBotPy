@@ -3,7 +3,9 @@ import os  # for importing env vars for the bot to use
 from twitchio.ext import commands
 import random
 
+CMD_PREFIX = os.environ['BOT_PREFIX']
 TTS_IGNORE_PREFIX = os.environ['TTS_IGNORE_PREFIX']
+COMPLEMENT_CHANCE = 5
 
 
 class Bot(commands.Bot):
@@ -12,7 +14,7 @@ class Bot(commands.Bot):
             token=os.environ['TMI_TOKEN'],
             client_id=os.environ['CLIENT_ID'],
             nick=os.environ['BOT_NICK'],
-            prefix=os.environ['BOT_PREFIX'],
+            prefix=CMD_PREFIX,
             initial_channels=[os.environ['CHANNEL']]
         )
         self.COMPLEMENTS_LIST = []
@@ -26,21 +28,20 @@ class Bot(commands.Bot):
 
     async def event_message(self, ctx):
         # Runs every time a message is sent in chat.
-        print("in msg")
-
-        # make sure the bot ignores itself
         if ctx.echo:
+            # make sure the bot ignores itself
             return
 
-        print(ctx.content)
-        await self.handle_commands(ctx)
+        if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
+            await self.handle_commands(ctx)
+        elif (random.random() * 100) <= COMPLEMENT_CHANCE:
+            await ctx.channel.send(self.complement_msg(ctx))
 
     def choose_complement(self):
         return random.choice(self.COMPLEMENTS_LIST)
 
-    @commands.command()
-    async def complement(self, ctx):
-        split_msg = ctx.message.content.split()
+    def complement_msg(self, ctx):
+        split_msg = ctx.content.split()
         who = ctx.author.name
         if len(split_msg) > 1:
             who = split_msg[1].strip()
@@ -49,7 +50,11 @@ class Bot(commands.Bot):
         atted_user = who
         if should_at:
             atted_user = "@" + who
-        await ctx.send(TTS_IGNORE_PREFIX + atted_user + " " + self.choose_complement())
+        return TTS_IGNORE_PREFIX + atted_user + " " + self.choose_complement()
+
+    @commands.command()
+    async def complement(self, ctx):
+        await ctx.channel.send(self.complement_msg(ctx.message))
 
 
 if __name__ == "__main__":
