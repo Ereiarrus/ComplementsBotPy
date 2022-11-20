@@ -34,8 +34,7 @@ class Bot(commands.Bot):
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
-        # elif (random.random() * 100) <= COMPLEMENT_CHANCE:
-        elif True:
+        elif (random.random() * 100) <= COMPLEMENT_CHANCE:
             await ctx.channel.send(self.complement_msg(ctx, ctx.author.name))
 
     def choose_complement(self):
