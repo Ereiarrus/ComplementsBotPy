@@ -2,8 +2,9 @@
 import os  # for importing env vars for the bot to use
 from twitchio.ext import commands
 import random
-from threading import Lock
-import json # json.dumps(dictionary, separators=(',', ':')) - second argument makes sure there are no superfluous spaces
+from ReadWriteLock import ReadWriteLock
+from threading import RLock
+import json  # json.dumps(dictionary, separators=(',', ':'))
 
 DEFAULT_CMD_PREFIX = '!'
 DEFAULT_TTS_IGNORE_PREFIX = "!"
@@ -15,12 +16,12 @@ custom_data = {"channel_name":
                    {"cmd_prefix": "!", "tts_ignore_prefix": "! ", "complement_chance": 10.0 / 3.0,
                     "extra_complements": []}}
 
-channels_to_join_lock = Lock()
+channels_to_join_lock = RLock()
 CHANNELS_TO_JOIN = set(os.environ['CHANNELS'].split(':'))
 
-ignored_users_lock = Lock()
+ignored_users_lock = RLock()
 IGNORED_USERS = set(os.environ['IGNORED_USERS'].split(':'))
-IGNORED_USERS.remove('')    # for some reason the empty string can make its way in if IGNORED_USERS is empty
+IGNORED_USERS.remove('')  # for some reason the empty string can make its way in if IGNORED_USERS is empty
 
 
 class Bot(commands.Bot):
@@ -119,7 +120,8 @@ class Bot(commands.Bot):
         # see how many channels I'm in
         if not self.is_in_bot_channel(ctx):
             return
-        await ctx.channel.send("@" + ctx.message.author.name + str(len(CHANNELS_TO_JOIN)) + " channels and counting!")
+        await ctx.channel.send(
+            "@" + ctx.message.author.name + " " + str(len(CHANNELS_TO_JOIN)) + " channels and counting!")
 
     @commands.command()
     async def ignoreme(self, ctx):
