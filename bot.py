@@ -111,10 +111,9 @@ class Bot(commands.Bot):
         if not Bot.is_in_bot_channel(ctx):
             return
         has_joined = False
-        user = ""
+        user = ctx.author.name
         channels_to_join_lock.acquire()
         try:
-            user = ctx.author.name
             CHANNELS_TO_JOIN.add(user)
             # TODO: the line below can probably be ran periodically instead of on every !joinme
             os.environ["CHANNELS"] = ':'.join(CHANNELS_TO_JOIN)
@@ -124,7 +123,7 @@ class Bot(commands.Bot):
         finally:
             channels_to_join_lock.release()
             if has_joined:
-                ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
+                await ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
 
     @commands.command()
     async def leaveme(self, ctx):
@@ -133,26 +132,26 @@ class Bot(commands.Bot):
         if not Bot.is_in_bot_channel(ctx):
             return
         has_left = False
-        user = ""
+        user = ctx.author.name
         channels_to_join_lock.acquire()
         try:
-            user = ctx.author.name
             CHANNELS_TO_JOIN.remove(user)
             # TODO: the line below can probably be ran periodically instead of on every !joinme
             os.environ["CHANNELS"] = ':'.join(CHANNELS_TO_JOIN)
+            has_left = True
         except Exception as e:
             raise e
         finally:
             channels_to_join_lock.release()
             if has_left:
-                ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
+                await ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
 
     @commands.command()
     async def about(self, ctx):
         # learn all about me
         if not Bot.is_in_bot_channel(ctx):
             return
-        ctx.channel.send(
+        await ctx.channel.send(
             "For most up-to-date information on commands, please have a look at "
             "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, "
             "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt")
@@ -171,16 +170,20 @@ class Bot(commands.Bot):
         # no longer complement the user
         if not Bot.is_in_bot_channel(ctx):
             return
+        is_ignored = False
+        user = ctx.author.name
         ignored_users_lock.acquire()
         try:
-            user = ctx.author.name
             IGNORED_USERS.add(user)
             # TODO: the line below can probably be ran periodically instead of on every !ignoreme
             os.environ["IGNORED_USERS"] = ':'.join(IGNORED_USERS)
+            is_ignored = True
         except Exception as e:
             raise e
         finally:
             ignored_users_lock.release()
+            if is_ignored:
+                await ctx.channel.send("@" + user + " ComplementsBot is now ignoring you.")
 
     @commands.command()
     async def unignoreme(self, ctx):
@@ -188,15 +191,21 @@ class Bot(commands.Bot):
         # undo ignoreme
         if not Bot.is_in_bot_channel(ctx):
             return
+        is_ignored = True
+        user = ctx.author.name
         ignored_users_lock.acquire()
         try:
-            IGNORED_USERS.remove(ctx.author.name)
+            IGNORED_USERS.remove(user)
             # TODO: the line below can probably be ran periodically instead of on every !unignoreme
             os.environ["IGNORED_USERS"] = ':'.join(IGNORED_USERS)
+            is_ignored = False
         except Exception as e:
             raise e
         finally:
             ignored_users_lock.release()
+            if not is_ignored:
+                await ctx.channel.send("@" + user + " ComplementsBot is no longer ignoring you!")
+
 
     # -------------------- any channel, but must be by owner --------------------
 

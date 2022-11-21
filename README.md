@@ -1,4 +1,4 @@
-# complementBot_Twitch
+# Complements Bot
 
 ## For twitch users:
 
