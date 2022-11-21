@@ -11,6 +11,7 @@ DEFAULT_TTS_IGNORE_PREFIX = "!"
 OWNER_NICK = 'ereiarrus'
 BOT_NICK = "complementsbot"
 DEFAULT_COMPLEMENT_CHANCE = 10.0 / 3.0
+SHOULD_IGNORE_BOTS = True
 
 custom_data = {"channel_name":
                    {"cmd_prefix": "!", "tts_ignore_prefix": "! ", "complement_chance": 10.0 / 3.0,
@@ -48,9 +49,14 @@ class Bot(commands.Bot):
             # make sure the bot ignores itself
             return
 
+        author = ctx.author.name
+        is_author_ignored = (author in IGNORED_USERS)
+        should_rng_choose = (random.random() * 100) <= DEFAULT_COMPLEMENT_CHANCE
+        is_author_bot = SHOULD_IGNORE_BOTS and len(author) >= 3 and author[-3:] == 'bot'
+
         if ctx.content[:len(DEFAULT_CMD_PREFIX)] == DEFAULT_CMD_PREFIX:
             await self.handle_commands(ctx)
-        elif (random.random() * 100) <= DEFAULT_COMPLEMENT_CHANCE and (not (ctx.author.name in IGNORED_USERS)):
+        elif should_rng_choose and (not is_author_ignored) and not is_author_bot:
             await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, False))
 
     def choose_complement(self):

@@ -43,6 +43,9 @@ These commands work in any channel I'm in, but must be used by the channel owner
 can either be 'true' or 'false', default is 'true'
 - !muterandomcomplement - mutes tts for complements randomly given out; can either be 'true' 
 or 'false', default is 'false'
+- !ignorebots - ignores users whose name ends in 'bot' for random complement; 
+this is the case by default
+- !unignorebots - undo ignorebots; by default, bots are ignored.
 
 ## About bot and me
 
