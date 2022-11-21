@@ -24,7 +24,7 @@ The following commands have not been implemented yet, but are planned to be:
 
 #### ComplementsBot chat only
 
-Say these commands in my channel chat here:
+Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 - !joinme - I will join your channel
 - !leaveme - I will leave your channel
 - !about - Learn all about me
