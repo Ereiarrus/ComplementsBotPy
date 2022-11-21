@@ -2,9 +2,14 @@
 import os  # for importing env vars for the bot to use
 from twitchio.ext import commands
 import random
+from firebase_admin import credentials, db
+import firebase_admin
 from ReadWriteLock import ReadWriteLock
 from threading import RLock
 import json  # json.dumps(dictionary, separators=(',', ':'))
+
+cred = credentials.Certificate("./.firebase_config.json")
+firebase_admin.initialize_app(cred)
 
 DEFAULT_CMD_PREFIX = '!'
 DEFAULT_TTS_IGNORE_PREFIX = "!"
@@ -81,8 +86,16 @@ class Bot(commands.Bot):
             who = " ".join(args[1:])
             if who[0] == "@":
                 who = who[1:]
-        if who in IGNORED_USERS:
-            return
+
+        ignored_users_lock.acquire()
+        try:
+            if who in IGNORED_USERS:
+                return
+        except Exception as e:
+            raise e
+        finally:
+            ignored_users_lock.release()
+
         await ctx.channel.send(self.complement_msg(ctx.message, who, True))
 
     # -------------------- bot channel only commands --------------------
@@ -95,39 +108,59 @@ class Bot(commands.Bot):
     async def joinme(self, ctx):
         # TODO
         # I will join your channel!
-        if not self.is_in_bot_channel(ctx):
+        if not Bot.is_in_bot_channel(ctx):
             return
+        has_joined = False
+        user = ""
+        channels_to_join_lock.acquire()
         try:
-            channels_to_join_lock.acquire()
+            user = ctx.author.name
+            CHANNELS_TO_JOIN.add(user)
+            # TODO: the line below can probably be ran periodically instead of on every !joinme
+            os.environ["CHANNELS"] = ':'.join(CHANNELS_TO_JOIN)
+            has_joined = True
         except Exception as e:
             raise e
         finally:
             channels_to_join_lock.release()
+            if has_joined:
+                ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
 
     @commands.command()
     async def leaveme(self, ctx):
         # TODO
         # I will leave your channel
-        if not self.is_in_bot_channel(ctx):
+        if not Bot.is_in_bot_channel(ctx):
             return
+        has_left = False
+        user = ""
+        channels_to_join_lock.acquire()
         try:
-            channels_to_join_lock.acquire()
+            user = ctx.author.name
+            CHANNELS_TO_JOIN.remove(user)
+            # TODO: the line below can probably be ran periodically instead of on every !joinme
+            os.environ["CHANNELS"] = ':'.join(CHANNELS_TO_JOIN)
         except Exception as e:
             raise e
         finally:
             channels_to_join_lock.release()
+            if has_left:
+                ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
 
     @commands.command()
     async def about(self, ctx):
-        # TODO
         # learn all about me
-        if not self.is_in_bot_channel(ctx):
+        if not Bot.is_in_bot_channel(ctx):
             return
+        ctx.channel.send(
+            "For most up-to-date information on commands, please have a look at "
+            "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, "
+            "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt")
 
     @commands.command()
     async def count(self, ctx):
         # see how many channels I'm in
-        if not self.is_in_bot_channel(ctx):
+        if not Bot.is_in_bot_channel(ctx):
             return
         await ctx.channel.send(
             "@" + ctx.message.author.name + " " + str(len(CHANNELS_TO_JOIN)) + " channels and counting!")
@@ -136,10 +169,10 @@ class Bot(commands.Bot):
     async def ignoreme(self, ctx):
         # TODO
         # no longer complement the user
-        if not self.is_in_bot_channel(ctx):
+        if not Bot.is_in_bot_channel(ctx):
             return
+        ignored_users_lock.acquire()
         try:
-            ignored_users_lock.acquire()
             user = ctx.author.name
             IGNORED_USERS.add(user)
             # TODO: the line below can probably be ran periodically instead of on every !ignoreme
@@ -153,10 +186,10 @@ class Bot(commands.Bot):
     async def unignoreme(self, ctx):
         # TODO
         # undo ignoreme
-        if not self.is_in_bot_channel(ctx):
+        if not Bot.is_in_bot_channel(ctx):
             return
+        ignored_users_lock.acquire()
         try:
-            ignored_users_lock.acquire()
             IGNORED_USERS.remove(ctx.author.name)
             # TODO: the line below can probably be ran periodically instead of on every !unignoreme
             os.environ["IGNORED_USERS"] = ':'.join(IGNORED_USERS)
@@ -175,50 +208,52 @@ class Bot(commands.Bot):
     async def setchance(self, ctx):
         # TODO
         # change how likely it is that person sending message gets complemented
-        if not self.is_by_channel_owner(ctx):
+        if not Bot.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def addcomplement(self, ctx):
         # TODO
         # add a custom complement for owner's channel
-        if not self.is_by_channel_owner(ctx):
+        if not Bot.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def removecomplement(self, ctx):
         # TODO
         # remove a custom complement
-        if not self.is_by_channel_owner(ctx):
+        if not Bot.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def listcomplements(self, ctx):
         # TODO
         # list all extra complements
-        if not self.is_by_channel_owner(ctx):
+        if not Bot.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def setmutettsprefix(self, ctx):
         # TODO
         # the character/string to put in front of a message to mute tts
-        if not self.is_by_channel_owner(ctx):
+        if not Bot.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def mutecmdcomplement(self, ctx):
         # TODO
         # mutes tts for complements sent with !complement command
-        if not self.is_by_channel_owner(ctx):
+        if not Bot.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def muterandomcomplement(self, ctx):
         # TODO
         # mutes tts for complements randomly given out
-        if not self.is_by_channel_owner(ctx):
+        if not Bot.is_by_channel_owner(ctx):
             return
+
+    # TODO: When a user calls a command on my channel, respond to tell them that command was done
 
 
 if __name__ == "__main__":
