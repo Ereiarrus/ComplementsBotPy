@@ -3,9 +3,10 @@ import os  # for importing env vars for the bot to use
 from twitchio.ext import commands
 import random
 from threading import Lock
+import json # json.dumps(dictionary, separators=(',', ':')) - second argument makes sure there are no superfluous spaces
 
 DEFAULT_CMD_PREFIX = '!'
-DEFAULT_TTS_IGNORE_PREFIX = "! "
+DEFAULT_TTS_IGNORE_PREFIX = "!"
 OWNER_NICK = 'ereiarrus'
 BOT_NICK = "complementsbot"
 DEFAULT_COMPLEMENT_CHANCE = 10.0 / 3.0
@@ -19,6 +20,7 @@ CHANNELS_TO_JOIN = set(os.environ['CHANNELS'].split(':'))
 
 ignored_users_lock = Lock()
 IGNORED_USERS = set(os.environ['IGNORED_USERS'].split(':'))
+IGNORED_USERS.remove('')    # for some reason the empty string can make its way in if IGNORED_USERS is empty
 
 
 class Bot(commands.Bot):
@@ -48,30 +50,33 @@ class Bot(commands.Bot):
         if ctx.content[:len(DEFAULT_CMD_PREFIX)] == DEFAULT_CMD_PREFIX:
             await self.handle_commands(ctx)
         elif (random.random() * 100) <= DEFAULT_COMPLEMENT_CHANCE and (not (ctx.author.name in IGNORED_USERS)):
-            await ctx.channel.send(self.complement_msg(ctx, ctx.author.name))
+            await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, False))
 
     def choose_complement(self):
         return random.choice(self.COMPLEMENTS_LIST)
 
-    def complement_msg(self, ctx, who=None):
+    def complement_msg(self, ctx, who=None, mute_tts=True):
         split_msg = ctx.content.split()
+        prefix = ""
         if not who:
             who = ctx.author.name
-        who = "@" + who
-        return DEFAULT_TTS_IGNORE_PREFIX + who + " " + self.choose_complement()
+        prefix = "@" + prefix
+        if mute_tts:
+            prefix = DEFAULT_TTS_IGNORE_PREFIX + " " + prefix
+        return prefix + who + " " + self.choose_complement()
 
     @commands.command()
     async def complement(self, ctx):
         msg = ctx.message.content.strip()
-        args = msg.split()
+        args = msg.split(" ")
         who = ctx.message.author.name
         if len(args) > 1:
-            who = args[1]
+            who = " ".join(args[1:])
             if who[0] == "@":
                 who = who[1:]
         if who in IGNORED_USERS:
             return
-        await ctx.channel.send(self.complement_msg(ctx.message, who))
+        await ctx.channel.send(self.complement_msg(ctx.message, who, True))
 
     # -------------------- bot channel only commands --------------------
 
@@ -114,7 +119,7 @@ class Bot(commands.Bot):
         # see how many channels I'm in
         if not self.is_in_bot_channel(ctx):
             return
-        ctx.channel.send("@" + ctx.message.author.name + str(len(CHANNELS_TO_JOIN)) + " channels and counting!")
+        await ctx.channel.send("@" + ctx.message.author.name + str(len(CHANNELS_TO_JOIN)) + " channels and counting!")
 
     @commands.command()
     async def ignoreme(self, ctx):
