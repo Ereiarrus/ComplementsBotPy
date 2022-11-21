@@ -41,7 +41,7 @@ These commands work in any channel I'm in, but must be used by the channel owner
 - !setmutettsprefix - the character/string to put in front of a message to mute tts; default is "!"
 - !mutecmdcomplement - mutes tts for complements sent with !complement command; 
 can either be 'true' or 'false', default is 'true'
-- !muterandcomplement - mutes tts for complements randomly given out; can either be 'true' 
+- !muterandomcomplement - mutes tts for complements randomly given out; can either be 'true' 
 or 'false', default is 'false'
 
 ## About bot and me

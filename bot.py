@@ -87,6 +87,7 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def joinme(self, ctx):
+        # TODO
         # I will join your channel!
         if not self.is_in_bot_channel(ctx):
             return
@@ -99,6 +100,7 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def leaveme(self, ctx):
+        # TODO
         # I will leave your channel
         if not self.is_in_bot_channel(ctx):
             return
@@ -111,6 +113,7 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def about(self, ctx):
+        # TODO
         # learn all about me
         if not self.is_in_bot_channel(ctx):
             return
@@ -125,6 +128,7 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def ignoreme(self, ctx):
+        # TODO
         # no longer complement the user
         if not self.is_in_bot_channel(ctx):
             return
@@ -141,6 +145,7 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def unignoreme(self, ctx):
+        # TODO
         # undo ignoreme
         if not self.is_in_bot_channel(ctx):
             return
@@ -162,25 +167,50 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def setchance(self, ctx):
+        # TODO
         # change how likely it is that person sending message gets complemented
         if not self.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def addcomplement(self, ctx):
+        # TODO
         # add a custom complement for owner's channel
         if not self.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def removecomplement(self, ctx):
+        # TODO
         # remove a custom complement
         if not self.is_by_channel_owner(ctx):
             return
 
     @commands.command()
     async def listcomplements(self, ctx):
+        # TODO
         # list all extra complements
+        if not self.is_by_channel_owner(ctx):
+            return
+
+    @commands.command()
+    async def setmutettsprefix(self, ctx):
+        # TODO
+        # the character/string to put in front of a message to mute tts
+        if not self.is_by_channel_owner(ctx):
+            return
+
+    @commands.command()
+    async def mutecmdcomplement(self, ctx):
+        # TODO
+        # mutes tts for complements sent with !complement command
+        if not self.is_by_channel_owner(ctx):
+            return
+
+    @commands.command()
+    async def muterandomcomplement(self, ctx):
+        # TODO
+        # mutes tts for complements randomly given out
         if not self.is_by_channel_owner(ctx):
             return
 
