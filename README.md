@@ -50,7 +50,7 @@ Twitch channel: https://www.twitch.tv/complementsbot
 
 Also check out https://www.twitch.tv/ereiarrus (if I ever decide to stream...)
 
-Source code: https://github.com/Ereiarrus/ComplementsBotPy
+YouTube channel: https://www.youtube.com/channel/UChejDismPBRIXFUNC-hB_bQ
 
 Donations to my PayPal are appreciated, but never necessary: me.he.jey+ereiarrus@gmail.com
 
