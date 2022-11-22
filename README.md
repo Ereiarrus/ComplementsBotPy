@@ -2,7 +2,7 @@
 
 ## For twitch users:
 
-I complement the sender of a message with a 3.33% chance. I currently have about 50 ways to complement you.
+I complement the sender of a message with a 3.33% (by default) chance. I currently have about 50 ways to complement you, which you can extend yourself, or disregard completely.
 
 Note that you might need to VIP me in your chat, especially if your viewers tend to make heavy use of the !complement
 command - this is because Twitch seems to count many bot messages as spam, and mutes/times out the bot.
