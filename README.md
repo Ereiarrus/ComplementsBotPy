@@ -15,6 +15,11 @@ The following commands have been implemented:
 
 Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 
+- !joinme - I will join your channel
+- !leaveme - I will leave your channel, but keep your settings in case you decide you want me back
+- !deleteme - I will leave your channel and delete all of your settings
+- !ignoreme - I will never complement you
+- !unignoreme - undo !ignoreme
 - !count - Check out how many channels I'm in
 - !about - Learn all about me
 
@@ -24,25 +29,20 @@ The following commands work anywhere that I have joined:
 
 - !complement \[username\] - If username present, complement that user; otherwise, get a complement yourself!
 
-### Unimplemented commands
-
-The following commands have not been implemented yet, but are planned to be:
-
-#### ComplementsBot chat only
-
-Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
-
-- !joinme - I will join your channel
-- !leaveme - I will leave your channel, but keep your settings in case you decide you want me back
-- !deleteme - I will leave your channel and delete all of your settings
-- !ignoreme - I will never complement you
-- !unignoreme - undo !ignoreme
-
 #### Channel owner only
 
 These commands must be used by the channel owner in their own channel:
 
 - !setchance - change how likely it is that person sending message gets complemented; default is 3.33%
+
+### Unimplemented commands
+
+The following commands have not been implemented yet, but are planned to be:
+
+#### Channel owner only
+
+These commands must be used by the channel owner in their own channel:
+
 - !addcomplement <complement> - add a custom complement for to your own channel
 - !removecomplement <complement> - remove a complement from your own channel
 - !listcomplements - lists all complements which have been added

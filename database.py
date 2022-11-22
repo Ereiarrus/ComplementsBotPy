@@ -101,3 +101,11 @@ def get_chance(user):
 
 def ignore_bots(user):
     USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).get()
+
+
+def set_complement_chance(user, chance):
+    USERS_DB_REF.child(user).child(COMPLEMENT_CHANCE).set(chance)
+
+
+def get_complement_chance(user):
+    return USERS_DB_REF.child(user).child(COMPLEMENT_CHANCE).get()

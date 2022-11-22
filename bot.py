@@ -20,6 +20,7 @@ class Bot(commands.Bot):
             prefix=CMD_PREFIX,
             initial_channels=get_joined_channels()
         )
+
         self.COMPLEMENTS_LIST = []
         with open("complements_list.txt", "r") as f:
             for line in f:
@@ -135,7 +136,7 @@ class Bot(commands.Bot):
         if not Bot.is_in_bot_channel(ctx):
             return
         await ctx.channel.send(
-            "@" + ctx.message.author.name + " " + str(len(number_of_joined_channels())) + " channels and counting!")
+            "@" + ctx.message.author.name + " " + str(number_of_joined_channels()) + " channels and counting!")
 
     @commands.command()
     async def ignoreme(self, ctx):
@@ -175,6 +176,21 @@ class Bot(commands.Bot):
         # change how likely it is that person sending message gets complemented
         if not Bot.is_by_channel_owner(ctx):
             return
+
+        user = ctx.channel.name
+        msg = ctx.message.content.strip()
+        chance = ""
+        try:
+            chance = (msg.split())[1]
+            chance = float(chance)
+        except ValueError:
+            await ctx.channel.send("@" + user + " " + chance + " is an invalid number. Please try again.")
+            return
+        except IndexError:
+            await ctx.channel.send("@" + user + " You did not enter a number. Please try again.")
+            return
+        set_complement_chance(user, chance)
+        await ctx.channel.send("@" + user + " complement chance set to " + str(get_complement_chance(user)) + "!")
 
     @commands.command()
     async def addcomplement(self, ctx):
