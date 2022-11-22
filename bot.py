@@ -36,14 +36,17 @@ class Bot(commands.Bot):
             # make sure the bot ignores itself
             return
 
-        user = ctx.author.name
-        is_author_ignored = is_user_ignored(user)
+        sender = ctx.author.name
+        is_author_ignored = is_user_ignored(sender)
         should_rng_choose = (random.random() * 100) <= get_complement_chance(ctx.channel.name)
-        is_author_bot = ignore_bots(user) and len(user) >= 3 and user[-3:] == 'bot'
+        is_author_bot = ignore_bots(sender) and len(sender) >= 3 and sender[-3:] == 'bot'
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
-        elif should_rng_choose and (not is_author_ignored) and not is_author_bot:
+        elif should_rng_choose \
+                and (not is_author_ignored) \
+                and not is_author_bot \
+                and get_random_complement_enabled(ctx.channel.name):
             await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, False))
 
     def choose_complement(self):
@@ -125,24 +128,6 @@ class Bot(commands.Bot):
             await ctx.channel.send("@" + user + " your channel does not exists in my records.")
 
     @commands.command()
-    async def about(self, ctx):
-        # learn all about me
-        if not Bot.is_in_bot_channel(ctx):
-            return
-        await ctx.channel.send(
-            "For most up-to-date information on commands, please have a look at "
-            "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, "
-            "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt")
-
-    @commands.command()
-    async def count(self, ctx):
-        # see how many channels I'm in
-        if not Bot.is_in_bot_channel(ctx):
-            return
-        await ctx.channel.send(
-            "@" + ctx.message.author.name + " " + str(number_of_joined_channels()) + " channels and counting!")
-
-    @commands.command()
     async def ignoreme(self, ctx):
         # no longer complement the user
         if not Bot.is_in_bot_channel(ctx):
@@ -168,11 +153,51 @@ class Bot(commands.Bot):
         else:
             await ctx.channel.send("@" + user + " ComplementsBot is not ignoring you!")
 
+    @commands.command()
+    async def count(self, ctx):
+        # see how many channels I'm in
+        if not Bot.is_in_bot_channel(ctx):
+            return
+        await ctx.channel.send(
+            "@" + ctx.message.author.name + " " + str(number_of_joined_channels()) + " channels and counting!")
+
+    @commands.command()
+    async def about(self, ctx):
+        # learn all about me
+        if not Bot.is_in_bot_channel(ctx):
+            return
+        await ctx.channel.send(
+            "For most up-to-date information on commands, please have a look at "
+            "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, "
+            "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt")
+
     # -------------------- any channel, but must be by owner --------------------
 
     @staticmethod
     def is_by_channel_owner(ctx):
         return ctx.channel.name == ctx.author.name
+
+    @commands.command()
+    async def setchance(self, ctx):
+        # TODO
+        # change how likely it is that person sending message gets complemented
+        if not Bot.is_by_channel_owner(ctx):
+            return
+
+        user = ctx.channel.name
+        msg = ctx.message.content.strip()
+        chance = ""
+        try:
+            chance = (msg.split())[1]
+            chance = float(chance)
+        except ValueError:
+            await ctx.channel.send("@" + user + " " + chance + " is an invalid number. Please try again.")
+            return
+        except IndexError:
+            await ctx.channel.send("@" + user + " You did not enter a number. Please try again.")
+            return
+        set_complement_chance(user, chance)
+        await ctx.channel.send("@" + user + " complement chance set to " + str(get_complement_chance(user)) + "!")
 
     @commands.command()
     async def disablecommandcomplement(self, ctx):
@@ -202,26 +227,31 @@ class Bot(commands.Bot):
                 "@" + user + " your viewers will now be able to make use of the !complement command!")
 
     @commands.command()
-    async def setchance(self, ctx):
+    async def disablerandomcomplement(self, ctx):
         # TODO
-        # change how likely it is that person sending message gets complemented
+        # the bot will no longer randomly give out complements
         if not Bot.is_by_channel_owner(ctx):
             return
-
         user = ctx.channel.name
-        msg = ctx.message.content.strip()
-        chance = ""
-        try:
-            chance = (msg.split())[1]
-            chance = float(chance)
-        except ValueError:
-            await ctx.channel.send("@" + user + " " + chance + " is an invalid number. Please try again.")
+        if get_random_complement_enabled(user):
+            disable_random_complement(user)
+            await ctx.channel.send("@" + user + " your viewers will no longer randomly receive complements.")
+        else:
+            await ctx.channel.send("@" + user + " your viewers already do not randomly receive complements.")
+
+    @commands.command()
+    async def enablerandomcomplement(self, ctx):
+        # TODO
+        # undo !disablerandomcomplement
+        if not Bot.is_by_channel_owner(ctx):
             return
-        except IndexError:
-            await ctx.channel.send("@" + user + " You did not enter a number. Please try again.")
-            return
-        set_complement_chance(user, chance)
-        await ctx.channel.send("@" + user + " complement chance set to " + str(get_complement_chance(user)) + "!")
+        user = ctx.channel.name
+        if get_random_complement_enabled(user):
+            await ctx.channel.send("@" + user + " ComplementsBot already randomly sends out complements!")
+        else:
+            enable_random_complement(user)
+            await ctx.channel.send(
+                "@" + user + " your viewers will now randomly receive complements!")
 
     @commands.command()
     async def addcomplement(self, ctx):

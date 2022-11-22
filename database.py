@@ -14,6 +14,7 @@ DEFAULT_COMPLEMENT_CHANCE = 10.0 / 3.0
 DEFAULT_SHOULD_IGNORE_BOTS = True
 DEFAULT_TTS_IGNORE_PREFIX = "!"
 DEFAULT_COMMAND_COMPLEMENT_ENABLED = True
+DEFAULT_RANDOM_COMPLEMENT_ENABLED = True
 
 # Database keys:
 COMPLEMENT_CHANCE = "complement_chance"
@@ -21,10 +22,13 @@ SHOULD_IGNORE_BOTS = "should_ignore_bots"
 IS_JOINED = "is_joined"
 TTS_IGNORE_PREFIX = "tts_ignore_prefix"
 COMMAND_COMPLEMENT_ENABLED = "command_complement_enabled"
+RANDOM_COMPLEMENT_ENABLED = "random_complement_enabled"
+CUSTOM_COMPLEMENTS = "custom_complements"
 
 DEFAULT_USER = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE, SHOULD_IGNORE_BOTS: DEFAULT_SHOULD_IGNORE_BOTS,
                 IS_JOINED: True, TTS_IGNORE_PREFIX: DEFAULT_TTS_IGNORE_PREFIX,
-                COMMAND_COMPLEMENT_ENABLED: DEFAULT_COMMAND_COMPLEMENT_ENABLED}
+                COMMAND_COMPLEMENT_ENABLED: DEFAULT_COMMAND_COMPLEMENT_ENABLED,
+                RANDOM_COMPLEMENT_ENABLED: DEFAULT_RANDOM_COMPLEMENT_ENABLED}
 
 
 def is_user_ignored(user):
@@ -140,3 +144,23 @@ def disable_command_complement(user):
 
 def enable_command_complement(user):
     set_command_complement_enabled(user, True)
+
+
+def set_random_complement_enabled(user, is_enabled):
+    USERS_DB_REF.child(user).child(RANDOM_COMPLEMENT_ENABLED).set(is_enabled)
+
+
+def get_random_complement_enabled(user):
+    is_enabled = USERS_DB_REF.child(user).child(RANDOM_COMPLEMENT_ENABLED).get()
+    if is_enabled is None:
+        set_random_complement_enabled(user, DEFAULT_RANDOM_COMPLEMENT_ENABLED)
+        is_enabled = DEFAULT_RANDOM_COMPLEMENT_ENABLED
+    return is_enabled
+
+
+def disable_random_complement(user):
+    set_random_complement_enabled(user, False)
+
+
+def enable_random_complement(user):
+    set_random_complement_enabled(user, True)

@@ -35,6 +35,12 @@ The following commands work anywhere that I have joined:
 These commands must be used by the channel owner in their own channel:
 
 - !setchance - change how likely it is that person sending message gets complemented; default is 3.33%
+- !disablecommandcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
+  command; by default, this is off
+- !enablecommandcomplement - undoes !disablecommandcomplement; this is the default
+- !disablerandomcomplement - ComplementsBot will no longer send out complements randomly; by default, ComplementsBot
+  does randomly send out complements
+- !enablerandomcomplement - undoes !disablerandomcomplement; this is the default
 
 ### Unimplemented commands
 
@@ -55,9 +61,6 @@ These commands must be used by the channel owner in their own channel:
 - !ignorebots - ignores users whose name ends in 'bot' for random complement;
   this is the case by default
 - !unignorebots - undo ignorebots; by default, bots are ignored.
-- !disablecommandcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
-  command; by default, this is off
-- !enablecommandcomplement - undoes !disablecommandcomplement; this is the default
 
 ## About bot and me
 
@@ -89,4 +92,4 @@ Make sure create a .env file in the root directory with the following variables:
 Once you have your firebase app, go to 'Service accounts' in project settings. From here, generate a new private key,
 and save the file as '.firebase_config.json' in the root directory.
 
-Create a Realtime Database in firebase.
+Create a Realtime Database in firebase with private access.
