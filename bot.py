@@ -18,7 +18,7 @@ class Bot(commands.Bot):
             client_id=os.environ['CLIENT_ID'],
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
-            initial_channels=get_joined_channels()
+            initial_channels=get_joined_channels()+[BOT_NICK]
         )
         self.COMPLEMENTS_LIST = []
         with open("complements_list.txt", "r") as f:
