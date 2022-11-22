@@ -18,7 +18,7 @@ class Bot(commands.Bot):
             client_id=os.environ['CLIENT_ID'],
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
-            initial_channels=get_channels()
+            initial_channels=get_joined_channels()
         )
         self.COMPLEMENTS_LIST = []
         with open("complements_list.txt", "r") as f:
@@ -35,10 +35,13 @@ class Bot(commands.Bot):
             # make sure the bot ignores itself
             return
 
-        author = ctx.author.name
-        is_author_ignored = is_user_ignored(author)
-        should_rng_choose = (random.random() * 100) <= get_chance(author)
-        is_author_bot = ignore_bots(author) and len(author) >= 3 and author[-3:] == 'bot'
+        print(get_chance(ctx.channel.name))
+        user = ctx.author.name
+        is_author_ignored = is_user_ignored(user)
+        should_rng_choose = (random.random() * 100) <= DEFAULT_COMPLEMENT_CHANCE
+        if is_channel_joined(ctx.channel.name):
+            should_rng_choose = (random.random() * 100) <= get_chance(ctx.channel.name)
+        is_author_bot = ignore_bots(user) and len(user) >= 3 and user[-3:] == 'bot'
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
@@ -85,9 +88,12 @@ class Bot(commands.Bot):
         if not Bot.is_in_bot_channel(ctx):
             return
         user = ctx.author.name
-        join_channel(user)
 
-        await ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
+        if is_channel_joined(user):
+            await ctx.channel.send("@" + user + " ComplementsBot has is already in your channel!")
+        else:
+            join_channel(user)
+            await ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
 
     @commands.command()
     async def leaveme(self, ctx):
@@ -95,9 +101,26 @@ class Bot(commands.Bot):
         if not Bot.is_in_bot_channel(ctx):
             return
         user = ctx.author.name
-        leave_channel(user)
+        if is_channel_joined(user):
+            leave_channel(user)
+            await ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
+        else:
+            await ctx.channel.send("@" + user + " ComplementsBot has is not joined.")
 
-        await ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
+
+    @commands.command()
+    async def deleteme(self, ctx):
+        # I will delete your channel information
+        if not Bot.is_in_bot_channel(ctx):
+            return
+        user = ctx.author.name
+
+        if channel_exists(user):
+            delete_channel(user)
+            await ctx.channel.send("@" + user + " ComplementsBot has deleted your channel.")
+        else:
+            await ctx.channel.send("@" + user + " your channel does not exists in my records.")
+
 
     @commands.command()
     async def about(self, ctx):
@@ -115,7 +138,7 @@ class Bot(commands.Bot):
         if not Bot.is_in_bot_channel(ctx):
             return
         await ctx.channel.send(
-            "@" + ctx.message.author.name + " " + str(len(number_of_joined_channels)) + " channels and counting!")
+            "@" + ctx.message.author.name + " " + str(len(number_of_joined_channels())) + " channels and counting!")
 
     @commands.command()
     async def ignoreme(self, ctx):
@@ -124,19 +147,25 @@ class Bot(commands.Bot):
             return
 
         user = ctx.author.name
-        ignore(user)
-
-        await ctx.channel.send("@" + user + " ComplementsBot is now ignoring you.")
+        if is_user_ignored(user):
+            await ctx.channel.send("@" + user + " ComplementsBot is already ignoring you.")
+        else:
+            ignore(user)
+            await ctx.channel.send("@" + user + " ComplementsBot is now ignoring you.")
 
     @commands.command()
     async def unignoreme(self, ctx):
         # undo ignoreme
         if not Bot.is_in_bot_channel(ctx):
             return
-        user = ctx.author.name
-        unignore(user)
 
-        await ctx.channel.send("@" + user + " ComplementsBot is no longer ignoring you!")
+        user = ctx.author.name
+        if is_user_ignored(user):
+            unignore(user)
+            await ctx.channel.send("@" + user + " ComplementsBot is no longer ignoring you!")
+        else:
+            await ctx.channel.send("@" + user + " ComplementsBot is not ignoring you!")
+
 
     # -------------------- any channel, but must be by owner --------------------
 
