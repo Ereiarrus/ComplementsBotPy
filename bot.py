@@ -36,6 +36,7 @@ class Bot(commands.Bot):
             return
 
         sender = ctx.author.name
+        channel = ctx.channel.name
         is_author_ignored = is_user_ignored(sender)
         should_rng_choose = (random.random() * 100) <= get_complement_chance(ctx.channel.name)
         is_author_bot = ignore_bots(sender) and len(sender) >= 3 and sender[-3:] == 'bot'
@@ -46,7 +47,7 @@ class Bot(commands.Bot):
                 and (not is_author_ignored) \
                 and not is_author_bot \
                 and get_random_complement_enabled(ctx.channel.name):
-            await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, False))
+            await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, not is_random_complement_muted(channel)))
 
     def choose_complement(self, ctx):
         channel = ctx.channel.name
@@ -60,13 +61,13 @@ class Bot(commands.Bot):
             return self.COMPLEMENTS_LIST[index], True
         return custom_complements[index - default_complements_length], True
 
-    def complement_msg(self, ctx, who=None, mute_tts=True):
+    def complement_msg(self, ctx, who=None, is_tts_muted=True):
         prefix = ""
         if who is None:
             who = ctx.author.name
         channel = ctx.channel.name
         prefix = "@" + prefix
-        if mute_tts:
+        if is_tts_muted:
             prefix = get_tts_ignore_prefix(channel) + " " + prefix
         complement, exists = self.choose_complement(ctx)
         if exists:
@@ -82,16 +83,16 @@ class Bot(commands.Bot):
             if who[0] == "@":
                 who = who[1:]
 
-        if is_user_ignored(who) or not get_cmd_complement_enabled(ctx.channel.name):
+        channel = ctx.channel.name
+        if is_user_ignored(who) or not get_cmd_complement_enabled(channel):
             return
 
-        await ctx.channel.send(self.complement_msg(ctx.message, who, True))
+        await ctx.channel.send(self.complement_msg(ctx.message, who, is_cmd_complement_muted(channel)))
 
     # -------------------- bot channel only commands --------------------
 
     def make_sure_channel_joined(self):
         return
-
 
     @staticmethod
     def is_in_bot_channel(ctx):
@@ -217,7 +218,8 @@ class Bot(commands.Bot):
         user = ctx.channel.name
         if get_cmd_complement_enabled(user):
             disable_cmd_complement(user)
-            await ctx.channel.send("@" + user + " your viewers will no longer be able to make use of the !complement command.")
+            await ctx.channel.send(
+                "@" + user + " your viewers will no longer be able to make use of the !complement command.")
         else:
             await ctx.channel.send("@" + user + " your viewers already cannot make use of the !complement command.")
 
@@ -286,7 +288,6 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def removeallcomplements(self, ctx):
-        # TODO
         # remove all custom complements a user has added
         if not Bot.is_by_channel_owner(ctx):
             return
@@ -294,27 +295,69 @@ class Bot(commands.Bot):
         remove_all_complements(user)
         await ctx.channel.send("@" + user + " all of your custom complements have been removed.")
 
-
     @commands.command()
     async def setmutettsprefix(self, ctx):
-        # TODO
         # the character/string to put in front of a message to mute tts
         if not Bot.is_by_channel_owner(ctx):
             return
+        channel = ctx.channel.name
+        msg = ctx.message.content
+        msg = msg.strip()
+        prefix = msg[msg.find(" ") + 1:]
+        set_mute_prefix(channel, prefix)
+        await ctx.channel.send("@" + channel + " mute TTS prefix changed to '" + prefix + "'.")
 
     @commands.command()
     async def mutecmdcomplement(self, ctx):
-        # TODO
         # mutes tts for complements sent with !complement command
         if not Bot.is_by_channel_owner(ctx):
             return
+        channel = ctx.channel.name
+
+        if is_cmd_complement_muted(channel):
+            await ctx.channel.send("@" + channel + " command complements are already muted!")
+        else:
+            mute_cmd_complement(channel)
+            await ctx.channel.send("@" + channel + " command complements are now muted.")
 
     @commands.command()
     async def muterandomcomplement(self, ctx):
-        # TODO
         # mutes tts for complements randomly given out
         if not Bot.is_by_channel_owner(ctx):
             return
+        channel = ctx.channel.name
+
+        if is_random_complement_muted(channel):
+            await ctx.channel.send("@" + channel + " random complements are already muted!")
+        else:
+            mute_random_complement(channel)
+            await ctx.channel.send("@" + channel + " random complements are now muted.")
+
+    @commands.command()
+    async def unmutecmdcomplement(self, ctx):
+        # unmutes tts for complements sent with !complement command
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if is_cmd_complement_muted(channel):
+            unmute_cmd_complement(channel)
+            await ctx.channel.send("@" + channel + " command complements are no longer muted!")
+        else:
+            await ctx.channel.send("@" + channel + " command complements are already unmuted!")
+
+    @commands.command()
+    async def unmuterandomcomplement(self, ctx):
+        # unmutes tts for complements randomly given out
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if is_random_complement_muted(channel):
+            unmute_random_complement(channel)
+            await ctx.channel.send("@" + channel + " random complements are no longer muted!")
+        else:
+            await ctx.channel.send("@" + channel + " random complements are already unmuted!")
 
 
 if __name__ == "__main__":

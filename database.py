@@ -15,20 +15,26 @@ DEFAULT_SHOULD_IGNORE_BOTS = True
 DEFAULT_TTS_IGNORE_PREFIX = "!"
 DEFAULT_COMMAND_COMPLEMENT_ENABLED = True
 DEFAULT_RANDOM_COMPLEMENT_ENABLED = True
+DEFAULT_COMMAND_COMPLEMENT_MUTED = True
+DEFAULT_RANDOM_COMPLEMENT_MUTED = False
+DEFAULT_IS_JOINED = True
 
 # Database keys:
 COMPLEMENT_CHANCE = "complement_chance"
 SHOULD_IGNORE_BOTS = "should_ignore_bots"
 IS_JOINED = "is_joined"
-TTS_IGNORE_PREFIX = "tts_ignore_prefix"
+MUTE_PREFIX = "tts_ignore_prefix"
 COMMAND_COMPLEMENT_ENABLED = "command_complement_enabled"
 RANDOM_COMPLEMENT_ENABLED = "random_complement_enabled"
 CUSTOM_COMPLEMENTS = "custom_complements"
+COMMAND_COMPLEMENT_MUTED = "command_complement_muted"
+RANDOM_COMPLEMENT_MUTED = "random_complement_muted"
 
 DEFAULT_USER = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE, SHOULD_IGNORE_BOTS: DEFAULT_SHOULD_IGNORE_BOTS,
-                IS_JOINED: True, TTS_IGNORE_PREFIX: DEFAULT_TTS_IGNORE_PREFIX,
-                COMMAND_COMPLEMENT_ENABLED: DEFAULT_COMMAND_COMPLEMENT_ENABLED,
-                RANDOM_COMPLEMENT_ENABLED: DEFAULT_RANDOM_COMPLEMENT_ENABLED}
+                IS_JOINED: DEFAULT_IS_JOINED, COMMAND_COMPLEMENT_ENABLED: DEFAULT_COMMAND_COMPLEMENT_ENABLED,
+                RANDOM_COMPLEMENT_ENABLED: DEFAULT_RANDOM_COMPLEMENT_ENABLED, MUTE_PREFIX: DEFAULT_TTS_IGNORE_PREFIX,
+                COMMAND_COMPLEMENT_MUTED: DEFAULT_COMMAND_COMPLEMENT_MUTED,
+                RANDOM_COMPLEMENT_MUTED: DEFAULT_RANDOM_COMPLEMENT_MUTED}
 
 
 def is_user_ignored(user):
@@ -99,11 +105,11 @@ def number_of_joined_channels():
 
 
 def set_tts_ignore_prefix(user, prefix):
-    tts_ignore_prefix = USERS_DB_REF.child(user).child(TTS_IGNORE_PREFIX).set(prefix)
+    tts_ignore_prefix = USERS_DB_REF.child(user).child(MUTE_PREFIX).set(prefix)
 
 
 def get_tts_ignore_prefix(user):
-    tts_ignore_prefix = USERS_DB_REF.child(user).child(TTS_IGNORE_PREFIX).get()
+    tts_ignore_prefix = USERS_DB_REF.child(user).child(MUTE_PREFIX).get()
     if tts_ignore_prefix is None:
         set_tts_ignore_prefix(user, DEFAULT_TTS_IGNORE_PREFIX)
         tts_ignore_prefix = DEFAULT_TTS_IGNORE_PREFIX
@@ -187,7 +193,42 @@ def get_custom_complements(user):
     return complements
 
 
+def set_mute_prefix(user, prefix):
+    USERS_DB_REF.child(user).child(MUTE_PREFIX).set(prefix)
 
 
+def get_mute_prefix(user):
+    prefix = USERS_DB_REF.child(user).child(MUTE_PREFIX).get()
+    if prefix is None:
+        return DEFAULT_TTS_IGNORE_PREFIX
+    return prefix
 
 
+def is_cmd_complement_muted(user):
+    is_muted = USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_MUTED).get()
+    if is_muted is None:
+        return DEFAULT_COMMAND_COMPLEMENT_MUTED
+    return is_muted
+
+
+def mute_cmd_complement(user):
+    USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_MUTED).set(True)
+
+
+def unmute_cmd_complement(user):
+    USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_MUTED).set(False)
+
+
+def is_random_complement_muted(user):
+    is_muted = USERS_DB_REF.child(user).child(RANDOM_COMPLEMENT_MUTED).get()
+    if is_muted is None:
+        return DEFAULT_RANDOM_COMPLEMENT_MUTED
+    return is_muted
+
+
+def mute_random_complement(user):
+    USERS_DB_REF.child(user).child(RANDOM_COMPLEMENT_MUTED).set(True)
+
+
+def unmute_random_complement(user):
+    USERS_DB_REF.child(user).child(RANDOM_COMPLEMENT_MUTED).set(False)

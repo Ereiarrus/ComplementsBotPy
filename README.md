@@ -43,6 +43,11 @@ These commands must be used by the channel owner in their own channel:
 - !enablerandomcomplement - undoes !disablerandomcomplement; this is the default
 - !removeallcomplements - removes all custom complements added by you
 - !addcomplement <complement> - add a custom complement for to your own channel
+- !setmutettsprefix - the character/string to put in front of a message to mute TTS (text-to-speech); default is "!"
+- !mutecmdcomplement - mutes tts for complements sent with !complement command; this is the default
+- !unmutecmdcomplement - undoes !mutecmdcomplement;
+- !muterandomcomplement - mutes tts for complements randomly given out;
+- !unmuterandomcomplement - undoes !muterandomcomplement; this is the default
 
 ### Unimplemented commands
 
@@ -54,11 +59,6 @@ These commands must be used by the channel owner in their own channel:
 
 - !removecomplement <complement> - remove a complement from your own channel
 - !listcomplements - lists all complements which have been added
-- !setmutettsprefix - the character/string to put in front of a message to mute tts; default is "!"
-- !mutecmdcomplement - mutes tts for complements sent with !complement command;
-  can either be 'true' or 'false', default is 'true'
-- !muterandomcomplement - mutes tts for complements randomly given out; can either be 'true'
-  or 'false', default is 'false'
 - !ignorebots - ignores users whose name ends in 'bot' for random complement;
   this is the case by default
 - !unignorebots - undo ignorebots; by default, bots are ignored.
