@@ -58,7 +58,7 @@ class Bot(commands.Bot):
         index = random.randint(0, default_complements_length + len(custom_complements) - 1)
         if index < default_complements_length:
             return self.COMPLEMENTS_LIST[index], True
-        return custom_complements[index - default_complements_length]
+        return custom_complements[index - default_complements_length], True
 
     def complement_msg(self, ctx, who=None, mute_tts=True):
         prefix = ""

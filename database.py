@@ -181,7 +181,10 @@ def remove_all_complements(user):
 
 
 def get_custom_complements(user):
-    return USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).get()
+    complements = USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).get()
+    if complements is None:
+        return []
+    return complements
 
 
 
