@@ -1,33 +1,14 @@
 # bot.py
-import os  # for importing env vars for the bot to use
+import os
 from twitchio.ext import commands
 import random
-from firebase_admin import credentials, db
-import firebase_admin
-from ReadWriteLock import ReadWriteLock
-from threading import RLock
-import json  # json.dumps(dictionary, separators=(',', ':'))
+from database import *
 
-cred = credentials.Certificate("./.firebase_config.json")
-firebase_admin.initialize_app(cred)
 
-DEFAULT_CMD_PREFIX = '!'
-DEFAULT_TTS_IGNORE_PREFIX = "!"
-OWNER_NICK = 'ereiarrus'
+CMD_PREFIX = '!'
+
 BOT_NICK = "complementsbot"
-DEFAULT_COMPLEMENT_CHANCE = 10.0 / 3.0
-SHOULD_IGNORE_BOTS = True
-
-custom_data = {"channel_name":
-                   {"cmd_prefix": "!", "tts_ignore_prefix": "! ", "complement_chance": 10.0 / 3.0,
-                    "extra_complements": []}}
-
-channels_to_join_lock = RLock()
-CHANNELS_TO_JOIN = set(os.environ['CHANNELS'].split(':'))
-
-ignored_users_lock = RLock()
-IGNORED_USERS = set(os.environ['IGNORED_USERS'].split(':'))
-IGNORED_USERS.remove('')  # for some reason the empty string can make its way in if IGNORED_USERS is empty
+OWNER_NICK = 'ereiarrus'
 
 
 class Bot(commands.Bot):
@@ -36,8 +17,8 @@ class Bot(commands.Bot):
             token=os.environ['TMI_TOKEN'],
             client_id=os.environ['CLIENT_ID'],
             nick=BOT_NICK,
-            prefix=DEFAULT_CMD_PREFIX,
-            initial_channels=list(CHANNELS_TO_JOIN)
+            prefix=CMD_PREFIX,
+            initial_channels=get_channels()
         )
         self.COMPLEMENTS_LIST = []
         with open("complements_list.txt", "r") as f:
@@ -55,11 +36,11 @@ class Bot(commands.Bot):
             return
 
         author = ctx.author.name
-        is_author_ignored = (author in IGNORED_USERS)
-        should_rng_choose = (random.random() * 100) <= DEFAULT_COMPLEMENT_CHANCE
-        is_author_bot = SHOULD_IGNORE_BOTS and len(author) >= 3 and author[-3:] == 'bot'
+        is_author_ignored = is_user_ignored(author)
+        should_rng_choose = (random.random() * 100) <= get_chance(author)
+        is_author_bot = ignore_bots(author) and len(author) >= 3 and author[-3:] == 'bot'
 
-        if ctx.content[:len(DEFAULT_CMD_PREFIX)] == DEFAULT_CMD_PREFIX:
+        if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
         elif should_rng_choose and (not is_author_ignored) and not is_author_bot:
             await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, False))
@@ -74,7 +55,7 @@ class Bot(commands.Bot):
             who = ctx.author.name
         prefix = "@" + prefix
         if mute_tts:
-            prefix = DEFAULT_TTS_IGNORE_PREFIX + " " + prefix
+            prefix = get_tts_ignore_prefix(who) + " " + prefix
         return prefix + who + " " + self.choose_complement()
 
     @commands.command()
@@ -87,14 +68,8 @@ class Bot(commands.Bot):
             if who[0] == "@":
                 who = who[1:]
 
-        ignored_users_lock.acquire()
-        try:
-            if who in IGNORED_USERS:
-                return
-        except Exception as e:
-            raise e
-        finally:
-            ignored_users_lock.release()
+        if is_user_ignored(who):
+            return
 
         await ctx.channel.send(self.complement_msg(ctx.message, who, True))
 
@@ -106,45 +81,23 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def joinme(self, ctx):
-        # TODO
         # I will join your channel!
         if not Bot.is_in_bot_channel(ctx):
             return
-        has_joined = False
         user = ctx.author.name
-        channels_to_join_lock.acquire()
-        try:
-            CHANNELS_TO_JOIN.add(user)
-            # TODO: the line below can probably be ran periodically instead of on every !joinme
-            os.environ["CHANNELS"] = ':'.join(CHANNELS_TO_JOIN)
-            has_joined = True
-        except Exception as e:
-            raise e
-        finally:
-            channels_to_join_lock.release()
-            if has_joined:
-                await ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
+        join_channel(user)
+
+        await ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
 
     @commands.command()
     async def leaveme(self, ctx):
-        # TODO
         # I will leave your channel
         if not Bot.is_in_bot_channel(ctx):
             return
-        has_left = False
         user = ctx.author.name
-        channels_to_join_lock.acquire()
-        try:
-            CHANNELS_TO_JOIN.remove(user)
-            # TODO: the line below can probably be ran periodically instead of on every !joinme
-            os.environ["CHANNELS"] = ':'.join(CHANNELS_TO_JOIN)
-            has_left = True
-        except Exception as e:
-            raise e
-        finally:
-            channels_to_join_lock.release()
-            if has_left:
-                await ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
+        leave_channel(user)
+
+        await ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
 
     @commands.command()
     async def about(self, ctx):
@@ -162,50 +115,28 @@ class Bot(commands.Bot):
         if not Bot.is_in_bot_channel(ctx):
             return
         await ctx.channel.send(
-            "@" + ctx.message.author.name + " " + str(len(CHANNELS_TO_JOIN)) + " channels and counting!")
+            "@" + ctx.message.author.name + " " + str(len(number_of_joined_channels)) + " channels and counting!")
 
     @commands.command()
     async def ignoreme(self, ctx):
-        # TODO
         # no longer complement the user
         if not Bot.is_in_bot_channel(ctx):
             return
-        is_ignored = False
+
         user = ctx.author.name
-        ignored_users_lock.acquire()
-        try:
-            IGNORED_USERS.add(user)
-            # TODO: the line below can probably be ran periodically instead of on every !ignoreme
-            os.environ["IGNORED_USERS"] = ':'.join(IGNORED_USERS)
-            is_ignored = True
-        except Exception as e:
-            raise e
-        finally:
-            ignored_users_lock.release()
-            if is_ignored:
-                await ctx.channel.send("@" + user + " ComplementsBot is now ignoring you.")
+        ignore(user)
+
+        await ctx.channel.send("@" + user + " ComplementsBot is now ignoring you.")
 
     @commands.command()
     async def unignoreme(self, ctx):
-        # TODO
         # undo ignoreme
         if not Bot.is_in_bot_channel(ctx):
             return
-        is_ignored = True
         user = ctx.author.name
-        ignored_users_lock.acquire()
-        try:
-            IGNORED_USERS.remove(user)
-            # TODO: the line below can probably be ran periodically instead of on every !unignoreme
-            os.environ["IGNORED_USERS"] = ':'.join(IGNORED_USERS)
-            is_ignored = False
-        except Exception as e:
-            raise e
-        finally:
-            ignored_users_lock.release()
-            if not is_ignored:
-                await ctx.channel.send("@" + user + " ComplementsBot is no longer ignoring you!")
+        unignore(user)
 
+        await ctx.channel.send("@" + user + " ComplementsBot is no longer ignoring you!")
 
     # -------------------- any channel, but must be by owner --------------------
 

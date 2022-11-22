@@ -4,6 +4,9 @@
 
 I complement the sender of a message with a 3.33% chance. I currently have about 50 ways to complement you.
 
+Note that you might need to VIP me in your chat, especially if your viewers tend to make heavy use of the !complement
+command - this is because Twitch seems to count many bot messages as spam, and mutes/times out the bot.
+
 ### Implemented commands
 
 The following commands have been implemented:
@@ -30,7 +33,8 @@ The following commands have not been implemented yet, but are planned to be:
 Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 
 - !joinme - I will join your channel
-- !leaveme - I will leave your channel
+- !leaveme - I will leave your channel, but keep your settings in case you decide you want me back
+- !deleteme - I will leave your channel and delete all of your settings
 - !ignoreme - I will never complement you
 - !unignoreme - undo !ignoreme
 
@@ -68,7 +72,7 @@ along with looking at https://github.com/TwitchIO/TwitchIO for examples to build
 
 - Make sure you have Python installed (Python 3.10.6 was used): https://www.python.org/downloads/
 - Run pipenv: pipenv --python 3.10
-- pipenv install twitchio json
+- pipenv install twitchio
 
 Make sure create a .env file in the root directory with the following variables:
 
@@ -76,8 +80,9 @@ Make sure create a .env file in the root directory with the following variables:
 - CLIENT_ID= register your app with twitch on https://dev.twitch.tv/console/apps/create -
   for name, give it the channel name (ComplementsBot in our case), OAuth Redirect URLs: https:localhost:8000,
   Category: Chat Bot; then go to 'Manage' and copy the Client ID
-- CHANNELS= give it the name of the channel where you want the bot to be active, separated by colons (':')
-- IGNORED_USERS= List of ignored users, separated by colons
+- DATABASE_URL= the URL to your realtime database as shown in firebase
 
 Once you have your firebase app, go to 'Service accounts' in project settings. From here, generate a new private key,
 and save the file as '.firebase_config.json' in the root directory.
+
+Create a Realtime Database in firebase.
