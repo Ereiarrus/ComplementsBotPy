@@ -4,7 +4,6 @@ from twitchio.ext import commands
 import random
 from database import *
 
-
 CMD_PREFIX = '!'
 
 BOT_NICK = "complementsbot"
@@ -13,12 +12,13 @@ OWNER_NICK = 'ereiarrus'
 
 class Bot(commands.Bot):
     def __init__(self):
+        join_channel(BOT_NICK)
         super().__init__(
             token=os.environ['TMI_TOKEN'],
             client_id=os.environ['CLIENT_ID'],
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
-            initial_channels=get_joined_channels()+[BOT_NICK]
+            initial_channels=get_joined_channels()
         )
         self.COMPLEMENTS_LIST = []
         with open("complements_list.txt", "r") as f:
@@ -35,12 +35,9 @@ class Bot(commands.Bot):
             # make sure the bot ignores itself
             return
 
-        print(get_chance(ctx.channel.name))
         user = ctx.author.name
         is_author_ignored = is_user_ignored(user)
-        should_rng_choose = (random.random() * 100) <= DEFAULT_COMPLEMENT_CHANCE
-        if is_channel_joined(ctx.channel.name):
-            should_rng_choose = (random.random() * 100) <= get_chance(ctx.channel.name)
+        should_rng_choose = (random.random() * 100) <= get_chance(ctx.channel.name)
         is_author_bot = ignore_bots(user) and len(user) >= 3 and user[-3:] == 'bot'
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
@@ -52,9 +49,8 @@ class Bot(commands.Bot):
         return random.choice(self.COMPLEMENTS_LIST)
 
     def complement_msg(self, ctx, who=None, mute_tts=True):
-        split_msg = ctx.content.split()
         prefix = ""
-        if not who:
+        if who is not None:
             who = ctx.author.name
         prefix = "@" + prefix
         if mute_tts:
@@ -93,6 +89,7 @@ class Bot(commands.Bot):
             await ctx.channel.send("@" + user + " ComplementsBot has is already in your channel!")
         else:
             join_channel(user)
+            await self.join_channels([user])
             await ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
 
     @commands.command()
@@ -103,10 +100,10 @@ class Bot(commands.Bot):
         user = ctx.author.name
         if is_channel_joined(user):
             leave_channel(user)
+            await self.part_channels([user])
             await ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
         else:
-            await ctx.channel.send("@" + user + " ComplementsBot has is not joined.")
-
+            await ctx.channel.send("@" + user + " ComplementsBot has not joined your channel.")
 
     @commands.command()
     async def deleteme(self, ctx):
@@ -117,10 +114,10 @@ class Bot(commands.Bot):
 
         if channel_exists(user):
             delete_channel(user)
+            await self.part_channels([user])
             await ctx.channel.send("@" + user + " ComplementsBot has deleted your channel.")
         else:
             await ctx.channel.send("@" + user + " your channel does not exists in my records.")
-
 
     @commands.command()
     async def about(self, ctx):
@@ -165,7 +162,6 @@ class Bot(commands.Bot):
             await ctx.channel.send("@" + user + " ComplementsBot is no longer ignoring you!")
         else:
             await ctx.channel.send("@" + user + " ComplementsBot is not ignoring you!")
-
 
     # -------------------- any channel, but must be by owner --------------------
 

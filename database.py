@@ -1,15 +1,14 @@
-from firebase_admin import credentials, firestore, db
+from firebase_admin import credentials, db
 import firebase_admin
 import os
 
 cred = credentials.Certificate("./.firebase_config.json")
-# firebase_admin.initialize_app(cred)
 databaseURL = os.environ['DATABASE_URL']
 firebase_admin.initialize_app(cred, {'databaseURL': databaseURL})
 
 REF = db.reference('/')
-IGNORED_DB_REF = ref.child('Ignored')
-USERS_DB_REF = ref.child('Users')
+IGNORED_DB_REF = REF.child('Ignored')
+USERS_DB_REF = REF.child('Users')
 
 DEFAULT_COMPLEMENT_CHANCE = 10.0 / 3.0
 DEFAULT_SHOULD_IGNORE_BOTS = True
@@ -38,7 +37,8 @@ def unignore(user):
 
 
 def channel_exists(user):
-    return user in USERS_DB_REF.get(False, True)
+    users = USERS_DB_REF.get(False, True)
+    return (users is not None) and user in users
 
 
 def is_channel_joined(user):
@@ -49,8 +49,8 @@ def is_channel_joined(user):
 
 
 def join_channel(user):
-    if not channel_exists:
-        USERS_DB_REF.set({user: DEFAULT_USER})
+    if not channel_exists(user):
+        USERS_DB_REF.child(user).set(DEFAULT_USER)
     else:
         USERS_DB_REF.child(user).child(IS_JOINED).set(True)
 
@@ -67,6 +67,8 @@ def get_joined_channels():
     # TODO: make sure to NOT count the ones which have left, but not deleted!
     all_users = USERS_DB_REF.get(False, True)
     joined_users = []
+    if all_users is None:
+        return joined_users
     for user in all_users:
         if USERS_DB_REF.child(user).child(IS_JOINED).get():
             joined_users.append(user)
@@ -75,11 +77,11 @@ def get_joined_channels():
 
 def number_of_joined_channels():
     # TODO: make sure to NOT count the ones which have left, but not deleted!
-    return
+    return len(get_joined_channels())
 
 
 def get_tts_ignore_prefix(user):
-    return
+    return USERS_DB_REF.child(user).child(TTS_IGNORE_PREFIX).get()
 
 
 def get_chance(user):
@@ -87,4 +89,4 @@ def get_chance(user):
 
 
 def ignore_bots(user):
-    return
+    USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).get()
