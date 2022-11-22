@@ -2,7 +2,8 @@
 
 ## For twitch users:
 
-I complement the sender of a message with a 3.33% (by default) chance. I currently have about 50 ways to complement you, which you can extend yourself, or disregard completely.
+I complement the sender of a message with a 3.33% (by default) chance. I currently have about 50 ways to complement you,
+which you can extend yourself, or disregard completely.
 
 Note that you might need to VIP me in your chat, especially if your viewers tend to make heavy use of the !complement
 command - this is because Twitch seems to count many bot messages as spam, and mutes/times out the bot.
@@ -54,6 +55,9 @@ These commands must be used by the channel owner in their own channel:
 - !ignorebots - ignores users whose name ends in 'bot' for random complement;
   this is the case by default
 - !unignorebots - undo ignorebots; by default, bots are ignored.
+- !disablecommandcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
+  command; by default, this is off
+- !enablecommandcomplement - undoes !disablecommandcomplement; this is the default
 
 ## About bot and me
 

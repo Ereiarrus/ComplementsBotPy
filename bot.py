@@ -38,7 +38,7 @@ class Bot(commands.Bot):
 
         user = ctx.author.name
         is_author_ignored = is_user_ignored(user)
-        should_rng_choose = (random.random() * 100) <= get_chance(ctx.channel.name)
+        should_rng_choose = (random.random() * 100) <= get_complement_chance(ctx.channel.name)
         is_author_bot = ignore_bots(user) and len(user) >= 3 and user[-3:] == 'bot'
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
@@ -51,7 +51,7 @@ class Bot(commands.Bot):
 
     def complement_msg(self, ctx, who=None, mute_tts=True):
         prefix = ""
-        if who is not None:
+        if who is None:
             who = ctx.author.name
         prefix = "@" + prefix
         if mute_tts:
@@ -68,12 +68,16 @@ class Bot(commands.Bot):
             if who[0] == "@":
                 who = who[1:]
 
-        if is_user_ignored(who):
+        if is_user_ignored(who) or not get_command_complement_enabled(ctx.channel.name):
             return
 
         await ctx.channel.send(self.complement_msg(ctx.message, who, True))
 
     # -------------------- bot channel only commands --------------------
+
+    def make_sure_channel_joined(self):
+        return
+
 
     @staticmethod
     def is_in_bot_channel(ctx):
@@ -169,6 +173,33 @@ class Bot(commands.Bot):
     @staticmethod
     def is_by_channel_owner(ctx):
         return ctx.channel.name == ctx.author.name
+
+    @commands.command()
+    async def disablecommandcomplement(self, ctx):
+        # TODO
+        # prevent users from being able to use the !complement command in your channel
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        user = ctx.channel.name
+        if get_command_complement_enabled(user):
+            disable_command_complement(user)
+            await ctx.channel.send("@" + user + " your viewers will no longer be able to make use of the !complement command.")
+        else:
+            await ctx.channel.send("@" + user + " your viewers already cannot make use of the !complement command.")
+
+    @commands.command()
+    async def enablecommandcomplement(self, ctx):
+        # TODO
+        # undo !disablecommandcomplement
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        user = ctx.channel.name
+        if get_command_complement_enabled(user):
+            await ctx.channel.send("@" + user + " your viewers can already make use of the !complement command!")
+        else:
+            enable_command_complement(user)
+            await ctx.channel.send(
+                "@" + user + " your viewers will now be able to make use of the !complement command!")
 
     @commands.command()
     async def setchance(self, ctx):

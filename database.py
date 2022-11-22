@@ -13,15 +13,18 @@ USERS_DB_REF = REF.child('Users')
 DEFAULT_COMPLEMENT_CHANCE = 10.0 / 3.0
 DEFAULT_SHOULD_IGNORE_BOTS = True
 DEFAULT_TTS_IGNORE_PREFIX = "!"
+DEFAULT_COMMAND_COMPLEMENT_ENABLED = True
 
 # Database keys:
 COMPLEMENT_CHANCE = "complement_chance"
 SHOULD_IGNORE_BOTS = "should_ignore_bots"
 IS_JOINED = "is_joined"
 TTS_IGNORE_PREFIX = "tts_ignore_prefix"
+COMMAND_COMPLEMENT_ENABLED = "command_complement_enabled"
 
 DEFAULT_USER = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE, SHOULD_IGNORE_BOTS: DEFAULT_SHOULD_IGNORE_BOTS,
-                IS_JOINED: True, TTS_IGNORE_PREFIX: DEFAULT_TTS_IGNORE_PREFIX}
+                IS_JOINED: True, TTS_IGNORE_PREFIX: DEFAULT_TTS_IGNORE_PREFIX,
+                COMMAND_COMPLEMENT_ENABLED: DEFAULT_COMMAND_COMPLEMENT_ENABLED}
 
 
 def is_user_ignored(user):
@@ -37,14 +40,15 @@ def ignore(user):
             data = []
         data.append(user)
         return data
+
     IGNORED_DB_REF.transaction(ignore_transaction)
 
 
 def unignore(user):
     def unignore_transaction(data):
-        print(data)
         data.remove(user)
         return data
+
     IGNORED_DB_REF.transaction(unignore_transaction)
 
 
@@ -76,7 +80,6 @@ def delete_channel(user):
 
 
 def get_joined_channels():
-    # TODO: make sure to NOT count the ones which have left, but not deleted!
     all_users = USERS_DB_REF.get(False, True)
     joined_users = []
     if all_users is None:
@@ -91,16 +94,16 @@ def number_of_joined_channels():
     return len(get_joined_channels())
 
 
+def set_tts_ignore_prefix(user, prefix):
+    tts_ignore_prefix = USERS_DB_REF.child(user).child(TTS_IGNORE_PREFIX).set(prefix)
+
+
 def get_tts_ignore_prefix(user):
-    return USERS_DB_REF.child(user).child(TTS_IGNORE_PREFIX).get()
-
-
-def get_chance(user):
-    return USERS_DB_REF.child(user).child(COMPLEMENT_CHANCE).get()
-
-
-def ignore_bots(user):
-    USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).get()
+    tts_ignore_prefix = USERS_DB_REF.child(user).child(TTS_IGNORE_PREFIX).get()
+    if tts_ignore_prefix is None:
+        set_tts_ignore_prefix(user, DEFAULT_TTS_IGNORE_PREFIX)
+        tts_ignore_prefix = DEFAULT_TTS_IGNORE_PREFIX
+    return tts_ignore_prefix
 
 
 def set_complement_chance(user, chance):
@@ -108,4 +111,32 @@ def set_complement_chance(user, chance):
 
 
 def get_complement_chance(user):
-    return USERS_DB_REF.child(user).child(COMPLEMENT_CHANCE).get()
+    chance = USERS_DB_REF.child(user).child(COMPLEMENT_CHANCE).get()
+    if chance is None:
+        set_complement_chance(user, DEFAULT_COMPLEMENT_CHANCE)
+        chance = DEFAULT_TTS_IGNORE_PREFIX
+    return chance
+
+
+def ignore_bots(user):
+    USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).get()
+
+
+def set_command_complement_enabled(user, is_enabled):
+    USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_ENABLED).set(is_enabled)
+
+
+def get_command_complement_enabled(user):
+    is_enabled = USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_ENABLED).get()
+    if is_enabled is None:
+        set_command_complement_enabled(user, DEFAULT_COMMAND_COMPLEMENT_ENABLED)
+        is_enabled = DEFAULT_COMMAND_COMPLEMENT_ENABLED
+    return is_enabled
+
+
+def disable_command_complement(user):
+    set_command_complement_enabled(user, False)
+
+
+def enable_command_complement(user):
+    set_command_complement_enabled(user, True)
