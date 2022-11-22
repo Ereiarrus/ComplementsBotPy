@@ -178,3 +178,13 @@ def add_complement(user, complement):
 
 def remove_all_complements(user):
     USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).delete()
+
+
+def get_custom_complements(user):
+    return USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).get()
+
+
+
+
+
+

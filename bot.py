@@ -48,17 +48,29 @@ class Bot(commands.Bot):
                 and get_random_complement_enabled(ctx.channel.name):
             await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, False))
 
-    def choose_complement(self):
-        return random.choice(self.COMPLEMENTS_LIST)
+    def choose_complement(self, ctx):
+        channel = ctx.channel.name
+        custom_complements = get_custom_complements(channel)
+        if len(custom_complements) == 0 and len(self.COMPLEMENTS_LIST) == 0:
+            return "", False
+
+        default_complements_length = len(self.COMPLEMENTS_LIST)
+        index = random.randint(0, default_complements_length + len(custom_complements) - 1)
+        if index < default_complements_length:
+            return self.COMPLEMENTS_LIST[index], True
+        return custom_complements[index - default_complements_length]
 
     def complement_msg(self, ctx, who=None, mute_tts=True):
         prefix = ""
         if who is None:
             who = ctx.author.name
+        channel = ctx.channel.name
         prefix = "@" + prefix
         if mute_tts:
-            prefix = get_tts_ignore_prefix(who) + " " + prefix
-        return prefix + who + " " + self.choose_complement()
+            prefix = get_tts_ignore_prefix(channel) + " " + prefix
+        complement, exists = self.choose_complement(ctx)
+        if exists:
+            return prefix + who + " " + complement
 
     @commands.command()
     async def complement(self, ctx):
