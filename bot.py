@@ -1,5 +1,4 @@
 # bot.py
-import os
 from twitchio.ext import commands
 import random
 from database import *
@@ -71,7 +70,7 @@ class Bot(commands.Bot):
             if who[0] == "@":
                 who = who[1:]
 
-        if is_user_ignored(who) or not get_command_complement_enabled(ctx.channel.name):
+        if is_user_ignored(who) or not get_cmd_complement_enabled(ctx.channel.name):
             return
 
         await ctx.channel.send(self.complement_msg(ctx.message, who, True))
@@ -94,11 +93,11 @@ class Bot(commands.Bot):
         user = ctx.author.name
 
         if is_channel_joined(user):
-            await ctx.channel.send("@" + user + " ComplementsBot has is already in your channel!")
+            await ctx.channel.send("@" + user + " I am already in your channel!")
         else:
             join_channel(user)
             await self.join_channels([user])
-            await ctx.channel.send("@" + user + " ComplementsBot has joined your channel!")
+            await ctx.channel.send("@" + user + " I have joined your channel!")
 
     @commands.command()
     async def leaveme(self, ctx):
@@ -109,9 +108,9 @@ class Bot(commands.Bot):
         if is_channel_joined(user):
             leave_channel(user)
             await self.part_channels([user])
-            await ctx.channel.send("@" + user + " ComplementsBot has left your channel.")
+            await ctx.channel.send("@" + user + " I have left your channel.")
         else:
-            await ctx.channel.send("@" + user + " ComplementsBot has not joined your channel.")
+            await ctx.channel.send("@" + user + " I have not joined your channel.")
 
     @commands.command()
     async def deleteme(self, ctx):
@@ -123,7 +122,7 @@ class Bot(commands.Bot):
         if channel_exists(user):
             delete_channel(user)
             await self.part_channels([user])
-            await ctx.channel.send("@" + user + " ComplementsBot has deleted your channel.")
+            await ctx.channel.send("@" + user + " I have deleted your channel data.")
         else:
             await ctx.channel.send("@" + user + " your channel does not exists in my records.")
 
@@ -135,10 +134,10 @@ class Bot(commands.Bot):
 
         user = ctx.author.name
         if is_user_ignored(user):
-            await ctx.channel.send("@" + user + " ComplementsBot is already ignoring you.")
+            await ctx.channel.send("@" + user + " I am already ignoring you.")
         else:
             ignore(user)
-            await ctx.channel.send("@" + user + " ComplementsBot is now ignoring you.")
+            await ctx.channel.send("@" + user + " I am now ignoring you.")
 
     @commands.command()
     async def unignoreme(self, ctx):
@@ -149,9 +148,9 @@ class Bot(commands.Bot):
         user = ctx.author.name
         if is_user_ignored(user):
             unignore(user)
-            await ctx.channel.send("@" + user + " ComplementsBot is no longer ignoring you!")
+            await ctx.channel.send("@" + user + " I am no longer ignoring you!")
         else:
-            await ctx.channel.send("@" + user + " ComplementsBot is not ignoring you!")
+            await ctx.channel.send("@" + user + " I am not ignoring you!")
 
     @commands.command()
     async def count(self, ctx):
@@ -179,7 +178,6 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def setchance(self, ctx):
-        # TODO
         # change how likely it is that person sending message gets complemented
         if not Bot.is_by_channel_owner(ctx):
             return
@@ -200,35 +198,32 @@ class Bot(commands.Bot):
         await ctx.channel.send("@" + user + " complement chance set to " + str(get_complement_chance(user)) + "!")
 
     @commands.command()
-    async def disablecommandcomplement(self, ctx):
-        # TODO
+    async def disablecmdcomplement(self, ctx):
         # prevent users from being able to use the !complement command in your channel
         if not Bot.is_by_channel_owner(ctx):
             return
         user = ctx.channel.name
-        if get_command_complement_enabled(user):
-            disable_command_complement(user)
+        if get_cmd_complement_enabled(user):
+            disable_cmd_complement(user)
             await ctx.channel.send("@" + user + " your viewers will no longer be able to make use of the !complement command.")
         else:
             await ctx.channel.send("@" + user + " your viewers already cannot make use of the !complement command.")
 
     @commands.command()
-    async def enablecommandcomplement(self, ctx):
-        # TODO
-        # undo !disablecommandcomplement
+    async def enablecmdcomplement(self, ctx):
+        # undo !disablecmdcomplement
         if not Bot.is_by_channel_owner(ctx):
             return
         user = ctx.channel.name
-        if get_command_complement_enabled(user):
+        if get_cmd_complement_enabled(user):
             await ctx.channel.send("@" + user + " your viewers can already make use of the !complement command!")
         else:
-            enable_command_complement(user)
+            enable_cmd_complement(user)
             await ctx.channel.send(
                 "@" + user + " your viewers will now be able to make use of the !complement command!")
 
     @commands.command()
     async def disablerandomcomplement(self, ctx):
-        # TODO
         # the bot will no longer randomly give out complements
         if not Bot.is_by_channel_owner(ctx):
             return
@@ -241,13 +236,12 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def enablerandomcomplement(self, ctx):
-        # TODO
         # undo !disablerandomcomplement
         if not Bot.is_by_channel_owner(ctx):
             return
         user = ctx.channel.name
         if get_random_complement_enabled(user):
-            await ctx.channel.send("@" + user + " ComplementsBot already randomly sends out complements!")
+            await ctx.channel.send("@" + user + " I already randomly send out complements!")
         else:
             enable_random_complement(user)
             await ctx.channel.send(
@@ -255,8 +249,19 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def addcomplement(self, ctx):
-        # TODO
         # add a custom complement for owner's channel
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        msg = ctx.message.content.strip()
+        complement = msg[msg.find(" ") + 1:]
+        user = ctx.channel.name
+        add_complement(user, complement)
+        await ctx.channel.send("@" + user + " new complements added: '" + complement + "'")
+
+    @commands.command()
+    async def listcomplements(self, ctx):
+        # TODO
+        # list all extra complements
         if not Bot.is_by_channel_owner(ctx):
             return
 
@@ -268,11 +273,15 @@ class Bot(commands.Bot):
             return
 
     @commands.command()
-    async def listcomplements(self, ctx):
+    async def removeallcomplements(self, ctx):
         # TODO
-        # list all extra complements
+        # remove all custom complements a user has added
         if not Bot.is_by_channel_owner(ctx):
             return
+        user = ctx.channel.name
+        remove_all_complements(user)
+        await ctx.channel.send("@" + user + " all of your custom complements have been removed.")
+
 
     @commands.command()
     async def setmutettsprefix(self, ctx):
@@ -294,8 +303,6 @@ class Bot(commands.Bot):
         # mutes tts for complements randomly given out
         if not Bot.is_by_channel_owner(ctx):
             return
-
-    # TODO: When a user calls a command on my channel, respond to tell them that command was done
 
 
 if __name__ == "__main__":

@@ -35,12 +35,14 @@ The following commands work anywhere that I have joined:
 These commands must be used by the channel owner in their own channel:
 
 - !setchance - change how likely it is that person sending message gets complemented; default is 3.33%
-- !disablecommandcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
+- !disablecmdcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
   command; by default, this is off
-- !enablecommandcomplement - undoes !disablecommandcomplement; this is the default
+- !enablecmdcomplement - undoes !disablecommandcomplement; this is the default
 - !disablerandomcomplement - ComplementsBot will no longer send out complements randomly; by default, ComplementsBot
   does randomly send out complements
 - !enablerandomcomplement - undoes !disablerandomcomplement; this is the default
+- !removeallcomplements - removes all custom complements added by you
+- !addcomplement <complement> - add a custom complement for to your own channel
 
 ### Unimplemented commands
 
@@ -50,7 +52,6 @@ The following commands have not been implemented yet, but are planned to be:
 
 These commands must be used by the channel owner in their own channel:
 
-- !addcomplement <complement> - add a custom complement for to your own channel
 - !removecomplement <complement> - remove a complement from your own channel
 - !listcomplements - lists all complements which have been added
 - !setmutettsprefix - the character/string to put in front of a message to mute tts; default is "!"

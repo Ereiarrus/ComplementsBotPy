@@ -130,7 +130,7 @@ def set_command_complement_enabled(user, is_enabled):
     USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_ENABLED).set(is_enabled)
 
 
-def get_command_complement_enabled(user):
+def get_cmd_complement_enabled(user):
     is_enabled = USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_ENABLED).get()
     if is_enabled is None:
         set_command_complement_enabled(user, DEFAULT_COMMAND_COMPLEMENT_ENABLED)
@@ -138,11 +138,11 @@ def get_command_complement_enabled(user):
     return is_enabled
 
 
-def disable_command_complement(user):
+def disable_cmd_complement(user):
     set_command_complement_enabled(user, False)
 
 
-def enable_command_complement(user):
+def enable_cmd_complement(user):
     set_command_complement_enabled(user, True)
 
 
@@ -164,3 +164,17 @@ def disable_random_complement(user):
 
 def enable_random_complement(user):
     set_random_complement_enabled(user, True)
+
+
+def add_complement(user, complement):
+    def add_transaction(data):
+        if data is None:
+            data = []
+        data.append(complement)
+        return data
+
+    USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).transaction(add_transaction)
+
+
+def remove_all_complements(user):
+    USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).delete()
