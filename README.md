@@ -12,6 +12,12 @@ command - this is because Twitch seems to count many bot messages as spam, and m
 
 The following commands have been implemented:
 
+#### Anywhere commands
+
+The following commands work anywhere that I have joined:
+
+- !complement \[username\] - If username present, complement that user; otherwise, get a complement yourself!
+
 #### ComplementsBot chat only
 
 Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
@@ -19,30 +25,30 @@ Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 - !joinme - I will join your channel
 - !leaveme - I will leave your channel, but keep your settings in case you decide you want me back
 - !deleteme - I will leave your channel and delete all of your settings
+
 - !ignoreme - I will never complement you
 - !unignoreme - undo !ignoreme
+
 - !count - Check out how many channels I'm in
 - !about - Learn all about me
-
-#### Anywhere commands
-
-The following commands work anywhere that I have joined:
-
-- !complement \[username\] - If username present, complement that user; otherwise, get a complement yourself!
 
 #### Channel owner only
 
 These commands must be used by the channel owner in their own channel:
 
-- !setchance - change how likely it is that person sending message gets complemented; default is 3.33%
+- !setchance - change how likely it is that person sending message gets complemented; default is 3.33%; setting it to a
+  number over 100 makes it always trigger, and to 0 or less to never trigger
+
+- !addcomplement <complement> - add a custom complement for to your own channel
+- !removeallcomplements - removes all custom complements added by you
+
 - !disablecmdcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
   command; by default, this is off
 - !enablecmdcomplement - undoes !disablecommandcomplement; this is the default
 - !disablerandomcomplement - ComplementsBot will no longer send out complements randomly; by default, ComplementsBot
   does randomly send out complements
 - !enablerandomcomplement - undoes !disablerandomcomplement; this is the default
-- !removeallcomplements - removes all custom complements added by you
-- !addcomplement <complement> - add a custom complement for to your own channel
+
 - !setmutettsprefix - the character/string to put in front of a message to mute TTS (text-to-speech); default is "!"
 - !mutecmdcomplement - mutes tts for complements sent with !complement command; this is the default
 - !unmutecmdcomplement - undoes !mutecmdcomplement;
@@ -59,9 +65,15 @@ These commands must be used by the channel owner in their own channel:
 
 - !removecomplement <complement> - remove a complement from your own channel
 - !listcomplements - lists all complements which have been added
+
 - !ignorebots - ignores users whose name ends in 'bot' for random complement;
   this is the case by default
 - !unignorebots - undo ignorebots; by default, bots are ignored.
+
+- !disablecustomcomplements - I will not complement people using your own complements
+- !enablecustomcomplements - I will complement people using your complements; this is the default
+- !disabledefaultcomplements - I will not complement people using the default complements
+- !enabledefaultcomplements - I will complement people using the default; this is the default
 
 ## About bot and me
 
