@@ -25,15 +25,27 @@ DEFAULT_USER = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE, SHOULD_IGNORE_BOTS
 
 
 def is_user_ignored(user):
-    return user in IGNORED_DB_REF.get(False, True)
+    users = IGNORED_DB_REF.get()
+    if users is None:
+        return False
+    return user in users
 
 
 def ignore(user):
-    USERS_DB_REF.push(user)
+    def ignore_transaction(data):
+        if data is None:
+            data = []
+        data.append(user)
+        return data
+    IGNORED_DB_REF.transaction(ignore_transaction)
 
 
 def unignore(user):
-    IGNORED_DB_REF.child(user).delete()
+    def unignore_transaction(data):
+        print(data)
+        data.remove(user)
+        return data
+    IGNORED_DB_REF.transaction(unignore_transaction)
 
 
 def channel_exists(user):
@@ -76,7 +88,6 @@ def get_joined_channels():
 
 
 def number_of_joined_channels():
-    # TODO: make sure to NOT count the ones which have left, but not deleted!
     return len(get_joined_channels())
 
 
