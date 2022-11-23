@@ -4,12 +4,13 @@ import random
 from database import *
 
 #TODO:
-# make it ignore bots/have a setting to toggle
 # when people try complementing the bot, say something different
 # when people reply to bot (e.g. say thank you), say something different
 # |
 # make a website where users can see all of their info
 # make a docker container for app
+# deploy app to firebase
+# set up database with data type rules
 
 CMD_PREFIX = '!'
 

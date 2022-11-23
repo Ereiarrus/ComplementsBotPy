@@ -72,7 +72,8 @@ The following commands have not been implemented yet, but are planned to be:
 
 These commands must be used by the channel owner in their own channel:
 
-- !removecomplement <complement> - remove a complement from your own channel
+- !removecomplement <index> - remove a complement from your own channel of specified index number
+- !getcomplement <index> - shows you the complement of specified index number
 - !listcomplements - lists all complements which have been added
 
 ## About bot and me
