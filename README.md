@@ -60,8 +60,8 @@ These commands must be used by the channel owner in their own channel:
 - !disabledefaultcomplements - I will not complement people using the default complements
 - !enabledefaultcomplements - I will complement people using the default; this is the default
 
-- !ignorebots - ignores users whose name ends in 'bot' for random complement;
-  this is the case by default
+- !ignorebots - ignores users whose name ends in 'bot' for random complement (they can still be manually complemented
+  using the !complement command if command complements are enabled (!enablecmdcomplement)); this is the case by default
 - !unignorebots - undo ignorebots; by default, bots are ignored.
 
 ### Unimplemented commands
