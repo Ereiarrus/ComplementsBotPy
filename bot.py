@@ -55,7 +55,9 @@ class Bot(commands.Bot):
                 and (not is_author_ignored) \
                 and not is_author_bot \
                 and get_random_complement_enabled(ctx.channel.name):
-            await ctx.channel.send(self.complement_msg(ctx, ctx.author.name, not is_random_complement_muted(channel)))
+            comp_msg, exists = self.complement_msg(ctx, ctx.author.name, is_random_complement_muted(channel))
+            if exists:
+                await ctx.channel.send(comp_msg)
 
     def choose_complement(self, ctx):
         channel = ctx.channel.name
@@ -84,8 +86,7 @@ class Bot(commands.Bot):
         if is_tts_muted:
             prefix = get_tts_ignore_prefix(channel) + " " + prefix
         complement, exists = self.choose_complement(ctx)
-        if exists:
-            return prefix + who + " " + complement
+        return prefix + who + " " + complement, exists
 
     @commands.command()
     async def complement(self, ctx):
@@ -101,7 +102,9 @@ class Bot(commands.Bot):
         if is_user_ignored(who) or not get_cmd_complement_enabled(channel):
             return
 
-        await ctx.channel.send(self.complement_msg(ctx.message, who, is_cmd_complement_muted(channel)))
+        comp_msg, exists = self.complement_msg(ctx.message, who, is_cmd_complement_muted(channel))
+        if exists:
+            await ctx.channel.send(comp_msg)
 
     # -------------------- bot channel only commands --------------------
 
@@ -380,7 +383,7 @@ class Bot(commands.Bot):
             return
         channel = ctx.channel.name
 
-        if are_custom_complements_enabled(channel):
+        if not are_custom_complements_enabled(channel):
             enable_custom_complements(channel)
             await ctx.channel.send("@" + channel + " custom complements are now enabled!")
         else:
@@ -393,7 +396,7 @@ class Bot(commands.Bot):
             return
         channel = ctx.channel.name
 
-        if are_default_complements_enabled(channel):
+        if not are_default_complements_enabled(channel):
             enable_default_complements(channel)
             await ctx.channel.send("@" + channel + " default complements are now enabled!")
         else:
@@ -413,7 +416,7 @@ class Bot(commands.Bot):
             await ctx.channel.send("@" + channel + " custom complements are already disabled.")
 
     @commands.command()
-    async def enabledefaultcomplements(self, ctx):
+    async def disabledefaultcomplements(self, ctx):
         # default complements will no longer be used to complement viewers
         if not Bot.is_by_channel_owner(ctx):
             return
