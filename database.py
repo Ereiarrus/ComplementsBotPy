@@ -18,6 +18,8 @@ DEFAULT_RANDOM_COMPLEMENT_ENABLED = True
 DEFAULT_COMMAND_COMPLEMENT_MUTED = True
 DEFAULT_RANDOM_COMPLEMENT_MUTED = False
 DEFAULT_IS_JOINED = True
+DEFAULT_DEFAULT_COMPLEMENTS_ENABLED = True
+DEFAULT_CUSTOM_COMPLEMENTS_ENABLED = True
 
 # Database keys:
 COMPLEMENT_CHANCE = "complement_chance"
@@ -29,12 +31,16 @@ RANDOM_COMPLEMENT_ENABLED = "random_complement_enabled"
 CUSTOM_COMPLEMENTS = "custom_complements"
 COMMAND_COMPLEMENT_MUTED = "command_complement_muted"
 RANDOM_COMPLEMENT_MUTED = "random_complement_muted"
+DEFAULT_COMPLEMENTS_ENABLED = "default_complements_enabled"
+CUSTOM_COMPLEMENTS_ENABLED = "custom_complements_enabled"
 
 DEFAULT_USER = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE, SHOULD_IGNORE_BOTS: DEFAULT_SHOULD_IGNORE_BOTS,
                 IS_JOINED: DEFAULT_IS_JOINED, COMMAND_COMPLEMENT_ENABLED: DEFAULT_COMMAND_COMPLEMENT_ENABLED,
                 RANDOM_COMPLEMENT_ENABLED: DEFAULT_RANDOM_COMPLEMENT_ENABLED, MUTE_PREFIX: DEFAULT_TTS_IGNORE_PREFIX,
                 COMMAND_COMPLEMENT_MUTED: DEFAULT_COMMAND_COMPLEMENT_MUTED,
-                RANDOM_COMPLEMENT_MUTED: DEFAULT_RANDOM_COMPLEMENT_MUTED}
+                RANDOM_COMPLEMENT_MUTED: DEFAULT_RANDOM_COMPLEMENT_MUTED,
+                CUSTOM_COMPLEMENTS_ENABLED: DEFAULT_CUSTOM_COMPLEMENTS_ENABLED,
+                DEFAULT_COMPLEMENTS_ENABLED: DEFAULT_DEFAULT_COMPLEMENTS_ENABLED}
 
 
 def is_user_ignored(user):
@@ -232,3 +238,33 @@ def mute_random_complement(user):
 
 def unmute_random_complement(user):
     USERS_DB_REF.child(user).child(RANDOM_COMPLEMENT_MUTED).set(False)
+
+
+def are_default_complements_enabled(user):
+    is_enabled = USERS_DB_REF.child(user).child(DEFAULT_COMPLEMENTS_ENABLED).get()
+    if is_enabled is None:
+        return DEFAULT_DEFAULT_COMPLEMENTS_ENABLED
+    return is_enabled
+
+
+def enable_default_complements(user):
+    USERS_DB_REF.child(user).child(DEFAULT_COMPLEMENTS_ENABLED).set(True)
+
+
+def enable_custom_complements(user):
+    USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS_ENABLED).set(True)
+
+
+def are_custom_complements_enabled(user):
+    is_enabled = USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS_ENABLED).get()
+    if is_enabled is None:
+        return DEFAULT_CUSTOM_COMPLEMENTS_ENABLED
+    return is_enabled
+
+
+def disable_custom_complements(user):
+    USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS_ENABLED).set(False)
+
+
+def disable_default_complements(user):
+    USERS_DB_REF.child(user).child(DEFAULT_COMPLEMENTS_ENABLED).set(False)

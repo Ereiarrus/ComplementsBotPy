@@ -55,6 +55,11 @@ These commands must be used by the channel owner in their own channel:
 - !muterandomcomplement - mutes tts for complements randomly given out;
 - !unmuterandomcomplement - undoes !muterandomcomplement; this is the default
 
+- !disablecustomcomplements - I will not complement people using your own complements
+- !enablecustomcomplements - I will complement people using your complements; this is the default
+- !disabledefaultcomplements - I will not complement people using the default complements
+- !enabledefaultcomplements - I will complement people using the default; this is the default
+
 ### Unimplemented commands
 
 The following commands have not been implemented yet, but are planned to be:
@@ -69,11 +74,6 @@ These commands must be used by the channel owner in their own channel:
 - !ignorebots - ignores users whose name ends in 'bot' for random complement;
   this is the case by default
 - !unignorebots - undo ignorebots; by default, bots are ignored.
-
-- !disablecustomcomplements - I will not complement people using your own complements
-- !enablecustomcomplements - I will complement people using your complements; this is the default
-- !disabledefaultcomplements - I will not complement people using the default complements
-- !enabledefaultcomplements - I will complement people using the default; this is the default
 
 ## About bot and me
 

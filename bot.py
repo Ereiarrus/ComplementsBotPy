@@ -7,8 +7,6 @@ from database import *
 # make it ignore bots/have a setting to toggle
 # when people try complementing the bot, say something different
 # when people reply to bot (e.g. say thank you), say something different
-# command to disable default complements
-# command to disable custom complements
 # |
 # make a website where users can see all of their info
 # make a docker container for app
@@ -61,14 +59,20 @@ class Bot(commands.Bot):
 
     def choose_complement(self, ctx):
         channel = ctx.channel.name
-        custom_complements = get_custom_complements(channel)
-        if len(custom_complements) == 0 and len(self.COMPLEMENTS_LIST) == 0:
+        custom_complements = []
+        if are_custom_complements_enabled(channel):
+            custom_complements = get_custom_complements(channel)
+        default_complements = []
+        if are_default_complements_enabled(channel):
+            default_complements = self.COMPLEMENTS_LIST
+
+        if len(custom_complements) == 0 and len(default_complements) == 0:
             return "", False
 
-        default_complements_length = len(self.COMPLEMENTS_LIST)
+        default_complements_length = len(default_complements)
         index = random.randint(0, default_complements_length + len(custom_complements) - 1)
         if index < default_complements_length:
-            return self.COMPLEMENTS_LIST[index], True
+            return default_complements[index], True
         return custom_complements[index - default_complements_length], True
 
     def complement_msg(self, ctx, who=None, is_tts_muted=True):
@@ -368,6 +372,58 @@ class Bot(commands.Bot):
             await ctx.channel.send("@" + channel + " random complements are no longer muted!")
         else:
             await ctx.channel.send("@" + channel + " random complements are already unmuted!")
+
+    @commands.command()
+    async def enablecustomcomplements(self, ctx):
+        # custom complements will now be used to complement viewers
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if are_custom_complements_enabled(channel):
+            enable_custom_complements(channel)
+            await ctx.channel.send("@" + channel + " custom complements are now enabled!")
+        else:
+            await ctx.channel.send("@" + channel + " custom complements are already enabled!")
+
+    @commands.command()
+    async def enabledefaultcomplements(self, ctx):
+        # custom complements will now be used to complement viewers
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if are_default_complements_enabled(channel):
+            enable_default_complements(channel)
+            await ctx.channel.send("@" + channel + " default complements are now enabled!")
+        else:
+            await ctx.channel.send("@" + channel + " default complements are already enabled!")
+
+    @commands.command()
+    async def disablecustomcomplements(self, ctx):
+        # custom complements will no longer be used to complement viewers
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if are_custom_complements_enabled(channel):
+            disable_custom_complements(channel)
+            await ctx.channel.send("@" + channel + " custom complements are now disabled.")
+        else:
+            await ctx.channel.send("@" + channel + " custom complements are already disabled.")
+
+    @commands.command()
+    async def enabledefaultcomplements(self, ctx):
+        # default complements will no longer be used to complement viewers
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if are_default_complements_enabled(channel):
+            disable_default_complements(channel)
+            await ctx.channel.send("@" + channel + " default complements are now disabled.")
+        else:
+            await ctx.channel.send("@" + channel + " default complements are already disabled!")
 
 
 if __name__ == "__main__":
