@@ -47,7 +47,7 @@ class Bot(commands.Bot):
         channel = ctx.channel.name
         is_author_ignored = is_user_ignored(sender)
         should_rng_choose = (random.random() * 100) <= get_complement_chance(ctx.channel.name)
-        is_author_bot = ignore_bots(sender) and len(sender) >= 3 and sender[-3:] == 'bot'
+        is_author_bot = is_ignoring_bots(channel) and len(sender) >= 3 and sender[-3:] == 'bot'
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
@@ -424,6 +424,32 @@ class Bot(commands.Bot):
             await ctx.channel.send("@" + channel + " default complements are now disabled.")
         else:
             await ctx.channel.send("@" + channel + " default complements are already disabled!")
+
+    @commands.command()
+    async def unignorebots(self, ctx):
+        # bots will not get complements
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if is_ignoring_bots(channel):
+            unignore_bots(channel)
+            await ctx.channel.send("@" + channel + " bots have a chance of being complemented!")
+        else:
+            await ctx.channel.send("@" + channel + " bots can already get complements!")
+
+    @commands.command()
+    async def ignorebots(self, ctx):
+        # bots might get complements
+        if not Bot.is_by_channel_owner(ctx):
+            return
+        channel = ctx.channel.name
+
+        if not is_ignoring_bots(channel):
+            ignore_bots(channel)
+            await ctx.channel.send("@" + channel + " bots will no longer get complemented.")
+        else:
+            await ctx.channel.send("@" + channel + " bots are already not getting complements.")
 
 
 if __name__ == "__main__":

@@ -134,10 +134,6 @@ def get_complement_chance(user):
     return chance
 
 
-def ignore_bots(user):
-    USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).get()
-
-
 def set_command_complement_enabled(user, is_enabled):
     USERS_DB_REF.child(user).child(COMMAND_COMPLEMENT_ENABLED).set(is_enabled)
 
@@ -268,3 +264,18 @@ def disable_custom_complements(user):
 
 def disable_default_complements(user):
     USERS_DB_REF.child(user).child(DEFAULT_COMPLEMENTS_ENABLED).set(False)
+
+
+def is_ignoring_bots(user):
+    is_ignoring = USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).get()
+    if is_ignoring is None:
+        return DEFAULT_SHOULD_IGNORE_BOTS
+    return is_ignoring
+
+
+def ignore_bots(user):
+    USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).set(True)
+
+
+def unignore_bots(user):
+    USERS_DB_REF.child(user).child(SHOULD_IGNORE_BOTS).set(False)

@@ -60,6 +60,10 @@ These commands must be used by the channel owner in their own channel:
 - !disabledefaultcomplements - I will not complement people using the default complements
 - !enabledefaultcomplements - I will complement people using the default; this is the default
 
+- !ignorebots - ignores users whose name ends in 'bot' for random complement;
+  this is the case by default
+- !unignorebots - undo ignorebots; by default, bots are ignored.
+
 ### Unimplemented commands
 
 The following commands have not been implemented yet, but are planned to be:
@@ -70,10 +74,6 @@ These commands must be used by the channel owner in their own channel:
 
 - !removecomplement <complement> - remove a complement from your own channel
 - !listcomplements - lists all complements which have been added
-
-- !ignorebots - ignores users whose name ends in 'bot' for random complement;
-  this is the case by default
-- !unignorebots - undo ignorebots; by default, bots are ignored.
 
 ## About bot and me
 
