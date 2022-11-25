@@ -4,6 +4,8 @@ import random
 from database import *
 
 #TODO:
+# allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
+# allow streamers to control which user groups can receive which complements
 # when people try complementing the bot, say something different
 # when people reply to bot (e.g. say thank you), say something different
 # |
@@ -16,6 +18,8 @@ CMD_PREFIX = '!'
 
 BOT_NICK = "complementsbot"
 OWNER_NICK = 'ereiarrus'
+
+SHOULD_LOG = False
 
 
 class Bot(commands.Bot):
@@ -35,8 +39,9 @@ class Bot(commands.Bot):
                 self.COMPLEMENTS_LIST.append(line.strip())
 
     async def event_ready(self):
-        # Called once when the bot goes online.
-        print(f"{BOT_NICK} is online!")
+        # Called once when the bot goes online.]
+        if SHOULD_LOG:
+            print(f"{BOT_NICK} is online!")
 
     async def event_message(self, ctx):
         # Runs every time a message is sent in chat.
@@ -204,13 +209,16 @@ class Bot(commands.Bot):
     # -------------------- any channel, but must be by owner --------------------
 
     @staticmethod
-    def is_by_channel_owner(ctx):
-        return ctx.channel.name == ctx.author.name
+    def is_by_broadcaster_or_mod(ctx):
+        return ctx.author.is_broadcaster \
+               or ctx.author.is_mod() \
+               or ctx.author.name == BOT_NICK \
+               or ctx.author.name == OWNER_NICK
 
     @commands.command()
     async def setchance(self, ctx):
         # change how likely it is that person sending message gets complemented
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
         user = ctx.channel.name
@@ -231,7 +239,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def disablecmdcomplement(self, ctx):
         # prevent users from being able to use the !complement command in your channel
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         user = ctx.channel.name
         if get_cmd_complement_enabled(user):
@@ -244,7 +252,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def enablecmdcomplement(self, ctx):
         # undo !disablecmdcomplement
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         user = ctx.channel.name
         if get_cmd_complement_enabled(user):
@@ -257,7 +265,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def disablerandomcomplement(self, ctx):
         # the bot will no longer randomly give out complements
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         user = ctx.channel.name
         if get_random_complement_enabled(user):
@@ -269,7 +277,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def enablerandomcomplement(self, ctx):
         # undo !disablerandomcomplement
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         user = ctx.channel.name
         if get_random_complement_enabled(user):
@@ -282,7 +290,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def addcomplement(self, ctx):
         # add a custom complement for owner's channel
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         msg = ctx.message.content.strip()
         complement = msg[msg.find(" ") + 1:]
@@ -294,20 +302,20 @@ class Bot(commands.Bot):
     async def listcomplements(self, ctx):
         # TODO
         # list all extra complements
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
     @commands.command()
     async def removecomplement(self, ctx):
         # TODO
         # remove a custom complement
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
     @commands.command()
     async def removeallcomplements(self, ctx):
         # remove all custom complements a user has added
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         user = ctx.channel.name
         remove_all_complements(user)
@@ -316,7 +324,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def setmutettsprefix(self, ctx):
         # the character/string to put in front of a message to mute tts
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
         msg = ctx.message.content
@@ -328,7 +336,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def mutecmdcomplement(self, ctx):
         # mutes tts for complements sent with !complement command
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -341,7 +349,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def muterandomcomplement(self, ctx):
         # mutes tts for complements randomly given out
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -354,7 +362,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def unmutecmdcomplement(self, ctx):
         # unmutes tts for complements sent with !complement command
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -367,7 +375,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def unmuterandomcomplement(self, ctx):
         # unmutes tts for complements randomly given out
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -380,7 +388,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def enablecustomcomplements(self, ctx):
         # custom complements will now be used to complement viewers
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -393,7 +401,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def enabledefaultcomplements(self, ctx):
         # custom complements will now be used to complement viewers
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -406,7 +414,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def disablecustomcomplements(self, ctx):
         # custom complements will no longer be used to complement viewers
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -419,7 +427,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def disabledefaultcomplements(self, ctx):
         # default complements will no longer be used to complement viewers
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -432,7 +440,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def unignorebots(self, ctx):
         # bots will not get complements
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -445,7 +453,7 @@ class Bot(commands.Bot):
     @commands.command()
     async def ignorebots(self, ctx):
         # bots might get complements
-        if not Bot.is_by_channel_owner(ctx):
+        if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         channel = ctx.channel.name
 
@@ -454,6 +462,10 @@ class Bot(commands.Bot):
             await ctx.channel.send("@" + channel + " bots will no longer get complemented.")
         else:
             await ctx.channel.send("@" + channel + " bots are already not getting complements.")
+
+    @commands.command()
+    async def compleave(self, ctx):
+        await self.leaveme(ctx)
 
 
 if __name__ == "__main__":

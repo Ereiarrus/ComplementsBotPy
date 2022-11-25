@@ -32,9 +32,11 @@ Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 - !count - Check out how many channels I'm in
 - !about - Learn all about me
 
-#### Channel owner only
+#### Channel owner and mods only
 
 These commands must be used by the channel owner in their own channel:
+
+- !compleave - same as !leaveme, but you can do it in your own channel.
 
 - !setchance - change how likely it is that person sending message gets complemented; default is 3.33%; setting it to a
   number over 100 makes it always trigger, and to 0 or less to never trigger
@@ -68,13 +70,15 @@ These commands must be used by the channel owner in their own channel:
 
 The following commands have not been implemented yet, but are planned to be:
 
-#### Channel owner only
+#### Channel owner and mods only
 
 These commands must be used by the channel owner in their own channel:
 
 - !removecomplement <index> - remove a complement from your own channel of specified index number
 - !getcomplement <index> - shows you the complement of specified index number
 - !listcomplements - lists all complements which have been added
+- commands which will allow channel owners to change who can use which command (user groups would be: channel owner,
+  moderators, VIPs, subscribers, regular user <- this one would allow everyone)
 
 ## About bot and me
 
