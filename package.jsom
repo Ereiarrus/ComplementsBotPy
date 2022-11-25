@@ -1,0 +1,20 @@
+{
+   "name": "ComplementsBotPy",
+    "version": "1.0.0",
+    "description": "",
+   "scripts": {
+       "build": "echo \"No build specified\"",
+       "test": "echo \"No test specified\"",
+        "start": "pip install twitchio && firebase_admin && python3 bot.py"
+   },
+   "repository": {
+        "type": "git",
+      "url": "git+https://github.com/Ereiarrus/ComplementsBotPy.git"
+   },
+   "author": "",
+   "license": "MIT",
+   "bugs": {
+       "url": "https://github.com/Ereiarrus/ComplementsBotPy/issues"
+    },
+   "homepage": "https://github.com/Ereiarrus/ComplementsBotPy#readme"
+}
