@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 twitchio = "*"
+firebase-admin = "*"
 
 [dev-packages]
 

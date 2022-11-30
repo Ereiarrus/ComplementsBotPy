@@ -57,7 +57,7 @@ class Bot(commands.Bot):
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
-        elif should_rng_choose \
+        if should_rng_choose \
                 and (not is_author_ignored) \
                 and not is_author_bot \
                 and get_random_complement_enabled(ctx.channel.name):
