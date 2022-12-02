@@ -267,7 +267,7 @@ class Bot(commands.Bot):
     @staticmethod
     def is_by_broadcaster_or_mod(ctx):
         return ctx.author.is_broadcaster \
-               or ctx.author.is_mod() \
+               or ctx.author.is_mod \
                or ctx.author.name == BOT_NICK \
                or ctx.author.name == OWNER_NICK
 
@@ -284,7 +284,7 @@ class Bot(commands.Bot):
             chance = (msg.split())[1]
             chance = float(chance)
         except ValueError:
-            to_send = "@" + user + " " + chance + " is an invalid number. Please try again."
+            to_send = "@" + user + " '" + chance + "' is an invalid number. Please try again."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
