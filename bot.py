@@ -1,4 +1,5 @@
 # bot.py
+from env_reader import *
 from twitchio.ext import commands
 import random
 from database import *
@@ -21,13 +22,12 @@ OWNER_NICK = 'ereiarrus'
 
 SHOULD_LOG = True
 
-
 class Bot(commands.Bot):
     def __init__(self):
         join_channel(BOT_NICK)
         super().__init__(
-            token=os.environ['TMI_TOKEN'],
-            client_id=os.environ['CLIENT_ID'],
+            token=TOKEN,
+            client_id=CLIENT_ID,
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
             initial_channels=get_joined_channels()

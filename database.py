@@ -1,9 +1,8 @@
 from firebase_admin import credentials, db
+from env_reader import *
 import firebase_admin
-import os
 
 cred = credentials.Certificate("./.firebase_config.json")
-databaseURL = os.environ['DATABASE_URL']
 firebase_admin.initialize_app(cred, {'databaseURL': databaseURL})
 
 REF = db.reference('/')
