@@ -255,10 +255,10 @@ class Bot(commands.Bot):
         # learn all about me
         if not Bot.is_in_bot_channel(ctx):
             return
-        to_send = f"@{ctx.author.name} "\
-            "For most up-to-date information on commands, please have a look at "\
-            "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, "\
-            "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
+        to_send = f"@{ctx.author.name} " \
+                  "For most up-to-date information on commands, please have a look at " \
+                  "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, " \
+                  "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
