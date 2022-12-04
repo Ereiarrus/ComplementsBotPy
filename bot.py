@@ -22,6 +22,7 @@ OWNER_NICK = 'ereiarrus'
 
 SHOULD_LOG = True
 
+
 class Bot(commands.Bot):
     def __init__(self):
         join_channel(BOT_NICK)
