@@ -1,7 +1,8 @@
 # bot.py
-from env_reader import *
 from twitchio.ext import commands
 import random
+from twitchio.ext import pubsub
+from env_reader import *
 from database import *
 
 # TODO:
@@ -23,11 +24,20 @@ OWNER_NICK = 'ereiarrus'
 SHOULD_LOG = True
 
 
+class CustomPubSubWS(pubsub.PubSubWebsocket):
+
+    async def handle_reward_redeem(self, message: dict):
+        print(message)
+        msg = models.PubSubChannelPointsMessage(self.client, message["data"])
+        self.client.run_event("pubsub_message", msg)  # generic one
+        self.client.run_event("pubsub_channel_points", msg)
+
+
 class Bot(commands.Bot):
     def __init__(self):
         join_channel(BOT_NICK)
         super().__init__(
-            token=TOKEN,
+            token=TOKEN1,
             client_id=CLIENT_ID,
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
@@ -39,8 +49,19 @@ class Bot(commands.Bot):
             for line in f:
                 self.COMPLEMENTS_LIST.append(line.strip())
 
+        self.pub_sub_websocket = CustomPubSubWS(self)
+
     async def event_ready(self):
         # Called once when the bot goes online.
+        await self.pub_sub_websocket.connect()
+        print(self.user_id)
+
+        blah = pubsub.topics.channel_points(TOKEN2)
+        print(blah(self.user_id).__topic__)
+        blah.__topic__ = blah.__topic__[:-3]
+        blah.__topic__ += str(845759020)
+        print(blah.__topic__)
+        await self.pub_sub_websocket.subscribe_topics([blah])
         if SHOULD_LOG:
             print(f"{BOT_NICK} is online!")
 
@@ -51,6 +72,8 @@ class Bot(commands.Bot):
             return
         if SHOULD_LOG:
             print(f"In channel {ctx.channel.name}, at {ctx.timestamp}, {ctx.author.name} said: {ctx.content}")
+
+        # return
 
         sender = ctx.author.name
         channel = ctx.channel.name
@@ -255,7 +278,7 @@ class Bot(commands.Bot):
         # learn all about me
         if not Bot.is_in_bot_channel(ctx):
             return
-        to_send = f"@{ctx.author.name} " \
+        to_send = f"@{ctx.message.author.name} " \
                   "For most up-to-date information on commands, please have a look at " \
                   "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, " \
                   "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
@@ -263,7 +286,7 @@ class Bot(commands.Bot):
         if SHOULD_LOG:
             print(to_send)
 
-    # -------------------- any channel, but must be by owner --------------------
+    # -------------------- any channel, but must be by owner/mod --------------------
 
     @staticmethod
     def is_by_broadcaster_or_mod(ctx):
@@ -383,7 +406,7 @@ class Bot(commands.Bot):
         complement = msg[msg.find(" ") + 1:]
         user = ctx.channel.name
         add_complement(user, complement)
-        to_send = "@" + user + " new complements added: '" + complement + "'"
+        to_send = "@" + user + " new complement added: '" + complement + "'"
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
