@@ -7,7 +7,10 @@ def is_env_read(var_str):
     except:
         with open(".env", "r") as f:
             for line in f:
-                split_line = line.strip().split("=", 1)
+                stripped_line = line.strip()
+                if stripped_line[0] == "#":
+                    continue
+                split_line = stripped_line.split("=", 1)
                 if var_str == split_line[0]:
                     to_set = split_line[1].strip()
                     if to_set[0] == '"':
