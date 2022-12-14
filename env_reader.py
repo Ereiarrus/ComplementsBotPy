@@ -20,6 +20,6 @@ def is_env_read(var_str):
 
 
 CLIENT_ID = is_env_read('CLIENT_ID')
-TOKEN1 = is_env_read('TMI_TOKEN')
-TOKEN2 = is_env_read('TOKEN2')
+TMI_TOKEN = is_env_read('TMI_TOKEN')
+REDEEMS_TOKEN = is_env_read('REDEEMS_TOKEN')
 databaseURL = is_env_read('DATABASE_URL')

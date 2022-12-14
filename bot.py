@@ -4,6 +4,7 @@ import random
 from twitchio.ext import pubsub
 from env_reader import *
 from database import *
+import requests
 
 # TODO:
 # allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
@@ -37,7 +38,7 @@ class Bot(commands.Bot):
     def __init__(self):
         join_channel(BOT_NICK)
         super().__init__(
-            token=TOKEN1,
+            token=TMI_TOKEN,
             client_id=CLIENT_ID,
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
@@ -53,15 +54,23 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
         # Called once when the bot goes online.
-        await self.pub_sub_websocket.connect()
-        print(self.user_id)
 
-        blah = pubsub.topics.channel_points(TOKEN2)
-        print(blah(self.user_id).__topic__)
-        blah.__topic__ = blah.__topic__[:-3]
-        blah.__topic__ += str(845759020)
-        print(blah.__topic__)
-        await self.pub_sub_websocket.subscribe_topics([blah])
+        await self.pub_sub_websocket.connect()
+        for connected_channel in self.connected_channels:
+            # if connected_channel.name != BOT_NICK:
+            #     continue
+            points_topic = pubsub.topics.channel_points(REDEEMS_TOKEN)
+            response = requests.get(f'https://api.twitch.tv/helix/users?login={connected_channel.name}',
+                                    headers={"client-id": CLIENT_ID, "authorization": f"Bearer {REDEEMS_TOKEN}"})
+            if response.status_code != 200:
+                if SHOULD_LOG:
+                    print(f"Unable to get user_id of channel {connected_channel.name}. Skipping.")
+                continue
+
+            channel_id = int(response.json()["data"][0]["id"])
+
+            await self.pub_sub_websocket.subscribe_topics([points_topic[channel_id]])
+
         if SHOULD_LOG:
             print(f"{BOT_NICK} is online!")
 

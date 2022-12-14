@@ -106,7 +106,7 @@ Make sure create a .env file in the root directory with the following variables:
   for name, give it the channel name (ComplementsBot in our case), OAuth Redirect URLs: https:localhost:8000,
   Category: Chat Bot; then go to 'Manage' and copy the Client ID
 - DATABASE_URL= the URL to your realtime database as shown in firebase
-- TOKEN2= follow guide from https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/: go to
+- REDEEMS_TOKEN= follow guide from https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/: go to
   https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=<CLIENT_ID>&redirect_uri=<whatever you put for the URL of your application which you can check on https://dev.twitch.tv/console/apps, probably https://localhost:8000>&scope=channel%3Aread%3Aredemptions
   This will make twitch ask you to authorize yourself, after which it will redirect you to the URL you specified for
   your app, and in the URL, you will see: ...#access_token=<TOKEN2>&...
