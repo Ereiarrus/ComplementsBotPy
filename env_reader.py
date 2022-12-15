@@ -20,6 +20,8 @@ def is_env_read(var_str):
 
 
 CLIENT_ID = is_env_read('CLIENT_ID')
-TMI_TOKEN = is_env_read('TMI_TOKEN')
-REDEEMS_TOKEN = is_env_read('REDEEMS_TOKEN')
+TMI_TOKEN = is_env_read('TMI_TOKEN')            # app access token
+REDEEMS_TOKEN = is_env_read('REDEEMS_TOKEN')    # user access token
 databaseURL = is_env_read('DATABASE_URL')
+CALLBACK_URI = is_env_read('CALLBACK_URI')
+CLIENT_SECRET = is_env_read('CLIENT_SECRET')

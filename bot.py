@@ -1,7 +1,8 @@
 # bot.py
-from twitchio.ext import commands
 import random
-from twitchio.ext import pubsub
+import string
+import twitchio
+from twitchio.ext import commands, eventsub
 from env_reader import *
 from database import *
 import requests
@@ -24,17 +25,17 @@ OWNER_NICK = 'ereiarrus'
 
 SHOULD_LOG = True
 
+webhook_secret = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(100))
+esbot = commands.Bot.from_client_credentials(client_id=CLIENT_ID,
+                                             client_secret=CLIENT_SECRET)
 
-class CustomPubSubWS(pubsub.PubSubWebsocket):
-
-    async def handle_reward_redeem(self, message: dict):
-        print(message)
-        msg = models.PubSubChannelPointsMessage(self.client, message["data"])
-        self.client.run_event("pubsub_message", msg)  # generic one
-        self.client.run_event("pubsub_channel_points", msg)
+esclient = eventsub.EventSubClient(esbot,
+                                   webhook_secret=webhook_secret,
+                                   callback_route=CALLBACK_URI + ":443")
 
 
 class Bot(commands.Bot):
+
     def __init__(self):
         join_channel(BOT_NICK)
         super().__init__(
@@ -42,7 +43,9 @@ class Bot(commands.Bot):
             client_id=CLIENT_ID,
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
-            initial_channels=get_joined_channels()
+            # TODO: might need to store joined channels as user ids instead of usernames (as usernames can be changed)
+            initial_channels=get_joined_channels(),
+            client_secret=CLIENT_SECRET
         )
 
         self.COMPLEMENTS_LIST = []
@@ -50,27 +53,12 @@ class Bot(commands.Bot):
             for line in f:
                 self.COMPLEMENTS_LIST.append(line.strip())
 
-        self.pub_sub_websocket = CustomPubSubWS(self)
+    async def __ainit__(self) -> None:
+        self.loop.create_task(esclient.listen(port=8000))
+        await esclient.subscribe_channel_points_redeemed(broadcaster=158144404)
 
     async def event_ready(self):
         # Called once when the bot goes online.
-
-        await self.pub_sub_websocket.connect()
-        for connected_channel in self.connected_channels:
-            # if connected_channel.name != BOT_NICK:
-            #     continue
-            points_topic = pubsub.topics.channel_points(REDEEMS_TOKEN)
-            response = requests.get(f'https://api.twitch.tv/helix/users?login={connected_channel.name}',
-                                    headers={"client-id": CLIENT_ID, "authorization": f"Bearer {REDEEMS_TOKEN}"})
-            if response.status_code != 200:
-                if SHOULD_LOG:
-                    print(f"Unable to get user_id of channel {connected_channel.name}. Skipping.")
-                continue
-
-            channel_id = int(response.json()["data"][0]["id"])
-
-            await self.pub_sub_websocket.subscribe_topics([points_topic[channel_id]])
-
         if SHOULD_LOG:
             print(f"{BOT_NICK} is online!")
 
@@ -82,7 +70,7 @@ class Bot(commands.Bot):
         if SHOULD_LOG:
             print(f"In channel {ctx.channel.name}, at {ctx.timestamp}, {ctx.author.name} said: {ctx.content}")
 
-        # return
+        return
 
         sender = ctx.author.name
         channel = ctx.channel.name
@@ -656,6 +644,14 @@ class Bot(commands.Bot):
         await self.leaveme(ctx)
 
 
+@esbot.event()
+async def event_eventsub_notification_redeem(payload: eventsub.CustomRewardRedemptionAddUpdateData) -> None:
+    print('Received event!')
+    print(payload)
+    print(dir(payload))
+
+
 if __name__ == "__main__":
     bot = Bot()
+    bot.loop.run_until_complete(bot.__ainit__())
     bot.run()

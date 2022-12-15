@@ -101,15 +101,17 @@ along with looking at https://github.com/TwitchIO/TwitchIO for examples to build
 
 Make sure create a .env file in the root directory with the following variables:
 
-- TMI_TOKEN= get your token from https://twitchapps.com/tmi/
+- TMI_TOKEN= get your token from https://twitchapps.com/tmi/; also known as the app access token
 - CLIENT_ID= register your app with twitch on -
-  for name, give it the channel name (ComplementsBot in our case), OAuth Redirect URLs: https:localhost:8000,
+  for name, give it the channel name (ComplementsBot in our case), OAuth Redirect URLs: https://localhost:8000,
   Category: Chat Bot; then go to 'Manage' and copy the Client ID
 - DATABASE_URL= the URL to your realtime database as shown in firebase
 - REDEEMS_TOKEN= follow guide from https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/: go to
   https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=<CLIENT_ID>&redirect_uri=<whatever you put for the URL of your application which you can check on https://dev.twitch.tv/console/apps, probably https://localhost:8000>&scope=channel%3Aread%3Aredemptions
   This will make twitch ask you to authorize yourself, after which it will redirect you to the URL you specified for
-  your app, and in the URL, you will see: ...#access_token=<TOKEN2>&...
+  your app, and in the URL, you will see: ...#access_token=<TOKEN2>&...;  also known as the user access token
+- CALLBACK_URI= the URL you put under URL for your application (probably just need https://localhost:8000)
+- CLIENT_SECRET= go to https://dev.twitch.tv/console/apps, click 'Manage', and generate a 'New Secret'.
 
 Once you have your firebase app, go to 'Service accounts' in project settings. From here, generate a new private key,
 and save the file as '.firebase_config.json' in the root directory.
