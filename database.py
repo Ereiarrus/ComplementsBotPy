@@ -184,7 +184,7 @@ def add_complement(user, complement):
     USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).transaction(add_transaction)
 
 
-def remove_chars(some_str, regex=r"[^a-z0-9]"):
+def remove_chars(some_str: str, regex=r"[^a-z0-9]"):
     return re.sub(regex, "", some_str.lower())
 
 

@@ -421,7 +421,7 @@ class Bot(commands.Bot):
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
         msg = ctx.message.content.strip()
-        phrase = msg[msg.find(" ") + 1:]
+        phrase = remove_chars(msg[msg.find(" ") + 1:])
         user = ctx.channel.name
         to_remove_comps, to_keep_comps = complements_to_remove(get_custom_complements(user), phrase)
         remove_complements(user, to_keep_comps)
@@ -431,7 +431,13 @@ class Bot(commands.Bot):
         to_send = "@" + user + " complement removed: " + removed_comps_msg
         msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
 
-        for msg in msgs:
+        if len(msgs) > 0:
+            for msg in msgs:
+                await ctx.channel.send(msg)
+                if SHOULD_LOG:
+                    print(msg)
+        else:
+            msg = "No complements with that phrase found."
             await ctx.channel.send(msg)
             if SHOULD_LOG:
                 print(msg)
