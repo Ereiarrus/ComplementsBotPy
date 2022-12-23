@@ -3,11 +3,8 @@ from env_reader import *
 from twitchio.ext import commands
 import random
 from database import *
-<<<<<<< Updated upstream
-=======
 import requests
 import textwrap
->>>>>>> Stashed changes
 
 # TODO:
 # allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
