@@ -1,3 +1,4 @@
+import re
 from firebase_admin import credentials, db
 from env_reader import *
 import firebase_admin
@@ -183,15 +184,45 @@ def add_complement(user, complement):
     USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).transaction(add_transaction)
 
 
+def remove_chars(some_str, regex=r"[^a-z0-9]"):
+    return re.sub(regex, "", some_str.lower())
+
+
+def complements_to_remove(data, phrase):
+    if data is None:
+        data = []
+
+    leftover_comps = []
+    removed_comps = []
+    for comp in data:
+        comp_edit = remove_chars(comp)
+        if phrase in comp_edit:
+            removed_comps.append(comp)
+        else:
+            leftover_comps.append(comp)
+
+    return removed_comps, leftover_comps
+
+
+def remove_complements(user, to_keep: iter = None, to_remove: iter = None):
+    # either provide to_remove or to_keep; if both given, to_remove takes precedence
+    def remove_transaction(data):
+        if to_remove:
+            for comp in to_remove:
+                data.remove(comp)
+            return data
+        return to_keep or []
+
+    USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).transaction(remove_transaction)
+
+
 def remove_all_complements(user):
     USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).delete()
 
 
 def get_custom_complements(user):
     complements = USERS_DB_REF.child(user).child(CUSTOM_COMPLEMENTS).get()
-    if complements is None:
-        return []
-    return complements
+    return complements or []
 
 
 def set_mute_prefix(user, prefix):

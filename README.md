@@ -43,6 +43,11 @@ These commands must be used by the channel owner in their own channel:
 
 - !addcomplement <complement> - add a custom complement for to your own channel
 - !removeallcomplements - removes all custom complements added by you
+- !removecomplement <phrase> - remove a complement from your own channel; the complement which gets removed is one which contains "phrase" in it, after "phrase" has gone through the process of:
+  - all non-alphanumeric (numbers and letters) characters get removed; this includes spaces
+  - all letters in "phrase" get converted into lowercase
+  - the resulting string (which was originally "phrase") will be compared to all custom complements with the same two things done to them, and any complement containing the phrase will be removed.
+  - any removed complements will be showed in the chat, up to 5 by default (edit with !showremovedcomplements <number>; no matter what this number is, all such complements will be removed, but only some shown)
 
 - !disablecmdcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
   command; by default, this is off
@@ -73,12 +78,11 @@ The following commands have not been implemented yet, but are planned to be:
 #### Channel owner and mods only
 
 These commands must be used by the channel owner in their own channel:
-
-- !removecomplement <index> - remove a complement from your own channel of specified index number
 - !getcomplement <index> - shows you the complement of specified index number
-- !listcomplements - lists all complements which have been added
+- !listcomplements - lists all complements which have been added; this might get the bot timed out/banned from your channel, especially if you have a lot of custom complements. Consider VIPing it if you plan on using it!
 - commands which will allow channel owners to change who can use which command (user groups would be: channel owner,
   moderators, VIPs, subscribers, regular user <- this one would allow everyone)
+- !showremovedcomplements <number> - when doing !removecomplement, controls the maximum number of complements removed to show 
 
 ## About bot and me
 

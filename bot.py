@@ -3,6 +3,11 @@ from env_reader import *
 from twitchio.ext import commands
 import random
 from database import *
+<<<<<<< Updated upstream
+=======
+import requests
+import textwrap
+>>>>>>> Stashed changes
 
 # TODO:
 # allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
@@ -16,6 +21,7 @@ from database import *
 # set up database with data type rules
 
 CMD_PREFIX = '!'
+DEFAULT_MAX_MSG_LEN = 500
 
 BOT_NICK = "complementsbot"
 OWNER_NICK = 'ereiarrus'
@@ -382,6 +388,13 @@ class Bot(commands.Bot):
         msg = ctx.message.content.strip()
         complement = msg[msg.find(" ") + 1:]
         user = ctx.channel.name
+        if len(complement) > 350:
+            to_send = "@" + user + " complement is too long. It may not be over 350 characters long."
+            await ctx.channel.send(to_send)
+            if SHOULD_LOG:
+                print(to_send)
+            return
+
         add_complement(user, complement)
         to_send = "@" + user + " new complements added: '" + complement + "'"
         await ctx.channel.send(to_send)
@@ -391,16 +404,29 @@ class Bot(commands.Bot):
     @commands.command()
     async def listcomplements(self, ctx):
         # TODO
-        # list all extra complements
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
     @commands.command()
     async def removecomplement(self, ctx):
-        # TODO
         # remove a custom complement
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
+        msg = ctx.message.content.strip()
+        phrase = msg[msg.find(" ") + 1:]
+        user = ctx.channel.name
+        to_remove_comps, to_keep_comps = complements_to_remove(get_custom_complements(user), phrase)
+        remove_complements(user, to_keep_comps)
+
+        removed_comps_msg = "'" + "', '".join(to_remove_comps) + "'"
+
+        to_send = "@" + user + " complement removed: " + removed_comps_msg
+        msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
+
+        for msg in msgs:
+            await ctx.channel.send(msg)
+            if SHOULD_LOG:
+                print(msg)
 
     @commands.command()
     async def removeallcomplements(self, ctx):
