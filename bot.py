@@ -404,6 +404,17 @@ class Bot(commands.Bot):
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
+        user = ctx.channel.name
+        comps_msg = "'" + "', '".join(get_custom_complements(user)) + "'"
+
+        to_send = "@" + user + " complements: " + comps_msg
+        msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
+
+        for msg in msgs:
+            await ctx.channel.send(msg)
+            if SHOULD_LOG:
+                print(msg)
+
     @commands.command()
     async def removecomplement(self, ctx):
         # remove a custom complement

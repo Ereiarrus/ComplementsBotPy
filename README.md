@@ -48,6 +48,7 @@ These commands must be used by the channel owner in their own channel:
   - all letters in "phrase" get converted into lowercase
   - the resulting string (which was originally "phrase") will be compared to all custom complements with the same two things done to them, and any complement containing the phrase will be removed.
   - any removed complements will be showed in the chat
+  - this might get the bot timed out/banned from your channel, especially if you are removing a lot of custom complements. Consider VIPing it if you plan on using it!
 
 - !disablecmdcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
   command; by default, this is off
@@ -66,6 +67,7 @@ These commands must be used by the channel owner in their own channel:
 - !enablecustomcomplements - I will complement people using your complements; this is the default
 - !disabledefaultcomplements - I will not complement people using the default complements
 - !enabledefaultcomplements - I will complement people using the default; this is the default
+- !listcomplements - lists all complements which have been added; this might get the bot timed out/banned from your channel, especially if you have a lot of custom complements. Consider VIPing it if you plan on using it!
 
 - !ignorebots - ignores users whose name ends in 'bot' for random complement (they can still be manually complemented
   using the !complement command if command complements are enabled (!enablecmdcomplement)); this is the case by default
@@ -79,7 +81,6 @@ The following commands have not been implemented yet, but are planned to be:
 
 These commands must be used by the channel owner in their own channel:
 - !getcomplement <index> - shows you the complement of specified index number
-- !listcomplements - lists all complements which have been added; this might get the bot timed out/banned from your channel, especially if you have a lot of custom complements. Consider VIPing it if you plan on using it!
 - commands which will allow channel owners to change who can use which command (user groups would be: channel owner,
   moderators, VIPs, subscribers, regular user <- this one would allow everyone)
 
