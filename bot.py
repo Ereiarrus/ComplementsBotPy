@@ -400,7 +400,6 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def listcomplements(self, ctx):
-        # TODO
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
@@ -410,7 +409,13 @@ class Bot(commands.Bot):
         to_send = "@" + user + " complements: " + comps_msg
         msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
 
-        for msg in msgs:
+        if len(msgs) > 0:
+            for msg in msgs:
+                await ctx.channel.send(msg)
+                if SHOULD_LOG:
+                    print(msg)
+        else:
+            msg = f"@{user} No complements found."
             await ctx.channel.send(msg)
             if SHOULD_LOG:
                 print(msg)
@@ -437,7 +442,7 @@ class Bot(commands.Bot):
                 if SHOULD_LOG:
                     print(msg)
         else:
-            msg = "No complements with that phrase found."
+            msg = f"@{user} No complements with that phrase found."
             await ctx.channel.send(msg)
             if SHOULD_LOG:
                 print(msg)
