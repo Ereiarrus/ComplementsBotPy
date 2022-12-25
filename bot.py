@@ -19,6 +19,7 @@ import textwrap
 
 CMD_PREFIX = '!'
 DEFAULT_MAX_MSG_LEN = 500
+MAX_COMPLEMENT_LENGTH = 350
 
 BOT_NICK = "complementsbot"
 OWNER_NICK = 'ereiarrus'
@@ -107,11 +108,11 @@ class Bot(commands.Bot):
         if who is None:
             who = ctx.author.name
         channel = ctx.channel.name
-        prefix = "@" + prefix
+        prefix = f"@{prefix}"
         if is_tts_muted:
-            prefix = get_tts_ignore_prefix(channel) + " " + prefix
+            prefix = f"{get_tts_ignore_prefix(channel)} {prefix}"
         complement, exists = self.choose_complement(ctx)
-        return prefix + who + " " + complement, exists
+        return f"{prefix}{who} {complement}", exists
 
     @commands.command()
     async def complement(self, ctx):
@@ -151,14 +152,14 @@ class Bot(commands.Bot):
         user = ctx.author.name
 
         if is_channel_joined(user):
-            to_send = "@" + user + " I am already in your channel!"
+            to_send = f"@{user} I am already in your channel!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
             join_channel(user)
             # TODO: follow the user
-            to_send = "@" + user + " I have joined your channel!"
+            to_send = f"@{user} I have joined your channel!"
             await self.join_channels([user])
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
@@ -174,12 +175,12 @@ class Bot(commands.Bot):
             leave_channel(user)
             await self.part_channels([user])
             # TODO: unfollow the user
-            to_send = "@" + user + " I have left your channel."
+            to_send = f"@{user} I have left your channel."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + user + " I have not joined your channel."
+            to_send = f"@{user} I have not joined your channel."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -195,12 +196,12 @@ class Bot(commands.Bot):
             delete_channel(user)
             await self.part_channels([user])
             # TODO: unfollow the user
-            to_send = "@" + user + " I have deleted your channel data."
+            to_send = f"@{user} I have deleted your channel data."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + user + " your channel does not exists in my records."
+            to_send = f"@{user} your channel does not exists in my records."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -213,13 +214,13 @@ class Bot(commands.Bot):
 
         user = ctx.author.name
         if is_user_ignored(user):
-            to_send = "@" + user + " I am already ignoring you."
+            to_send = f"@{user} I am already ignoring you."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
             ignore(user)
-            to_send = "@" + user + " I am now ignoring you."
+            to_send = f"@{user} I am now ignoring you."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -233,12 +234,12 @@ class Bot(commands.Bot):
         user = ctx.author.name
         if is_user_ignored(user):
             unignore(user)
-            to_send = "@" + user + " I am no longer ignoring you!"
+            to_send = f"@{user} I am no longer ignoring you!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + user + " I am not ignoring you!"
+            to_send = f"@{user} I am not ignoring you!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -248,7 +249,7 @@ class Bot(commands.Bot):
         # see how many channels I'm in
         if not Bot.is_in_bot_channel(ctx):
             return
-        to_send = "@" + ctx.message.author.name + " " + str(number_of_joined_channels()) + " channels and counting!"
+        to_send = f"@{ctx.message.author.name} {str(number_of_joined_channels())} channels and counting!"
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
@@ -288,19 +289,19 @@ class Bot(commands.Bot):
             chance = (msg.split())[1]
             chance = float(chance)
         except ValueError:
-            to_send = "@" + user + " '" + chance + "' is an invalid number. Please try again."
+            to_send = f"@{user} '{chance}' is an invalid number. Please try again."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
             return
         except IndexError:
-            to_send = "@" + user + " You did not enter a number. Please try again."
+            to_send = f"@{user} You did not enter a number. Please try again."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
             return
         set_complement_chance(user, chance)
-        to_send = "@" + user + " complement chance set to " + str(get_complement_chance(user)) + "!"
+        to_send = f"@{user} complement chance set to {str(get_complement_chance(user))}!"
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
@@ -313,12 +314,12 @@ class Bot(commands.Bot):
         user = ctx.channel.name
         if get_cmd_complement_enabled(user):
             disable_cmd_complement(user)
-            to_send = "@" + user + " your viewers will no longer be able to make use of the !complement command."
+            to_send = f"@{user} your viewers will no longer be able to make use of the !complement command."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + user + " your viewers already cannot make use of the !complement command."
+            to_send = f"@{user} your viewers already cannot make use of the !complement command."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -330,13 +331,13 @@ class Bot(commands.Bot):
             return
         user = ctx.channel.name
         if get_cmd_complement_enabled(user):
-            to_send = "@" + user + " your viewers can already make use of the !complement command!"
+            to_send = f"@{user} your viewers can already make use of the !complement command!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
             enable_cmd_complement(user)
-            to_send = "@" + user + " your viewers will now be able to make use of the !complement command!"
+            to_send = f"@{user} your viewers will now be able to make use of the !complement command!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -349,12 +350,12 @@ class Bot(commands.Bot):
         user = ctx.channel.name
         if get_random_complement_enabled(user):
             disable_random_complement(user)
-            to_send = "@" + user + " your viewers will no longer randomly receive complements."
+            to_send = f"@{user} your viewers will no longer randomly receive complements."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + user + " your viewers already do not randomly receive complements."
+            to_send = f"@{user} your viewers already do not randomly receive complements."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -366,13 +367,13 @@ class Bot(commands.Bot):
             return
         user = ctx.channel.name
         if get_random_complement_enabled(user):
-            to_send = "@" + user + " I already randomly send out complements!"
+            to_send = f"@{user} I already randomly send out complements!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
             enable_random_complement(user)
-            to_send = "@" + user + " your viewers will now randomly receive complements!"
+            to_send = f"@{user} your viewers will now randomly receive complements!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -385,15 +386,15 @@ class Bot(commands.Bot):
         msg = ctx.message.content.strip()
         complement = msg[msg.find(" ") + 1:]
         user = ctx.channel.name
-        if len(complement) > 350:
-            to_send = "@" + user + " complement is too long. It may not be over 350 characters long."
+        if len(complement) > MAX_COMPLEMENT_LENGTH:
+            to_send = f"@{user} complement is too long. It may not be over {MAX_COMPLEMENT_LENGTH} characters long."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
             return
 
         add_complement(user, complement)
-        to_send = "@" + user + " new complements added: '" + complement + "'"
+        to_send = f"@{user} new complements added: '{complement}'"
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
@@ -406,7 +407,7 @@ class Bot(commands.Bot):
         user = ctx.channel.name
         comps_msg = "'" + "', '".join(get_custom_complements(user)) + "'"
 
-        to_send = "@" + user + " complements: " + comps_msg
+        to_send = f"@{user} complements: {comps_msg}"
         msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
 
         if len(msgs) > 0:
@@ -433,7 +434,7 @@ class Bot(commands.Bot):
 
         removed_comps_msg = "'" + "', '".join(to_remove_comps) + "'"
 
-        to_send = "@" + user + " complement removed: " + removed_comps_msg
+        to_send = f"@{user} complement removed: {removed_comps_msg}"
         msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
 
         if len(msgs) > 0:
@@ -454,7 +455,7 @@ class Bot(commands.Bot):
             return
         user = ctx.channel.name
         remove_all_complements(user)
-        to_send = "@" + user + " all of your custom complements have been removed."
+        to_send = f"@{user} all of your custom complements have been removed."
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
@@ -469,7 +470,7 @@ class Bot(commands.Bot):
         msg = msg.strip()
         prefix = msg[msg.find(" ") + 1:]
         set_mute_prefix(channel, prefix)
-        to_send = "@" + channel + " mute TTS prefix changed to '" + prefix + "'."
+        to_send = f"@{channel} mute TTS prefix changed to '{prefix}'."
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
@@ -482,13 +483,13 @@ class Bot(commands.Bot):
         channel = ctx.channel.name
 
         if is_cmd_complement_muted(channel):
-            to_send = "@" + channel + " command complements are already muted!"
+            to_send = f"@{channel} command complements are already muted!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
             mute_cmd_complement(channel)
-            to_send = "@" + channel + " command complements are now muted."
+            to_send = f"@{channel} command complements are now muted."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -501,13 +502,13 @@ class Bot(commands.Bot):
         channel = ctx.channel.name
 
         if is_random_complement_muted(channel):
-            to_send = "@" + channel + " random complements are already muted!"
+            to_send = f"@{channel} random complements are already muted!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
             mute_random_complement(channel)
-            to_send = "@" + channel + " random complements are now muted."
+            to_send = f"@{channel} random complements are now muted."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -521,12 +522,12 @@ class Bot(commands.Bot):
 
         if is_cmd_complement_muted(channel):
             unmute_cmd_complement(channel)
-            to_send = "@" + channel + " command complements are no longer muted!"
+            to_send = f"@{channel} command complements are no longer muted!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " command complements are already unmuted!"
+            to_send = f"@{channel} command complements are already unmuted!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -540,12 +541,12 @@ class Bot(commands.Bot):
 
         if is_random_complement_muted(channel):
             unmute_random_complement(channel)
-            to_send = "@" + channel + " random complements are no longer muted!"
+            to_send = f"@{channel} random complements are no longer muted!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " random complements are already unmuted!"
+            to_send = f"@{channel} random complements are already unmuted!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -559,12 +560,12 @@ class Bot(commands.Bot):
 
         if not are_custom_complements_enabled(channel):
             enable_custom_complements(channel)
-            to_send = "@" + channel + " custom complements are now enabled!"
+            to_send = f"@{channel} custom complements are now enabled!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " custom complements are already enabled!"
+            to_send = f"@{channel} custom complements are already enabled!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -578,12 +579,12 @@ class Bot(commands.Bot):
 
         if not are_default_complements_enabled(channel):
             enable_default_complements(channel)
-            to_send = "@" + channel + " default complements are now enabled!"
+            to_send = f"@{channel} default complements are now enabled!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " default complements are already enabled!"
+            to_send = f"@{channel} default complements are already enabled!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -597,12 +598,12 @@ class Bot(commands.Bot):
 
         if are_custom_complements_enabled(channel):
             disable_custom_complements(channel)
-            to_send = "@" + channel + " custom complements are now disabled."
+            to_send = f"@{channel} custom complements are now disabled."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " custom complements are already disabled."
+            to_send = f"@{channel} custom complements are already disabled."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -616,12 +617,12 @@ class Bot(commands.Bot):
 
         if are_default_complements_enabled(channel):
             disable_default_complements(channel)
-            to_send = "@" + channel + " default complements are now disabled."
+            to_send = f"@{channel} default complements are now disabled."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " default complements are already disabled!"
+            to_send = f"@{channel} default complements are already disabled!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -635,12 +636,12 @@ class Bot(commands.Bot):
 
         if is_ignoring_bots(channel):
             unignore_bots(channel)
-            to_send = "@" + channel + " bots have a chance of being complemented!"
+            to_send = f"@{channel} bots have a chance of being complemented!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " bots can already get complements!"
+            to_send = f"@{channel} bots can already get complements!"
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
@@ -654,12 +655,12 @@ class Bot(commands.Bot):
 
         if not is_ignoring_bots(channel):
             ignore_bots(channel)
-            to_send = "@" + channel + " bots will no longer get complemented."
+            to_send = f"@{channel} bots will no longer get complemented."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
         else:
-            to_send = "@" + channel + " bots are already not getting complements."
+            to_send = f"@{channel} bots are already not getting complements."
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
