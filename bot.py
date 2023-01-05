@@ -31,7 +31,7 @@ class Bot(commands.Bot):
     def __init__(self):
         join_channel(BOT_NICK)
         super().__init__(
-            token=TOKEN,
+            token=TMI_TOKEN,
             client_id=CLIENT_ID,
             nick=BOT_NICK,
             prefix=CMD_PREFIX,
@@ -44,11 +44,18 @@ class Bot(commands.Bot):
                 self.COMPLEMENTS_LIST.append(line.strip())
 
     async def event_ready(self):
-        # Called once when the bot goes online.
+        """
+        Called once when the bot goes online.
+        """
         if SHOULD_LOG:
             print(f"{BOT_NICK} is online!")
 
     async def event_message(self, ctx):
+        """
+
+        :param ctx:
+        :return:
+        """
         # Runs every time a message is sent in chat.
         if ctx.echo:
             # make sure the bot ignores itself
@@ -98,7 +105,7 @@ class Bot(commands.Bot):
             return default_complements[index], True
         return custom_complements[index - default_complements_length], True
 
-    def complement_msg(self, ctx, who=None, is_tts_muted=True):
+    def complement_msg(self, ctx: commands.Context, who: str = None, is_tts_muted: bool = True):
         """
         :return complement: the complement chosen, prepended with who it's aimed at and perhaps a TTS muting symbol
         :return exists: whether there are any valid complements (for example, if  both custom and default complements
