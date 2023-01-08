@@ -28,6 +28,10 @@ OWNER_NICK = 'ereiarrus'
 SHOULD_LOG = True
 
 
+def custom_log(msg):
+    print(msg)
+
+
 class Bot(commands.Bot):
     def __init__(self):
         join_channel(BOT_NICK)
@@ -50,7 +54,7 @@ class Bot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
         if SHOULD_LOG:
-            print(f"{BOT_NICK} is online!")
+            custom_log(f"{BOT_NICK} is online!")
 
     @staticmethod
     def is_bot(username):
@@ -74,7 +78,7 @@ class Bot(commands.Bot):
             # make sure the bot ignores itself
             return
         if SHOULD_LOG:
-            print(f"In channel {ctx.channel.name}, at {ctx.timestamp}, {ctx.author.name} said: {ctx.content}")
+            custom_log(f"In channel {ctx.channel.name}, at {ctx.timestamp}, {ctx.author.name} said: {ctx.content}")
 
         sender = ctx.author.name
         channel = ctx.channel.name
@@ -93,7 +97,7 @@ class Bot(commands.Bot):
             if exists:
                 await ctx.channel.send(comp_msg)
                 if SHOULD_LOG:
-                    print(f"In channel {ctx.channel.name}, at {ctx.timestamp}, {ctx.author.name} "
+                    custom_log(f"In channel {ctx.channel.name}, at {ctx.timestamp}, {ctx.author.name} "
                           f"was complemented (randomly) with: {comp_msg}")
 
     def choose_complement(self, ctx):
@@ -168,7 +172,7 @@ class Bot(commands.Bot):
         if exists:
             await ctx.channel.send(comp_msg)
             if SHOULD_LOG:
-                print(f"In channel {ctx.channel.name}, at {ctx.message.timestamp}, {ctx.message.author.name} "
+                custom_log(f"In channel {ctx.channel.name}, at {ctx.message.timestamp}, {ctx.message.author.name} "
                       f"was complemented (by command) with: {comp_msg}")
 
     # -------------------- bot channel only commands --------------------
@@ -181,7 +185,7 @@ class Bot(commands.Bot):
     def send_and_log(ctx, msg: str):
         await ctx.channel.send(msg)
         if SHOULD_LOG:
-            print(msg)
+            custom_log(msg)
 
     class DoIfElse:
         def __init__(self
