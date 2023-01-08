@@ -514,7 +514,8 @@ class Bot(commands.Bot):
                                     , f"@{F_USER} command complements are already muted!"
                                     , f"@{F_USER} command complements are now muted."
                                     , None
-                                    , (lambda ctx: mute_cmd_complement(ctx.channel.name)))
+                                    , (lambda ctx: mute_cmd_complement(ctx.channel.name))
+                                    )
                      )
 
     @commands.command()
@@ -523,27 +524,27 @@ class Bot(commands.Bot):
         Bot.cmd_body(ctx
                      , Bot.is_by_broadcaster_or_mod
                      , None
-                     , Bot.DoIfElse((lambda ctx: is_cmd_complement_muted(ctx.channel.name))
+                     , Bot.DoIfElse((lambda ctx: is_random_complement_muted(ctx.channel.name))
                                     , f"@{F_USER} random complements are already muted!"
                                     , f"@{F_USER} random complements are now muted."
                                     , None
-                                    , (lambda ctx: mute_random_complement(ctx.channel.name)))
+                                    , (lambda ctx: mute_random_complement(ctx.channel.name))
+                                    )
                      )
 
     @commands.command()
     async def unmutecmdcomplement(self, ctx):
         # unmutes tts for complements sent with !complement command
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        channel = ctx.channel.name
-
-        if is_cmd_complement_muted(channel):
-            unmute_cmd_complement(channel)
-            to_send = f"@{channel} command complements are no longer muted!"
-            Bot.send_and_log(ctx, to_send)
-        else:
-            to_send = f"@{channel} command complements are already unmuted!"
-            Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: is_cmd_complement_muted(ctx.channel.name))
+                                    , f"@{F_USER} command complements are no longer muted!"
+                                    , f"@{F_USER} command complements are already unmuted!"
+                                    , (lambda ctx: unmute_cmd_complement(ctx.channel.name))
+                                    , None
+                                    )
+                     )
 
     @commands.command()
     async def unmuterandomcomplement(self, ctx):
