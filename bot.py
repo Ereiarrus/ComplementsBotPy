@@ -255,21 +255,13 @@ class Bot(commands.Bot):
     @commands.command()
     async def unignoreme(self, ctx):
         # undo ignoreme
-        if not Bot.is_in_bot_channel(ctx):
-            return
-
-        user = ctx.author.name
-        if is_user_ignored(user):
-            unignore(user)
-            to_send = f"@{user} I am no longer ignoring you!"
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            to_send = f"@{user} I am not ignoring you!"
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
+        self.bot_cmd_body(ctx
+                          , (lambda ctx: is_user_ignored(ctx.author.name))
+                          , (lambda ctx: unignore(ctx.author.name))
+                          , f"@{F_USER} I am no longer ignoring you!"
+                          , None
+                          , f"@{F_USER} I am not ignoring you!"
+                          )
 
     @commands.command()
     async def count(self, ctx):
