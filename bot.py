@@ -446,7 +446,7 @@ class Bot(commands.Bot):
             return
 
         user = ctx.channel.name
-        comps_msg = "'" + "', '".join(get_custom_complements(user)) + "'"
+        comps_msg = '"' + '", "'.join(get_custom_complements(user)) + '"'
 
         to_send = f"@{user} complements: {comps_msg}"
         msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
@@ -463,13 +463,14 @@ class Bot(commands.Bot):
         # remove a custom complement
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
+
         msg = ctx.message.content.strip()
         phrase = remove_chars(msg[msg.find(" ") + 1:])
         user = ctx.channel.name
         to_remove_comps, to_keep_comps = complements_to_remove(get_custom_complements(user), phrase)
         remove_complements(user, to_keep_comps)
 
-        removed_comps_msg = "'" + "', '".join(to_remove_comps) + "'"
+        removed_comps_msg = '"' + '", "'.join(to_remove_comps) + '"'
 
         to_send = f"@{user} complement removed: {removed_comps_msg}"
         msgs = textwrap.wrap(to_send, DEFAULT_MAX_MSG_LEN)
@@ -484,18 +485,18 @@ class Bot(commands.Bot):
     @commands.command()
     async def removeallcomplements(self, ctx):
         # remove all custom complements a user has added
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        user = ctx.channel.name
-        remove_all_complements(user)
-        to_send = f"@{user} all of your custom complements have been removed."
-        Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , (lambda ctx: remove_all_complements(ctx.channel.name))
+                     , None
+                     , f"@{F_USER} all of your custom complements have been removed.")
 
     @commands.command()
     async def setmutettsprefix(self, ctx):
         # the character/string to put in front of a message to mute tts
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
+
         channel = ctx.channel.name
         msg = ctx.message.content
         msg = msg.strip()
