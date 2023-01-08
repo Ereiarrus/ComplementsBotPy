@@ -577,17 +577,16 @@ class Bot(commands.Bot):
     @commands.command()
     async def enabledefaultcomplements(self, ctx):
         # custom complements will now be used to complement viewers
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        channel = ctx.channel.name
-
-        if not are_default_complements_enabled(channel):
-            enable_default_complements(channel)
-            to_send = f"@{channel} default complements are now enabled!"
-            Bot.send_and_log(ctx, to_send)
-        else:
-            to_send = f"@{channel} default complements are already enabled!"
-            Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: are_default_complements_enabled(ctx.channel.name))
+                                    , f"@{F_USER} default complements are now enabled!"
+                                    , f"@{F_USER} default complements are already enabled!"
+                                    , (lambda ctx: enable_default_complements(ctx.channel.name))
+                                    , None
+                                    )
+                     )
 
     @commands.command()
     async def disablecustomcomplements(self, ctx):
