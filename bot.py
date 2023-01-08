@@ -51,6 +51,11 @@ class Bot(commands.Bot):
         if SHOULD_LOG:
             print(f"{BOT_NICK} is online!")
 
+    @staticmethod
+    def is_bot(username):
+        return len(username) >= 3 and username[-3:] == 'bot' \
+               or username == "streamlabs"
+
     async def event_message(self, ctx):
         """
 
@@ -68,7 +73,7 @@ class Bot(commands.Bot):
         channel = ctx.channel.name
         is_author_ignored = is_user_ignored(sender)
         should_rng_choose = (random.random() * 100) <= get_complement_chance(ctx.channel.name)
-        is_author_bot = is_ignoring_bots(channel) and len(sender) >= 3 and sender[-3:] == 'bot'
+        is_author_bot = is_ignoring_bots(channel) and Bot.is_bot(sender)
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
             await self.handle_commands(ctx)
