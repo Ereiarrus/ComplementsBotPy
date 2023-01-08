@@ -20,6 +20,7 @@ import textwrap
 CMD_PREFIX = '!'
 DEFAULT_MAX_MSG_LEN = 500
 MAX_COMPLEMENT_LENGTH = 350
+F_USER = "{user}"
 
 BOT_NICK = "complementsbot"
 OWNER_NICK = 'ereiarrus'
@@ -144,33 +145,73 @@ class Bot(commands.Bot):
 
     # -------------------- bot channel only commands --------------------
 
-    def make_sure_channel_joined(self):
-        return
 
     @staticmethod
     def is_in_bot_channel(ctx):
         return ctx.channel.name == BOT_NICK or ctx.channel.name == OWNER_NICK
 
+    @staticmethod
+    def bot_cmd_body(ctx
+                     , if_check: callable
+                     , do_true: callable
+                     , true_msg: str
+                     , do_false: callable
+                     , false_msg: str
+                     , aux=None) -> bool:
+        """
+        The main structure in which commands sent to the bot's channel need to be processed
+        :param ctx: context from the original call
+        :param if_check: what the condition for entering 'if' statement is
+        :param do_true: what to do when the if_check succeeds (done before sending message to chat);
+            if 'None', does nothing
+        :param true_msg: what to send to chat when the 'if' if_check succeeds; any ocurrence of F_USER in the string is
+            replaced with the name of the user in chat who called the original command
+        :param do_false: what to do when if_check fails (done before sending message to chat);
+            if 'None', does nothing
+        :param false_msg: what to send to chat when the if_check fails; any ocurrence of F_USER in the string is
+            replaced with the name of the user in chat who called the original command
+        :param aux: any auxiliary argument needed for the other functions
+
+        :return: True if in bot channel, False otherwise
+        """
+
+        if not Bot.is_in_bot_channel(ctx):
+            return False
+
+        user = ctx.author.name
+        if do_true is None:
+            do_true = (lambda ctx, aux: None)
+        if do_false is None:
+            do_false = (lambda ctx, aux: None)
+
+        to_send = "!!!THIS SHOULD NOT GET SENT!!!"
+        if if_check(ctx, aux):
+            do_true(ctx, aux)
+            to_send = true_msg.replace(F_USER, user)
+        else:
+            do_false(ctx, aux)
+            to_send = false_msg.replace(F_USER, user)
+        await ctx.channel.send(to_send)
+        if SHOULD_LOG:
+            print(to_send)
+
+        return True
+
+
     @commands.command()
     async def joinme(self, ctx):
         # I will join your channel!
-        if not Bot.is_in_bot_channel(ctx):
-            return
-        user = ctx.author.name
-
-        if is_channel_joined(user):
-            to_send = f"@{user} I am already in your channel!"
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            join_channel(user)
+        def do_false(ctx, aux):
+            join_channel(ctx.author.name)
             # TODO: follow the user
-            to_send = f"@{user} I have joined your channel!"
-            await self.join_channels([user])
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
+            await self.join_channels([ctx.author.name])
+        self.bot_cmd_body(ctx
+                          , (lambda ctx, aux: is_channel_joined(ctx.author.name))
+                          , None
+                          , f"@{F_USER} I am already in your channel!"
+                          , do_false
+                          , f"@{F_USER} I have joined your channel!"
+                          )
 
     @commands.command()
     async def leaveme(self, ctx):
