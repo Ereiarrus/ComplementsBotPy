@@ -98,7 +98,7 @@ class Bot(commands.Bot):
                 await ctx.channel.send(comp_msg)
                 if SHOULD_LOG:
                     custom_log(f"In channel {ctx.channel.name}, at {ctx.timestamp}, {ctx.author.name} "
-                          f"was complemented (randomly) with: {comp_msg}")
+                               f"was complemented (randomly) with: {comp_msg}")
 
     def choose_complement(self, ctx):
         """
@@ -173,7 +173,7 @@ class Bot(commands.Bot):
             await ctx.channel.send(comp_msg)
             if SHOULD_LOG:
                 custom_log(f"In channel {ctx.channel.name}, at {ctx.message.timestamp}, {ctx.message.author.name} "
-                      f"was complemented (by command) with: {comp_msg}")
+                           f"was complemented (by command) with: {comp_msg}")
 
     # -------------------- bot channel only commands --------------------
 
@@ -183,6 +183,9 @@ class Bot(commands.Bot):
 
     @staticmethod
     def send_and_log(ctx, msg: str):
+        """
+        Send the message to the channel of ctx and also logs it
+        """
         await ctx.channel.send(msg)
         if SHOULD_LOG:
             custom_log(msg)
@@ -257,8 +260,12 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def joinme(self, ctx):
-        # I will join your channel!
+        """
+        Get the bot to join the user's channel and start complementing people in their channel.
+        """
+
         def do_false(ctx):
+            # Have to save to database and update in memory so bot starts working straight away
             join_channel(ctx.author.name)
             # TODO: follow the user
             await self.join_channels([ctx.author.name])
@@ -276,8 +283,12 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def leaveme(self, ctx):
-        # I will leave your channel
+        """
+        Bot leaves the user's channel and no longer complements chatters there.
+        """
+
         def do_true(ctx):
+            # Update database and in realtime for "instant" effect
             leave_channel(ctx.author.name)
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
@@ -295,8 +306,12 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def deleteme(self, ctx):
-        # I will delete your channel information
+        """
+        Same as the 'leaveme' command, but on top, also delete any records of the user (e.g. custom complements)
+        """
+
         def do_true(ctx):
+            # Remove any user records from database and leave their channel NOW
             delete_channel(ctx.author.name)
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
@@ -314,7 +329,9 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def ignoreme(self, ctx):
-        # no longer complement the user
+        """
+        The user of this command will not get any complements sent their way from ComplementsBot
+        """
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , None
@@ -328,7 +345,10 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def unignoreme(self, ctx):
-        # undo ignoreme
+        """
+        Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
+        complement using the 'complement' command will work.
+        """
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , None
@@ -342,7 +362,9 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def count(self, ctx):
-        # see how many channels I'm in
+        """
+        Shows the number of channels that the bot is active in
+        """
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , always_msg=f"@{F_USER} {str(number_of_joined_channels())} channels and counting!"
@@ -350,7 +372,9 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def about(self, ctx):
-        # learn all about me
+        """
+        Shows some information about the bot
+        """
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , always_msg=f"@{F_USER} "
