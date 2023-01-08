@@ -266,12 +266,13 @@ class Bot(commands.Bot):
     @commands.command()
     async def count(self, ctx):
         # see how many channels I'm in
-        if not Bot.is_in_bot_channel(ctx):
-            return
-        to_send = f"@{ctx.message.author.name} {str(number_of_joined_channels())} channels and counting!"
-        await ctx.channel.send(to_send)
-        if SHOULD_LOG:
-            print(to_send)
+        self.bot_cmd_body(ctx
+                          , (lambda ctx: True)
+                          , None
+                          , f"@{F_USER} {str(number_of_joined_channels())} channels and counting!"
+                          , None
+                          , ""
+                          )
 
     @commands.command()
     async def about(self, ctx):
