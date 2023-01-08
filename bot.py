@@ -149,49 +149,74 @@ class Bot(commands.Bot):
     def is_in_bot_channel(ctx):
         return ctx.channel.name == BOT_NICK or ctx.channel.name == OWNER_NICK
 
+    class DoIfElse:
+        def __init__(self
+                     , if_check: callable
+                     , true_msg: str
+                     , false_msg: str
+                     , do_false: callable = (lambda ctx: None)
+                     , do_true: callable = (lambda ctx: None)):
+            """
+            :param if_check: what the condition for entering 'if' statement is
+            :param do_true: what to do when the if_check succeeds (done before sending message to chat);
+                if 'None', does nothing
+            :param true_msg: what to send to chat when the 'if' if_check succeeds; any occurrence of F_USER in the string is
+                replaced with the name of the user in chat who called the original command
+            :param do_false: what to do when if_check fails (done before sending message to chat);
+                if 'None', does nothing
+            :param false_msg: what to send to chat when the if_check fails; any occurrence of F_USER in the string is
+                replaced with the name of the user in chat who called the original command
+            """
+
+            self.do_false = do_false
+            self.do_true = do_true
+            self.false_msg = false_msg
+            self.true_msg = true_msg
+            self.if_check = if_check
+
     @staticmethod
     def cmd_body(ctx
                  , permission_check: callable
-                 , if_check: callable
-                 , do_true: callable
-                 , true_msg: str
-                 , do_false: callable
-                 , false_msg: str) -> bool:
+                 , do_before_if: callable = (lambda ctx: None)
+                 , do_if_else: DoIfElse = None
+                 , always_msg: str = None) -> bool:
         """
         The main structure in which commands sent to the bot's channel need to be processed
         :param ctx: context from the original call
-        :param if_check: what the condition for entering 'if' statement is
-        :param do_true: what to do when the if_check succeeds (done before sending message to chat);
-            if 'None', does nothing
-        :param true_msg: what to send to chat when the 'if' if_check succeeds; any ocurrence of F_USER in the string is
-            replaced with the name of the user in chat who called the original command
-        :param do_false: what to do when if_check fails (done before sending message to chat);
-            if 'None', does nothing
-        :param false_msg: what to send to chat when the if_check fails; any ocurrence of F_USER in the string is
-            replaced with the name of the user in chat who called the original command
-
-        :return: True if in bot channel, False otherwise
+        :param permission_check: who is allowed to run the command in question
+        :param do_before_if: this is always called if permission_check passes; if 'None', does nothing
+        :param do_if_else: specifies the if condition on which to enter the if block, what to do in the if and else
+            blocks, and the messages to send in either block; if None, all if/else logic is skipped
+        :param always_msg: message to always send to chat (after do_before_if and do_if_else); if None, send nothing;
+            any occurrence of F_USER in the string is replaced with the name of the user in chat who called the
+            original command
+        :return: True if permission_check passes, False otherwise
         """
 
         if not permission_check(ctx):
             return False
 
-        user = ctx.author.name
-        if do_true is None:
-            do_true = (lambda ctx: None)
-        if do_false is None:
-            do_false = (lambda ctx: None)
+        do_before_if(ctx)
 
-        to_send = "!!!THIS SHOULD NOT GET SENT!!!"
-        if if_check(ctx):
-            do_true(ctx)
-            to_send = true_msg.replace(F_USER, user)
-        else:
-            do_false(ctx)
-            to_send = false_msg.replace(F_USER, user)
-        await ctx.channel.send(to_send)
-        if SHOULD_LOG:
-            print(to_send)
+        user = ctx.author.name
+
+        if do_if_else is not None:
+            to_send = ""
+            if do_if_else.if_check(ctx):
+                do_if_else.do_true(ctx)
+                to_send = do_if_else.true_msg.replace(F_USER, user)
+            else:
+                do_if_else.do_false(ctx)
+                to_send = do_if_else.false_msg.replace(F_USER, user)
+            await ctx.channel.send(to_send)
+            if SHOULD_LOG:
+                print(to_send)
+
+        if always_msg is not None:
+            to_send = always_msg.replace(F_USER, user)
+            await ctx.channel.send(to_send)
+            if SHOULD_LOG:
+                print(to_send)
 
         return True
 
@@ -204,13 +229,13 @@ class Bot(commands.Bot):
             await self.join_channels([ctx.author.name])
 
         Bot.cmd_body(ctx
-                      , Bot.is_in_bot_channel
-                      , (lambda ctx: is_channel_joined(ctx.author.name))
-                      , None
-                      , f"@{F_USER} I am already in your channel!"
-                      , do_false
-                      , f"@{F_USER} I have joined your channel!"
-                      )
+                     , Bot.is_in_bot_channel
+                     , (lambda ctx: is_channel_joined(ctx.author.name))
+                     , None
+                     , f"@{F_USER} I am already in your channel!"
+                     , do_false
+                     , f"@{F_USER} I have joined your channel!"
+                     )
 
     @commands.command()
     async def leaveme(self, ctx):
@@ -221,13 +246,13 @@ class Bot(commands.Bot):
             await self.part_channels([ctx.author.name])
 
         Bot.cmd_body(ctx
-                      , Bot.is_in_bot_channel
-                      , (lambda ctx: is_channel_joined(ctx.author.name))
-                      , do_true
-                      , f"@{F_USER} I have left your channel."
-                      , None
-                      , f"@{F_USER} I have not joined your channel."
-                      )
+                     , Bot.is_in_bot_channel
+                     , (lambda ctx: is_channel_joined(ctx.author.name))
+                     , do_true
+                     , f"@{F_USER} I have left your channel."
+                     , None
+                     , f"@{F_USER} I have not joined your channel."
+                     )
 
     @commands.command()
     async def deleteme(self, ctx):
@@ -238,65 +263,65 @@ class Bot(commands.Bot):
             await self.part_channels([ctx.author.name])
 
         Bot.cmd_body(ctx
-                      , Bot.is_in_bot_channel
-                      , (lambda ctx: channel_exists(ctx.author.name))
-                      , do_true
-                      , f"@{F_USER} I have deleted your channel data."
-                      , None
-                      , f"@{F_USER} your channel does not exists in my records."
-                      )
+                     , Bot.is_in_bot_channel
+                     , (lambda ctx: channel_exists(ctx.author.name))
+                     , do_true
+                     , f"@{F_USER} I have deleted your channel data."
+                     , None
+                     , f"@{F_USER} your channel does not exists in my records."
+                     )
 
     @commands.command()
     async def ignoreme(self, ctx):
         # no longer complement the user
         Bot.cmd_body(ctx
-                      , Bot.is_in_bot_channel
-                      , (lambda ctx: is_user_ignored(ctx.author.name))
-                      , None
-                      , f"@{F_USER} I am already ignoring you."
-                      , (lambda ctx: ignore(ctx.author.name))
-                      , f"@{F_USER} I am now ignoring you."
-                      )
+                     , Bot.is_in_bot_channel
+                     , (lambda ctx: is_user_ignored(ctx.author.name))
+                     , None
+                     , f"@{F_USER} I am already ignoring you."
+                     , (lambda ctx: ignore(ctx.author.name))
+                     , f"@{F_USER} I am now ignoring you."
+                     )
 
     @commands.command()
     async def unignoreme(self, ctx):
         # undo ignoreme
         Bot.cmd_body(ctx
-                      , Bot.is_in_bot_channel
-                      , (lambda ctx: is_user_ignored(ctx.author.name))
-                      , (lambda ctx: unignore(ctx.author.name))
-                      , f"@{F_USER} I am no longer ignoring you!"
-                      , None
-                      , f"@{F_USER} I am not ignoring you!"
-                      )
+                     , Bot.is_in_bot_channel
+                     , (lambda ctx: is_user_ignored(ctx.author.name))
+                     , (lambda ctx: unignore(ctx.author.name))
+                     , f"@{F_USER} I am no longer ignoring you!"
+                     , None
+                     , f"@{F_USER} I am not ignoring you!"
+                     )
 
     @commands.command()
     async def count(self, ctx):
         # see how many channels I'm in
         Bot.cmd_body(ctx
-                      , Bot.is_in_bot_channel
-                      , (lambda ctx: True)
-                      , None
-                      , f"@{F_USER} {str(number_of_joined_channels())} channels and counting!"
-                      , None
-                      , ""
-                      )
+                     , Bot.is_in_bot_channel
+                     , (lambda ctx: True)
+                     , None
+                     , f"@{F_USER} {str(number_of_joined_channels())} channels and counting!"
+                     , None
+                     , ""
+                     )
 
     @commands.command()
     async def about(self, ctx):
         # learn all about me
         Bot.cmd_body(ctx
-                      , Bot.is_in_bot_channel
-                      , (lambda ctx: True)
-                      , None
-                      , f"@{F_USER} "
-                            "For most up-to-date information on commands, please have a look at "
-                            "https://github.com/Ereiarrus/ComplementsBotPy#readme "
-                            "and for most up-to-date complements, have a look at "
-                            "https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
-                      , None
-                      , ""
-                      )
+                     , Bot.is_in_bot_channel
+                     , (lambda ctx: True)
+                     , None
+                     , f"@{F_USER} "
+                       "For most up-to-date information on commands, please have a look at "
+                       "https://github.com/Ereiarrus/ComplementsBotPy#readme "
+                       "and for most up-to-date complements, have a look at "
+                       "https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
+                     , None
+                     , ""
+                     )
 
     # -------------------- any channel, but must be by owner --------------------
 
