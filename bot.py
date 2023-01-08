@@ -150,12 +150,13 @@ class Bot(commands.Bot):
         return ctx.channel.name == BOT_NICK or ctx.channel.name == OWNER_NICK
 
     @staticmethod
-    def bot_cmd_body(ctx
-                     , if_check: callable
-                     , do_true: callable
-                     , true_msg: str
-                     , do_false: callable
-                     , false_msg: str) -> bool:
+    def cmd_body(ctx
+                 , permission_check: callable
+                 , if_check: callable
+                 , do_true: callable
+                 , true_msg: str
+                 , do_false: callable
+                 , false_msg: str) -> bool:
         """
         The main structure in which commands sent to the bot's channel need to be processed
         :param ctx: context from the original call
@@ -172,7 +173,7 @@ class Bot(commands.Bot):
         :return: True if in bot channel, False otherwise
         """
 
-        if not Bot.is_in_bot_channel(ctx):
+        if not permission_check(ctx):
             return False
 
         user = ctx.author.name
@@ -202,13 +203,14 @@ class Bot(commands.Bot):
             # TODO: follow the user
             await self.join_channels([ctx.author.name])
 
-        self.bot_cmd_body(ctx
-                          , (lambda ctx: is_channel_joined(ctx.author.name))
-                          , None
-                          , f"@{F_USER} I am already in your channel!"
-                          , do_false
-                          , f"@{F_USER} I have joined your channel!"
-                          )
+        Bot.cmd_body(ctx
+                      , Bot.is_in_bot_channel
+                      , (lambda ctx: is_channel_joined(ctx.author.name))
+                      , None
+                      , f"@{F_USER} I am already in your channel!"
+                      , do_false
+                      , f"@{F_USER} I have joined your channel!"
+                      )
 
     @commands.command()
     async def leaveme(self, ctx):
@@ -218,13 +220,14 @@ class Bot(commands.Bot):
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
 
-        self.bot_cmd_body(ctx
-                          , (lambda ctx: is_channel_joined(ctx.author.name))
-                          , do_true
-                          , f"@{F_USER} I have left your channel."
-                          , None
-                          , f"@{F_USER} I have not joined your channel."
-                          )
+        Bot.cmd_body(ctx
+                      , Bot.is_in_bot_channel
+                      , (lambda ctx: is_channel_joined(ctx.author.name))
+                      , do_true
+                      , f"@{F_USER} I have left your channel."
+                      , None
+                      , f"@{F_USER} I have not joined your channel."
+                      )
 
     @commands.command()
     async def deleteme(self, ctx):
@@ -234,61 +237,66 @@ class Bot(commands.Bot):
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
 
-        self.bot_cmd_body(ctx
-                          , (lambda ctx: channel_exists(ctx.author.name))
-                          , do_true
-                          , f"@{F_USER} I have deleted your channel data."
-                          , None
-                          , f"@{F_USER} your channel does not exists in my records."
-                          )
+        Bot.cmd_body(ctx
+                      , Bot.is_in_bot_channel
+                      , (lambda ctx: channel_exists(ctx.author.name))
+                      , do_true
+                      , f"@{F_USER} I have deleted your channel data."
+                      , None
+                      , f"@{F_USER} your channel does not exists in my records."
+                      )
 
     @commands.command()
     async def ignoreme(self, ctx):
         # no longer complement the user
-        self.bot_cmd_body(ctx
-                          , (lambda ctx: is_user_ignored(ctx.author.name))
-                          , None
-                          , f"@{F_USER} I am already ignoring you."
-                          , (lambda ctx: ignore(ctx.author.name))
-                          , f"@{F_USER} I am now ignoring you."
-                          )
+        Bot.cmd_body(ctx
+                      , Bot.is_in_bot_channel
+                      , (lambda ctx: is_user_ignored(ctx.author.name))
+                      , None
+                      , f"@{F_USER} I am already ignoring you."
+                      , (lambda ctx: ignore(ctx.author.name))
+                      , f"@{F_USER} I am now ignoring you."
+                      )
 
     @commands.command()
     async def unignoreme(self, ctx):
         # undo ignoreme
-        self.bot_cmd_body(ctx
-                          , (lambda ctx: is_user_ignored(ctx.author.name))
-                          , (lambda ctx: unignore(ctx.author.name))
-                          , f"@{F_USER} I am no longer ignoring you!"
-                          , None
-                          , f"@{F_USER} I am not ignoring you!"
-                          )
+        Bot.cmd_body(ctx
+                      , Bot.is_in_bot_channel
+                      , (lambda ctx: is_user_ignored(ctx.author.name))
+                      , (lambda ctx: unignore(ctx.author.name))
+                      , f"@{F_USER} I am no longer ignoring you!"
+                      , None
+                      , f"@{F_USER} I am not ignoring you!"
+                      )
 
     @commands.command()
     async def count(self, ctx):
         # see how many channels I'm in
-        self.bot_cmd_body(ctx
-                          , (lambda ctx: True)
-                          , None
-                          , f"@{F_USER} {str(number_of_joined_channels())} channels and counting!"
-                          , None
-                          , ""
-                          )
+        Bot.cmd_body(ctx
+                      , Bot.is_in_bot_channel
+                      , (lambda ctx: True)
+                      , None
+                      , f"@{F_USER} {str(number_of_joined_channels())} channels and counting!"
+                      , None
+                      , ""
+                      )
 
     @commands.command()
     async def about(self, ctx):
         # learn all about me
-        self.bot_cmd_body(ctx
-                          , (lambda ctx: True)
-                          , None
-                          , f"@{F_USER} "
+        Bot.cmd_body(ctx
+                      , Bot.is_in_bot_channel
+                      , (lambda ctx: True)
+                      , None
+                      , f"@{F_USER} "
                             "For most up-to-date information on commands, please have a look at "
                             "https://github.com/Ereiarrus/ComplementsBotPy#readme "
                             "and for most up-to-date complements, have a look at "
                             "https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
-                          , None
-                          , ""
-                          )
+                      , None
+                      , ""
+                      )
 
     # -------------------- any channel, but must be by owner --------------------
 
