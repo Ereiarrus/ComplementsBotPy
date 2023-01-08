@@ -636,17 +636,16 @@ class Bot(commands.Bot):
     @commands.command()
     async def ignorebots(self, ctx):
         # bots might get complements
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        channel = ctx.channel.name
-
-        if not is_ignoring_bots(channel):
-            ignore_bots(channel)
-            to_send = f"@{channel} bots will no longer get complemented."
-            Bot.send_and_log(ctx, to_send)
-        else:
-            to_send = f"@{channel} bots are already not getting complements."
-            Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: is_ignoring_bots(ctx.channel.name))
+                                    , f"@{F_USER} bots will no longer get complemented."
+                                    , f"@{F_USER} bots are already not getting complements."
+                                    , (lambda ctx: ignore_bots(ctx.channel.name))
+                                    , None
+                                    )
+                     )
 
     @commands.command()
     async def compleave(self, ctx):
