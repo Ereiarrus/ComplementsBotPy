@@ -145,7 +145,6 @@ class Bot(commands.Bot):
 
     # -------------------- bot channel only commands --------------------
 
-
     @staticmethod
     def is_in_bot_channel(ctx):
         return ctx.channel.name == BOT_NICK or ctx.channel.name == OWNER_NICK
@@ -195,7 +194,6 @@ class Bot(commands.Bot):
 
         return True
 
-
     @commands.command()
     async def joinme(self, ctx):
         # I will join your channel!
@@ -203,6 +201,7 @@ class Bot(commands.Bot):
             join_channel(ctx.author.name)
             # TODO: follow the user
             await self.join_channels([ctx.author.name])
+
         self.bot_cmd_body(ctx
                           , (lambda ctx: is_channel_joined(ctx.author.name))
                           , None
@@ -218,6 +217,7 @@ class Bot(commands.Bot):
             leave_channel(ctx.author.name)
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
+
         self.bot_cmd_body(ctx
                           , (lambda ctx: is_channel_joined(ctx.author.name))
                           , do_true
@@ -233,6 +233,7 @@ class Bot(commands.Bot):
             delete_channel(ctx.author.name)
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
+
         self.bot_cmd_body(ctx
                           , (lambda ctx: channel_exists(ctx.author.name))
                           , do_true
@@ -277,15 +278,17 @@ class Bot(commands.Bot):
     @commands.command()
     async def about(self, ctx):
         # learn all about me
-        if not Bot.is_in_bot_channel(ctx):
-            return
-        to_send = f"@{ctx.author.name} " \
-                  "For most up-to-date information on commands, please have a look at " \
-                  "https://github.com/Ereiarrus/ComplementsBotPy#readme and for most up-to-date complements, " \
-                  "have a look at https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
-        await ctx.channel.send(to_send)
-        if SHOULD_LOG:
-            print(to_send)
+        self.bot_cmd_body(ctx
+                          , (lambda ctx: True)
+                          , None
+                          , f"@{F_USER} "
+                            "For most up-to-date information on commands, please have a look at "
+                            "https://github.com/Ereiarrus/ComplementsBotPy#readme "
+                            "and for most up-to-date complements, have a look at "
+                            "https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
+                          , None
+                          , ""
+                          )
 
     # -------------------- any channel, but must be by owner --------------------
 
