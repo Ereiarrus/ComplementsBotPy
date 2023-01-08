@@ -567,10 +567,10 @@ class Bot(commands.Bot):
                      , Bot.is_by_broadcaster_or_mod
                      , None
                      , Bot.DoIfElse((lambda ctx: are_custom_complements_enabled(ctx.channel.name))
-                                    , f"@{F_USER} custom complements are now enabled!"
                                     , f"@{F_USER} custom complements are already enabled!"
-                                    , (lambda ctx: enable_custom_complements(ctx.channel.name))
+                                    , f"@{F_USER} custom complements are now enabled!"
                                     , None
+                                    , (lambda ctx: enable_custom_complements(ctx.channel.name))
                                     )
                      )
 
@@ -581,10 +581,10 @@ class Bot(commands.Bot):
                      , Bot.is_by_broadcaster_or_mod
                      , None
                      , Bot.DoIfElse((lambda ctx: are_default_complements_enabled(ctx.channel.name))
-                                    , f"@{F_USER} default complements are now enabled!"
                                     , f"@{F_USER} default complements are already enabled!"
-                                    , (lambda ctx: enable_default_complements(ctx.channel.name))
+                                    , f"@{F_USER} default complements are now enabled!"
                                     , None
+                                    , (lambda ctx: enable_default_complements(ctx.channel.name))
                                     )
                      )
 
@@ -637,10 +637,10 @@ class Bot(commands.Bot):
                      , Bot.is_by_broadcaster_or_mod
                      , None
                      , Bot.DoIfElse((lambda ctx: is_ignoring_bots(ctx.channel.name))
-                                    , f"@{F_USER} bots will no longer get complemented."
                                     , f"@{F_USER} bots are already not getting complements."
-                                    , (lambda ctx: ignore_bots(ctx.channel.name))
+                                    , f"@{F_USER} bots will no longer get complemented."
                                     , None
+                                    , (lambda ctx: ignore_bots(ctx.channel.name))
                                     )
                      )
 
