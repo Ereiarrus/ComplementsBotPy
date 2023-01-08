@@ -156,8 +156,7 @@ class Bot(commands.Bot):
                      , do_true: callable
                      , true_msg: str
                      , do_false: callable
-                     , false_msg: str
-                     , aux=None) -> bool:
+                     , false_msg: str) -> bool:
         """
         The main structure in which commands sent to the bot's channel need to be processed
         :param ctx: context from the original call
@@ -170,7 +169,6 @@ class Bot(commands.Bot):
             if 'None', does nothing
         :param false_msg: what to send to chat when the if_check fails; any ocurrence of F_USER in the string is
             replaced with the name of the user in chat who called the original command
-        :param aux: any auxiliary argument needed for the other functions
 
         :return: True if in bot channel, False otherwise
         """
@@ -180,16 +178,16 @@ class Bot(commands.Bot):
 
         user = ctx.author.name
         if do_true is None:
-            do_true = (lambda ctx, aux: None)
+            do_true = (lambda ctx: None)
         if do_false is None:
-            do_false = (lambda ctx, aux: None)
+            do_false = (lambda ctx: None)
 
         to_send = "!!!THIS SHOULD NOT GET SENT!!!"
-        if if_check(ctx, aux):
-            do_true(ctx, aux)
+        if if_check(ctx):
+            do_true(ctx)
             to_send = true_msg.replace(F_USER, user)
         else:
-            do_false(ctx, aux)
+            do_false(ctx)
             to_send = false_msg.replace(F_USER, user)
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
@@ -201,12 +199,12 @@ class Bot(commands.Bot):
     @commands.command()
     async def joinme(self, ctx):
         # I will join your channel!
-        def do_false(ctx, aux):
+        def do_false(ctx):
             join_channel(ctx.author.name)
             # TODO: follow the user
             await self.join_channels([ctx.author.name])
         self.bot_cmd_body(ctx
-                          , (lambda ctx, aux: is_channel_joined(ctx.author.name))
+                          , (lambda ctx: is_channel_joined(ctx.author.name))
                           , None
                           , f"@{F_USER} I am already in your channel!"
                           , do_false
@@ -216,12 +214,12 @@ class Bot(commands.Bot):
     @commands.command()
     async def leaveme(self, ctx):
         # I will leave your channel
-        def do_true(ctx, aux):
+        def do_true(ctx):
             leave_channel(ctx.author.name)
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
         self.bot_cmd_body(ctx
-                          , (lambda ctx, aux: is_channel_joined(ctx.author.name))
+                          , (lambda ctx: is_channel_joined(ctx.author.name))
                           , do_true
                           , f"@{F_USER} I have left your channel."
                           , None
@@ -231,12 +229,12 @@ class Bot(commands.Bot):
     @commands.command()
     async def deleteme(self, ctx):
         # I will delete your channel information
-        def do_true(ctx, aux):
+        def do_true(ctx):
             delete_channel(ctx.author.name)
             # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
         self.bot_cmd_body(ctx
-                          , (lambda ctx, aux: is_channel_joined(ctx.author.name))
+                          , (lambda ctx: channel_exists(ctx.author.name))
                           , do_true
                           , f"@{F_USER} I have deleted your channel data."
                           , None
@@ -246,21 +244,13 @@ class Bot(commands.Bot):
     @commands.command()
     async def ignoreme(self, ctx):
         # no longer complement the user
-        if not Bot.is_in_bot_channel(ctx):
-            return
-
-        user = ctx.author.name
-        if is_user_ignored(user):
-            to_send = f"@{user} I am already ignoring you."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            ignore(user)
-            to_send = f"@{user} I am now ignoring you."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
+        self.bot_cmd_body(ctx
+                          , (lambda ctx: is_user_ignored(ctx.author.name))
+                          , None
+                          , f"@{F_USER} I am already ignoring you."
+                          , (lambda ctx: ignore(ctx.author.name))
+                          , f"@{F_USER} I am now ignoring you."
+                          )
 
     @commands.command()
     async def unignoreme(self, ctx):
