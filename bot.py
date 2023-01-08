@@ -520,17 +520,15 @@ class Bot(commands.Bot):
     @commands.command()
     async def muterandomcomplement(self, ctx):
         # mutes tts for complements randomly given out
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        channel = ctx.channel.name
-
-        if is_random_complement_muted(channel):
-            to_send = f"@{channel} random complements are already muted!"
-            Bot.send_and_log(ctx, to_send)
-        else:
-            mute_random_complement(channel)
-            to_send = f"@{channel} random complements are now muted."
-            Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: is_cmd_complement_muted(ctx.channel.name))
+                                    , f"@{F_USER} random complements are already muted!"
+                                    , f"@{F_USER} random complements are now muted."
+                                    , None
+                                    , (lambda ctx: mute_random_complement(ctx.channel.name)))
+                     )
 
     @commands.command()
     async def unmutecmdcomplement(self, ctx):
