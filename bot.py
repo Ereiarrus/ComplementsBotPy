@@ -497,28 +497,25 @@ class Bot(commands.Bot):
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
-        channel = ctx.channel.name
         msg = ctx.message.content
         msg = msg.strip()
         prefix = msg[msg.find(" ") + 1:]
-        set_mute_prefix(channel, prefix)
-        to_send = f"@{channel} mute TTS prefix changed to '{prefix}'."
+        set_mute_prefix(ctx.channel.name, prefix)
+        to_send = f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'."
         Bot.send_and_log(ctx, to_send)
 
     @commands.command()
     async def mutecmdcomplement(self, ctx):
         # mutes tts for complements sent with !complement command
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        channel = ctx.channel.name
-
-        if is_cmd_complement_muted(channel):
-            to_send = f"@{channel} command complements are already muted!"
-            Bot.send_and_log(ctx, to_send)
-        else:
-            mute_cmd_complement(channel)
-            to_send = f"@{channel} command complements are now muted."
-            Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse(is_cmd_complement_muted
+                                    , f"@{F_USER} command complements are already muted!"
+                                    , f"@{F_USER} command complements are now muted."
+                                    , None
+                                    , (lambda ctx: mute_cmd_complement(ctx.channel.name)))
+                     )
 
     @commands.command()
     async def muterandomcomplement(self, ctx):
