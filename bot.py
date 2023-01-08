@@ -216,22 +216,17 @@ class Bot(commands.Bot):
     @commands.command()
     async def leaveme(self, ctx):
         # I will leave your channel
-        if not Bot.is_in_bot_channel(ctx):
-            return
-        user = ctx.author.name
-        if is_channel_joined(user):
-            leave_channel(user)
-            await self.part_channels([user])
+        def do_true(ctx, aux):
+            leave_channel(ctx.author.name)
             # TODO: unfollow the user
-            to_send = f"@{user} I have left your channel."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            to_send = f"@{user} I have not joined your channel."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
+            await self.part_channels([ctx.author.name])
+        self.bot_cmd_body(ctx
+                          , (lambda ctx, aux: is_channel_joined(ctx.author.name))
+                          , do_true
+                          , f"@{F_USER} I have left your channel."
+                          , None
+                          , f"@{F_USER} I have not joined your channel."
+                          )
 
     @commands.command()
     async def deleteme(self, ctx):
