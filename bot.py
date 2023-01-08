@@ -605,17 +605,16 @@ class Bot(commands.Bot):
     @commands.command()
     async def disabledefaultcomplements(self, ctx):
         # default complements will no longer be used to complement viewers
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        channel = ctx.channel.name
-
-        if are_default_complements_enabled(channel):
-            disable_default_complements(channel)
-            to_send = f"@{channel} default complements are now disabled."
-            Bot.send_and_log(ctx, to_send)
-        else:
-            to_send = f"@{channel} default complements are already disabled!"
-            Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: are_default_complements_enabled(ctx.channel.name))
+                                    , f"@{F_USER} default complements are now disabled."
+                                    , f"@{F_USER} default complements are already disabled!"
+                                    , (lambda ctx: disable_default_complements(ctx.channel.name))
+                                    , None
+                                    )
+                     )
 
     @commands.command()
     async def unignorebots(self, ctx):
