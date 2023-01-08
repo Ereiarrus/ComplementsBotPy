@@ -510,7 +510,7 @@ class Bot(commands.Bot):
         Bot.cmd_body(ctx
                      , Bot.is_by_broadcaster_or_mod
                      , None
-                     , Bot.DoIfElse(is_cmd_complement_muted
+                     , Bot.DoIfElse((lambda ctx: is_cmd_complement_muted(ctx.channel.name))
                                     , f"@{F_USER} command complements are already muted!"
                                     , f"@{F_USER} command complements are now muted."
                                     , None
