@@ -39,6 +39,7 @@ class Bot(commands.Bot):
             initial_channels=get_joined_channels()
         )
 
+        # Read the default complements from file
         self.COMPLEMENTS_LIST = []
         with open("complements_list.txt", "r") as f:
             for line in f:
@@ -46,23 +47,29 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
         """
-        Called once when the bot goes online.
+        Called once when the bot goes online; purely informational
         """
         if SHOULD_LOG:
             print(f"{BOT_NICK} is online!")
 
     @staticmethod
     def is_bot(username):
+        """
+        checks if a username matches that of a known or assumed bot; currently the following count as bots:
+            - any username ending in 'bot'
+            - streamlabs
+        """
         return len(username) >= 3 and username[-3:] == 'bot' \
                or username == "streamlabs"
 
     async def event_message(self, ctx):
         """
-
-        :param ctx:
-        :return:
+        Runs every time a message is sent in chat. This also includes any commands.
+        Decides if the person who sent the message in chat should be complemented based on: complement chance, their
+            ignored status, whether they are a bot, if random complements are enabled in the channel.
+            Depending on mute status of random complements, the complement might be prepended with a mute prefix.
         """
-        # Runs every time a message is sent in chat.
+
         if ctx.echo:
             # make sure the bot ignores itself
             return
@@ -76,10 +83,11 @@ class Bot(commands.Bot):
         is_author_bot = is_ignoring_bots(channel) and Bot.is_bot(sender)
 
         if ctx.content[:len(CMD_PREFIX)] == CMD_PREFIX:
+            # Handle commands
             await self.handle_commands(ctx)
         if should_rng_choose \
                 and (not is_author_ignored) \
-                and not is_author_bot \
+                and (not is_author_bot) \
                 and get_random_complement_enabled(ctx.channel.name):
             comp_msg, exists = self.complement_msg(ctx, ctx.author.name, is_random_complement_muted(channel))
             if exists:
@@ -90,10 +98,13 @@ class Bot(commands.Bot):
 
     def choose_complement(self, ctx):
         """
-        :return complement: the chosen complement (if one exists)
+        Chooses a complement with which to complement a user. This is based on the default complements, custom
+            complements, and the status of whether either of these two are enabled or disabled for that channel.
+        :return complement: the chosen complement (if one exists - otherwise an empty string)
         :return exists: whether there are any valid complements (for example, if  both custom and default complements
-            are disabled, this would be False
+            are disabled, this would be False)
         """
+
         channel = ctx.channel.name
         custom_complements = []
         if are_custom_complements_enabled(channel):
@@ -103,6 +114,7 @@ class Bot(commands.Bot):
             default_complements = self.COMPLEMENTS_LIST
 
         if len(custom_complements) == 0 and len(default_complements) == 0:
+            # No complements to dish out
             return "", False
 
         default_complements_length = len(default_complements)
@@ -113,15 +125,19 @@ class Bot(commands.Bot):
 
     def complement_msg(self, ctx: commands.Context, who: str = None, is_tts_muted: bool = True):
         """
+        Format the complement message correctly. This includes any TTS mute prefixes and an '@' in front of the user's
+            name if not included to notify them of the complement.
+        :param who: the name of the person that the complement is aimed at
+        :param is_tts_muted: whether the channel mutes TTS for this complement
         :return complement: the complement chosen, prepended with who it's aimed at and perhaps a TTS muting symbol
         :return exists: whether there are any valid complements (for example, if  both custom and default complements
             are disabled, this would be False
         """
-        prefix = ""
+
         if who is None:
             who = ctx.author.name
         channel = ctx.channel.name
-        prefix = f"@{prefix}"
+        prefix = "@"
         if is_tts_muted:
             prefix = f"{get_tts_ignore_prefix(channel)} {prefix}"
         complement, exists = self.choose_complement(ctx)
@@ -129,6 +145,13 @@ class Bot(commands.Bot):
 
     @commands.command()
     async def complement(self, ctx):
+        """
+        Users can get a complement themselves or complement others with this command assuming the user is not ignored by
+            the bot and the channel owner has not disabled command complements.
+        Assumes that anything typed after the command is a username, even if it has spaces in it.
+        The user of this command is allowed to prepend an optional '@' to the user's name with no change to the
+            behaviour of the command.
+        """
         msg = ctx.message.content.strip()
         args = msg.split(" ")
         who = ctx.message.author.name
