@@ -621,17 +621,16 @@ class Bot(commands.Bot):
     @commands.command()
     async def unignorebots(self, ctx):
         # bots will not get complements
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        channel = ctx.channel.name
-
-        if is_ignoring_bots(channel):
-            unignore_bots(channel)
-            to_send = f"@{channel} bots have a chance of being complemented!"
-            Bot.send_and_log(ctx, to_send)
-        else:
-            to_send = f"@{channel} bots can already get complements!"
-            Bot.send_and_log(ctx, to_send)
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: is_ignoring_bots(ctx.channel.name))
+                                    , f"@{F_USER} bots have a chance of being complemented!"
+                                    , f"@{F_USER} bots can already get complements!"
+                                    , (lambda ctx: unignore_bots(ctx.channel.name))
+                                    , None
+                                    )
+                     )
 
     @commands.command()
     async def ignorebots(self, ctx):
@@ -647,7 +646,7 @@ class Bot(commands.Bot):
                                     )
                      )
 
-    @commands.command()
+    @commands.command(aliases=["compleaveme"])
     async def compleave(self, ctx):
         await self.leaveme(ctx)
 
