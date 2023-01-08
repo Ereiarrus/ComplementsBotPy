@@ -231,23 +231,17 @@ class Bot(commands.Bot):
     @commands.command()
     async def deleteme(self, ctx):
         # I will delete your channel information
-        if not Bot.is_in_bot_channel(ctx):
-            return
-        user = ctx.author.name
-
-        if channel_exists(user):
-            delete_channel(user)
-            await self.part_channels([user])
+        def do_true(ctx, aux):
+            delete_channel(ctx.author.name)
             # TODO: unfollow the user
-            to_send = f"@{user} I have deleted your channel data."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            to_send = f"@{user} your channel does not exists in my records."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
+            await self.part_channels([ctx.author.name])
+        self.bot_cmd_body(ctx
+                          , (lambda ctx, aux: is_channel_joined(ctx.author.name))
+                          , do_true
+                          , f"@{F_USER} I have deleted your channel data."
+                          , None
+                          , f"@{F_USER} your channel does not exists in my records."
+                          )
 
     @commands.command()
     async def ignoreme(self, ctx):
