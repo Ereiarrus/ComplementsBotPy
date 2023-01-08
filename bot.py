@@ -382,63 +382,47 @@ class Bot(commands.Bot):
                                     )
                      )
 
-
     @commands.command()
     async def enablecmdcomplement(self, ctx):
         # undo !disablecmdcomplement
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        user = ctx.channel.name
-        if get_cmd_complement_enabled(user):
-            to_send = f"@{user} your viewers can already make use of the !complement command!"
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            enable_cmd_complement(user)
-            to_send = f"@{user} your viewers will now be able to make use of the !complement command!"
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: get_cmd_complement_enabled(ctx.channel.name))
+                                    , f"@{F_USER} your viewers can already make use of the !complement command!"
+                                    , f"@{F_USER} your viewers will now be able to make use of the !complement command!"
+                                    , None
+                                    , (lambda ctx: enable_cmd_complement(ctx.channel.name))
+                                    )
+                     )
 
     @commands.command()
     async def disablerandomcomplement(self, ctx):
         # the bot will no longer randomly give out complements
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        user = ctx.channel.name
-        if get_random_complement_enabled(user):
-            disable_random_complement(user)
-            to_send = f"@{user} your viewers will no longer randomly receive complements."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            to_send = f"@{user} your viewers already do not randomly receive complements."
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: get_random_complement_enabled(ctx.channel.name))
+                                    , f"@{F_USER} your viewers will no longer randomly receive complements."
+                                    , f"@{F_USER} your viewers already do not randomly receive complements."
+                                    , (lambda ctx: disable_random_complement(ctx.channel.name))
+                                    , None
+                                    )
+                     )
 
     @commands.command()
     async def enablerandomcomplement(self, ctx):
         # undo !disablerandomcomplement
-        if not Bot.is_by_broadcaster_or_mod(ctx):
-            return
-        user = ctx.channel.name
-        if get_random_complement_enabled(user):
-            to_send = f"@{user} I already randomly send out complements!"
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-        else:
-            enable_random_complement(user)
-            to_send = f"@{user} your viewers will now randomly receive complements!"
-            await ctx.channel.send(to_send)
-            if SHOULD_LOG:
-                print(to_send)
-
+        Bot.cmd_body(ctx
+                     , Bot.is_by_broadcaster_or_mod
+                     , None
+                     , Bot.DoIfElse((lambda ctx: get_random_complement_enabled(ctx.channel.name))
+                                    , f"@{F_USER} I already randomly send out complements!"
+                                    , f"@{F_USER} your viewers will now randomly receive complements!"
+                                    , None
+                                    , (lambda ctx: enable_random_complement(ctx.channel.name))
+                                    )
+                     )
 
     @commands.command()
     async def addcomplement(self, ctx):
@@ -461,7 +445,6 @@ class Bot(commands.Bot):
         if SHOULD_LOG:
             print(to_send)
 
-
     @commands.command()
     async def listcomplements(self, ctx):
         if not Bot.is_by_broadcaster_or_mod(ctx):
@@ -483,7 +466,6 @@ class Bot(commands.Bot):
             await ctx.channel.send(msg)
             if SHOULD_LOG:
                 print(msg)
-
 
     @commands.command()
     async def removecomplement(self, ctx):
@@ -512,7 +494,6 @@ class Bot(commands.Bot):
             if SHOULD_LOG:
                 print(msg)
 
-
     @commands.command()
     async def removeallcomplements(self, ctx):
         # remove all custom complements a user has added
@@ -524,7 +505,6 @@ class Bot(commands.Bot):
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
-
 
     @commands.command()
     async def setmutettsprefix(self, ctx):
@@ -540,7 +520,6 @@ class Bot(commands.Bot):
         await ctx.channel.send(to_send)
         if SHOULD_LOG:
             print(to_send)
-
 
     @commands.command()
     async def mutecmdcomplement(self, ctx):
@@ -561,7 +540,6 @@ class Bot(commands.Bot):
             if SHOULD_LOG:
                 print(to_send)
 
-
     @commands.command()
     async def muterandomcomplement(self, ctx):
         # mutes tts for complements randomly given out
@@ -580,7 +558,6 @@ class Bot(commands.Bot):
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
-
 
     @commands.command()
     async def unmutecmdcomplement(self, ctx):
@@ -601,7 +578,6 @@ class Bot(commands.Bot):
             if SHOULD_LOG:
                 print(to_send)
 
-
     @commands.command()
     async def unmuterandomcomplement(self, ctx):
         # unmutes tts for complements randomly given out
@@ -620,7 +596,6 @@ class Bot(commands.Bot):
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
-
 
     @commands.command()
     async def enablecustomcomplements(self, ctx):
@@ -641,7 +616,6 @@ class Bot(commands.Bot):
             if SHOULD_LOG:
                 print(to_send)
 
-
     @commands.command()
     async def enabledefaultcomplements(self, ctx):
         # custom complements will now be used to complement viewers
@@ -660,7 +634,6 @@ class Bot(commands.Bot):
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
-
 
     @commands.command()
     async def disablecustomcomplements(self, ctx):
@@ -681,7 +654,6 @@ class Bot(commands.Bot):
             if SHOULD_LOG:
                 print(to_send)
 
-
     @commands.command()
     async def disabledefaultcomplements(self, ctx):
         # default complements will no longer be used to complement viewers
@@ -700,7 +672,6 @@ class Bot(commands.Bot):
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
-
 
     @commands.command()
     async def unignorebots(self, ctx):
@@ -721,7 +692,6 @@ class Bot(commands.Bot):
             if SHOULD_LOG:
                 print(to_send)
 
-
     @commands.command()
     async def ignorebots(self, ctx):
         # bots might get complements
@@ -740,7 +710,6 @@ class Bot(commands.Bot):
             await ctx.channel.send(to_send)
             if SHOULD_LOG:
                 print(to_send)
-
 
     @commands.command()
     async def compleave(self, ctx):
