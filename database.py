@@ -1,7 +1,7 @@
 import re
 from firebase_admin import credentials, db
 from env_reader import *
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, Optional
 import firebase_admin
 
 cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
@@ -209,7 +209,7 @@ def complements_to_remove(data: list[str], phrase: str) -> Tuple[list[str], list
     return removed_comps, leftover_comps
 
 
-def remove_complements(user, to_keep: iter = None, to_remove: iter = None) -> None:
+def remove_complements(user, to_keep: Optional[list[str]] = None, to_remove: Optional[list[str]] = None) -> None:
     # either provide to_remove or to_keep; if both given, to_remove takes precedence
     def remove_transaction(data):
         if to_remove:
