@@ -8,17 +8,17 @@ import requests
 from typing import Callable, Optional, Union
 import textwrap
 
-#TODO:
-# allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
-# allow streamers to control which user groups can receive which complements
-# when people try complementing the bot, say something different
-# when people reply to bot (e.g. say thank you), say something different
-# |
-# make a website where users can see all of their info
-# make a docker container for app
-# Change primary key for users - from username to user id
-# deploy app to server
-# set up database with data type rules
+# TODO:
+#  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
+#  allow streamers to control which user groups can receive which complements
+#  when people try complementing the bot, say something different
+#  when people reply to bot (e.g. say thank you), say something different
+#  |
+#  make a website where users can see all of their info
+#  make a docker container for app
+#  Change primary key for users - from username to user id
+#  deploy app to server
+#  set up database with data type rules
 
 CMD_PREFIX: str = '!'
 DEFAULT_MAX_MSG_LEN: int = 500
@@ -56,6 +56,7 @@ class Bot(commands.Bot):
         """
         Called once when the bot goes online; purely informational
         """
+
         if SHOULD_LOG:
             custom_log(f"{BOT_NICK} is online!")
 
@@ -66,6 +67,7 @@ class Bot(commands.Bot):
             - any username ending in 'bot'
             - streamlabs
         """
+
         return len(username) >= 3 and username[-3:] == 'bot' \
                or username == "streamlabs"
 
@@ -130,7 +132,8 @@ class Bot(commands.Bot):
             return default_complements[index], True
         return custom_complements[index - default_complements_length], True
 
-    def complement_msg(self, ctx: Union[commands.Context, Message], who: str = None, is_tts_muted: bool = True) -> (str, bool):
+    def complement_msg(self, ctx: Union[commands.Context, Message], who: str = None, is_tts_muted: bool = True) -> (
+    str, bool):
         """
         Format the complement message correctly. This includes any TTS mute prefixes and an '@' in front of the user's
             name if not included to notify them of the complement.
@@ -159,6 +162,7 @@ class Bot(commands.Bot):
         The user of this command is allowed to prepend an optional '@' to the user's name with no change to the
             behaviour of the command.
         """
+
         msg: str = ctx.message.content.strip()
         args: list[str] = msg.split(" ")
         who: str = ctx.message.author.name
@@ -185,10 +189,11 @@ class Bot(commands.Bot):
         return ctx.channel.name == BOT_NICK or ctx.channel.name == OWNER_NICK
 
     @staticmethod
-    def send_and_log(ctx: commands.Context, msg: str) -> None:
+    async def send_and_log(ctx: commands.Context, msg: str) -> None:
         """
         Send the message to the channel of ctx and also logs it
         """
+
         await ctx.channel.send(msg)
         if SHOULD_LOG:
             custom_log(msg)
@@ -267,7 +272,7 @@ class Bot(commands.Bot):
         Get the bot to join the user's channel and start complementing people in their channel.
         """
 
-        def do_false(ctx: commands.Context) -> None:
+        async def do_false(ctx: commands.Context) -> None:
             # Have to save to database and update in memory so bot starts working straight away
             join_channel(ctx.author.name)
             # TODO: follow the user
@@ -290,7 +295,7 @@ class Bot(commands.Bot):
         Bot leaves the user's channel and no longer complements chatters there.
         """
 
-        def do_true(ctx: commands.Context) -> None:
+        async def do_true(ctx: commands.Context) -> None:
             # Update database and in realtime for "instant" effect
             leave_channel(ctx.author.name)
             # TODO: unfollow the user
@@ -313,7 +318,7 @@ class Bot(commands.Bot):
         Same as the 'leaveme' command, but on top, also delete any records of the user (e.g. custom complements)
         """
 
-        def do_true(ctx: commands.Context) -> None:
+        async def do_true(ctx: commands.Context) -> None:
             # Remove any user records from database and leave their channel NOW
             delete_channel(ctx.author.name)
             # TODO: unfollow the user
@@ -335,6 +340,7 @@ class Bot(commands.Bot):
         """
         The user of this command will not get any complements sent their way from ComplementsBot
         """
+
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , None
@@ -352,6 +358,7 @@ class Bot(commands.Bot):
         Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
         complement using the 'complement' command will work.
         """
+
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , None
@@ -368,6 +375,7 @@ class Bot(commands.Bot):
         """
         Shows the number of channels that the bot is active in
         """
+
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , always_msg=f"@{F_USER} {str(number_of_joined_channels())} channels and counting!"
@@ -378,6 +386,7 @@ class Bot(commands.Bot):
         """
         Shows some information about the bot
         """
+
         Bot.cmd_body(ctx
                      , Bot.is_in_bot_channel
                      , always_msg=f"@{F_USER} "
@@ -452,6 +461,7 @@ class Bot(commands.Bot):
         """
         Allow chatters in user's chat to use the !complement command
         """
+
         Bot.cmd_body(ctx
                      , Bot.is_by_broadcaster_or_mod
                      , None
@@ -525,6 +535,7 @@ class Bot(commands.Bot):
         Due to Twitch having a maximum message length, these might have to be sent over more than one message, so it is
             split to make sure all complements are visible.
         """
+
         if not Bot.is_by_broadcaster_or_mod(ctx):
             return
 
@@ -707,7 +718,7 @@ class Bot(commands.Bot):
         All custom complements will be removed from the pool that we choose complements for chatters from; this does NOT
             delete the custom complements.
         """
-        # custom complements will no longer be used to complement viewers
+
         Bot.cmd_body(ctx
                      , Bot.is_by_broadcaster_or_mod
                      , None
@@ -741,6 +752,7 @@ class Bot(commands.Bot):
         """
         Chatters that count as bots might be complemented by ComplementsBot
         """
+
         Bot.cmd_body(ctx
                      , Bot.is_by_broadcaster_or_mod
                      , None
@@ -769,11 +781,15 @@ class Bot(commands.Bot):
                                     )
                      )
 
+    # TODO: this command currently does not work due
+    #  to the check for if the coommand was sent in the bot's channel
+    #  of the leaveme command
     @commands.command(aliases=["compleaveme"])
     async def compleave(self, ctx: commands.Context) -> None:
         """
         Allows the user to kick ComplementsBot out of their channel from their own channel chat
         """
+
         await self.leaveme(ctx)
 
 
