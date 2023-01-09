@@ -5,7 +5,7 @@ from twitchio import Message
 import random
 from database import *
 import requests
-from typing import Callable, Optional
+from typing import Callable, Optional, Awaitable, Union
 import textwrap
 
 # TODO:
@@ -204,8 +204,10 @@ class Bot(commands.Bot):
                      , if_check: Callable[[commands.Context], bool]
                      , true_msg: str
                      , false_msg: str
-                     , do_true: Optional[Callable[[commands.Context], None]] = (lambda ctx: None)
-                     , do_false: Optional[Callable[[commands.Context], None]] = (lambda ctx: None)) -> None:
+                     , do_true: Optional[
+                    Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]] = None
+                     , do_false: Optional[
+                    Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]] = None) -> None:
             """
             :param if_check: what the condition for entering 'if' statement is
             :param do_true: what to do when the if_check succeeds (done before sending message to chat);
@@ -221,13 +223,17 @@ class Bot(commands.Bot):
             self.if_check: Callable[[commands.Context], bool] = if_check
             self.true_msg: str = true_msg
             self.false_msg: str = false_msg
-            self.do_true: Callable[[commands.Context], None] = do_true or (lambda ctx: None)
-            self.do_false: Callable[[commands.Context], None] = do_false or (lambda ctx: None)
+
+            self.do_true: Callable[[commands.Context], Awaitable[None]] | \
+                          Callable[[commands.Context], None] = do_true or (lambda ctx: None)
+            self.do_false: Callable[[commands.Context], None] | \
+                           Callable[[commands.Context], Awaitable[None]] = do_false or (lambda ctx: None)
 
     @staticmethod
     async def cmd_body(ctx: commands.Context
                        , permission_check: Callable[[commands.Context], bool]
-                       , do_before_if: Optional[Callable[[commands.Context], None]] = (lambda ctx: None)
+                       , do_before_if: Optional[
+                Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]] = None
                        , do_if_else: Optional[DoIfElse] = None
                        , always_msg: Optional[str] = None) -> bool:
         """
@@ -246,18 +252,25 @@ class Bot(commands.Bot):
         if not permission_check(ctx):
             return False
 
-        do_before_if = do_before_if or (lambda ctx: None)
-        do_before_if(ctx)
+        async def run_with_appropriate_awaiting(
+                func: Optional[Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]]) -> None:
+            if func is None:
+                return
+            to_do: Union[None, Awaitable[None]] = func(ctx)
+            if isinstance(to_do, Awaitable):
+                await to_do
+
+        await run_with_appropriate_awaiting(do_before_if)
 
         user: str = ctx.author.name
 
         if do_if_else is not None:
             to_send: str
             if do_if_else.if_check(ctx):
-                do_if_else.do_true(ctx)
+                await run_with_appropriate_awaiting(do_if_else.do_true)
                 to_send = do_if_else.true_msg.replace(F_USER, user)
             else:
-                do_if_else.do_false(ctx)
+                await run_with_appropriate_awaiting(do_if_else.do_false)
                 to_send = do_if_else.false_msg.replace(F_USER, user)
             await Bot.send_and_log(ctx, to_send)
 
