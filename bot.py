@@ -52,7 +52,7 @@ class Bot(commands.Bot):
             for line in f:
                 self.COMPLEMENTS_LIST.append(line.strip())
 
-    async def event_ready(self):
+    async def event_ready(self) -> None:
         """
         Called once when the bot goes online; purely informational
         """
@@ -60,7 +60,7 @@ class Bot(commands.Bot):
             custom_log(f"{BOT_NICK} is online!")
 
     @staticmethod
-    def is_bot(username):
+    def is_bot(username) -> bool:
         """
         checks if a username matches that of a known or assumed bot; currently the following count as bots:
             - any username ending in 'bot'
@@ -69,7 +69,7 @@ class Bot(commands.Bot):
         return len(username) >= 3 and username[-3:] == 'bot' \
                or username == "streamlabs"
 
-    async def event_message(self, ctx: Message):
+    async def event_message(self, ctx: Message) -> None:
         """
         Runs every time a message is sent in chat. This also includes any commands.
         Decides if the person who sent the message in chat should be complemented based on: complement chance, their
@@ -151,7 +151,7 @@ class Bot(commands.Bot):
         return f"{prefix}{who} {complement}", exists
 
     @commands.command()
-    async def complement(self, ctx: commands.Context):
+    async def complement(self, ctx: commands.Context) -> None:
         """
         Users can get a complement themselves or complement others with this command assuming the user is not ignored by
             the bot and the channel owner has not disabled command complements.
@@ -181,11 +181,11 @@ class Bot(commands.Bot):
     # -------------------- bot channel only commands --------------------
 
     @staticmethod
-    def is_in_bot_channel(ctx: commands.Context):
+    def is_in_bot_channel(ctx: commands.Context) -> bool:
         return ctx.channel.name == BOT_NICK or ctx.channel.name == OWNER_NICK
 
     @staticmethod
-    def send_and_log(ctx: commands.Context, msg: str):
+    def send_and_log(ctx: commands.Context, msg: str) -> None:
         """
         Send the message to the channel of ctx and also logs it
         """
@@ -262,12 +262,12 @@ class Bot(commands.Bot):
         return True
 
     @commands.command()
-    async def joinme(self, ctx: commands.Context):
+    async def joinme(self, ctx: commands.Context) -> None:
         """
         Get the bot to join the user's channel and start complementing people in their channel.
         """
 
-        def do_false(ctx: commands.Context):
+        def do_false(ctx: commands.Context) -> None:
             # Have to save to database and update in memory so bot starts working straight away
             join_channel(ctx.author.name)
             # TODO: follow the user
@@ -285,12 +285,12 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def leaveme(self, ctx: commands.Context):
+    async def leaveme(self, ctx: commands.Context) -> None:
         """
         Bot leaves the user's channel and no longer complements chatters there.
         """
 
-        def do_true(ctx: commands.Context):
+        def do_true(ctx: commands.Context) -> None:
             # Update database and in realtime for "instant" effect
             leave_channel(ctx.author.name)
             # TODO: unfollow the user
@@ -308,12 +308,12 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def deleteme(self, ctx: commands.Context):
+    async def deleteme(self, ctx: commands.Context) -> None:
         """
         Same as the 'leaveme' command, but on top, also delete any records of the user (e.g. custom complements)
         """
 
-        def do_true(ctx: commands.Context):
+        def do_true(ctx: commands.Context) -> None:
             # Remove any user records from database and leave their channel NOW
             delete_channel(ctx.author.name)
             # TODO: unfollow the user
@@ -331,7 +331,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def ignoreme(self, ctx: commands.Context):
+    async def ignoreme(self, ctx: commands.Context) -> None:
         """
         The user of this command will not get any complements sent their way from ComplementsBot
         """
@@ -347,7 +347,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def unignoreme(self, ctx: commands.Context):
+    async def unignoreme(self, ctx: commands.Context) -> None:
         """
         Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
         complement using the 'complement' command will work.
@@ -364,7 +364,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def count(self, ctx: commands.Context):
+    async def count(self, ctx: commands.Context) -> None:
         """
         Shows the number of channels that the bot is active in
         """
@@ -374,7 +374,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def about(self, ctx: commands.Context):
+    async def about(self, ctx: commands.Context) -> None:
         """
         Shows some information about the bot
         """
@@ -390,14 +390,14 @@ class Bot(commands.Bot):
     # -------------------- any channel, but must be by owner --------------------
 
     @staticmethod
-    def is_by_broadcaster_or_mod(ctx: commands.Context):
+    def is_by_broadcaster_or_mod(ctx: commands.Context) -> bool:
         return ctx.author.is_broadcaster \
                or ctx.author.is_mod \
                or ctx.author.name == BOT_NICK \
                or ctx.author.name == OWNER_NICK
 
     @commands.command()
-    async def setchance(self, ctx: commands.Context):
+    async def setchance(self, ctx: commands.Context) -> None:
         """
         Change how likely it is that person sending message gets complemented by random.
         The number given can be any valid float number, with anything 100 or above guaranteeing a complement, and 0 and
@@ -430,7 +430,7 @@ class Bot(commands.Bot):
         Bot.send_and_log(ctx, f"@{channel} complement chance set to {str(get_complement_chance(channel))}!")
 
     @commands.command()
-    async def disablecmdcomplement(self, ctx: commands.Context):
+    async def disablecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Prevent chatter from being able to use the !complement command in user's channel
         """
@@ -448,7 +448,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def enablecmdcomplement(self, ctx: commands.Context):
+    async def enablecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Allow chatters in user's chat to use the !complement command
         """
@@ -464,7 +464,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def disablerandomcomplement(self, ctx: commands.Context):
+    async def disablerandomcomplement(self, ctx: commands.Context) -> None:
         """
         Prevent the bot from randomly complementing chatters in user's chat
         """
@@ -481,7 +481,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def enablerandomcomplement(self, ctx: commands.Context):
+    async def enablerandomcomplement(self, ctx: commands.Context) -> None:
         """
         Allow the bot to randomly complement chatters in user's chat
         """
@@ -498,7 +498,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def addcomplement(self, ctx: commands.Context):
+    async def addcomplement(self, ctx: commands.Context) -> None:
         """
         Add a complement for user's chat only that might be chosen to complement the user's chatters
         """
@@ -519,7 +519,7 @@ class Bot(commands.Bot):
         Bot.send_and_log(ctx, f"@{user} new complements added: '{complement}'")
 
     @commands.command()
-    async def listcomplements(self, ctx: commands.Context):
+    async def listcomplements(self, ctx: commands.Context) -> None:
         """
         Show the user all of their custom complements.
         Due to Twitch having a maximum message length, these might have to be sent over more than one message, so it is
@@ -541,7 +541,7 @@ class Bot(commands.Bot):
             Bot.send_and_log(ctx, msg)
 
     @commands.command()
-    async def removecomplement(self, ctx: commands.Context):
+    async def removecomplement(self, ctx: commands.Context) -> None:
         """
         Remove a custom complement, and show the ones that were removed (similarly to !listallcomplements, this might
             require splitting the message into multiple messages due to length limit).
@@ -573,7 +573,7 @@ class Bot(commands.Bot):
             Bot.send_and_log(ctx, msg)
 
     @commands.command()
-    async def removeallcomplements(self, ctx: commands.Context):
+    async def removeallcomplements(self, ctx: commands.Context) -> None:
         """
         Remove all custom complements a user has added
         """
@@ -585,7 +585,7 @@ class Bot(commands.Bot):
                      , f"@{F_USER} all of your custom complements have been removed.")
 
     @commands.command()
-    async def setmutettsprefix(self, ctx: commands.Context):
+    async def setmutettsprefix(self, ctx: commands.Context) -> None:
         """
         Set the character/string to put in front of a message to mute TTS
         """
@@ -600,7 +600,7 @@ class Bot(commands.Bot):
         Bot.send_and_log(ctx, f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'.")
 
     @commands.command()
-    async def mutecmdcomplement(self, ctx: commands.Context):
+    async def mutecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Mutes TTS for complements sent with !complement command
         """
@@ -617,7 +617,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def muterandomcomplement(self, ctx: commands.Context):
+    async def muterandomcomplement(self, ctx: commands.Context) -> None:
         """
         Mutes TTS for complements given out randomly
         """
@@ -634,7 +634,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def unmutecmdcomplement(self, ctx: commands.Context):
+    async def unmutecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Unmutes TTS for complements sent with !complement command
         """
@@ -651,7 +651,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def unmuterandomcomplement(self, ctx: commands.Context):
+    async def unmuterandomcomplement(self, ctx: commands.Context) -> None:
         """
         Unmutes TTS for complements given out randomly
         """
@@ -668,7 +668,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def enablecustomcomplements(self, ctx: commands.Context):
+    async def enablecustomcomplements(self, ctx: commands.Context) -> None:
         """
         All custom complements will be added to the pool that we choose complements for chatters from
         """
@@ -685,7 +685,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def enabledefaultcomplements(self, ctx: commands.Context):
+    async def enabledefaultcomplements(self, ctx: commands.Context) -> None:
         """
         All default complements will be added to the pool that we choose complements for chatters from
         """
@@ -702,7 +702,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def disablecustomcomplements(self, ctx: commands.Context):
+    async def disablecustomcomplements(self, ctx: commands.Context) -> None:
         """
         All custom complements will be removed from the pool that we choose complements for chatters from; this does NOT
             delete the custom complements.
@@ -720,7 +720,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def disabledefaultcomplements(self, ctx: commands.Context):
+    async def disabledefaultcomplements(self, ctx: commands.Context) -> None:
         """
         All default complements will be removed from the pool that we choose complements for chatters from
         """
@@ -737,7 +737,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def unignorebots(self, ctx: commands.Context):
+    async def unignorebots(self, ctx: commands.Context) -> None:
         """
         Chatters that count as bots might be complemented by ComplementsBot
         """
@@ -753,7 +753,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command()
-    async def ignorebots(self, ctx: commands.Context):
+    async def ignorebots(self, ctx: commands.Context) -> None:
         """
         Chatters that count as bots will not be complemented by ComplementsBot
         """
@@ -770,7 +770,7 @@ class Bot(commands.Bot):
                      )
 
     @commands.command(aliases=["compleaveme"])
-    async def compleave(self, ctx: commands.Context):
+    async def compleave(self, ctx: commands.Context) -> None:
         """
         Allows the user to kick ComplementsBot out of their channel from their own channel chat
         """
