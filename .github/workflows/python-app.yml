@@ -12,25 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: oNaiPs/secrets-to-env-action@v1
+    - uses: oNaiPs/secrets-to-env-action@v1 # exports all github secrets as environment variables
       with:
         secrets: ${{ toJSON(secrets) }}
-#    - name: TEST
-#      env:
-#        TEST: ${{ secrets.TEST }}
-#      run: |
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
-#        echo "$TEST"
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
@@ -60,7 +44,7 @@ jobs:
     needs: [build]
     steps:
     - uses: actions/checkout@v3
-    - uses: oNaiPs/secrets-to-env-action@v1
+    - uses: oNaiPs/secrets-to-env-action@v1 # exports all github secrets as environment variables
       with:
         secrets: ${{ toJSON(secrets) }}
     - name: Install dependencies
