@@ -4,10 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-twitchio = "*"
-firebase-admin = "*"
+twitchio = "~=2.5.0"
+firebase-admin = "~=6.0.1"
 websockets = "*"
 requests = "*"
+pylint = "~=2.15.9"
+flake8 = "~=6.0.0"
 
 [dev-packages]
 
