@@ -1,5 +1,4 @@
-import database
-import bot
+from ComplementsBot import bot, database
 
 
 def test_channel_exists() -> None:

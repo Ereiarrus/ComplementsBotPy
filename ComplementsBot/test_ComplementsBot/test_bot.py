@@ -1,4 +1,4 @@
-import bot
+from ComplementsBot import bot
 from typing import List
 
 

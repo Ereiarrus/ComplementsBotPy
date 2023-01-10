@@ -1,15 +1,15 @@
-# bot.py
 """
 Holds all commands (and their logic) for how ComplementsBot should complement Twitch chatters
 """
 
+import os
 import textwrap
 from typing import Callable, Optional, Awaitable, Union, Tuple
 import random
 from twitchio.ext import commands
 from twitchio import Message
 from env_reader import CLIENT_ID, TMI_TOKEN
-import database
+from . import database
 
 # TODO:
 #  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
@@ -59,7 +59,8 @@ class ComplementsBot(commands.Bot):
 
         # Read the default complements from file
         self.complements_list: list[str] = []
-        with open("complements_list.txt", "r", encoding="utf-8") as complements_file:
+        with open(os.path.join(os.path.dirname(__file__), "complements_list.txt"), "r",
+                  encoding="utf-8") as complements_file:
             for line in complements_file:
                 self.complements_list.append(line.strip())
 
@@ -492,7 +493,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} your viewers already cannot make use of the !complement command.",
                                           (lambda ctx: database.disable_cmd_complement(ctx.channel.name)),
                                           None
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -511,7 +512,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} your viewers will now be able to make use of the !complement command!",
                                           None,
                                           (lambda ctx: database.enable_cmd_complement(ctx.channel.name))
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -529,7 +530,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} your viewers already do not randomly receive complements.",
                                           (lambda ctx: database.disable_random_complement(ctx.channel.name)),
                                           None
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -547,7 +548,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} your viewers will now randomly receive complements!",
                                           None,
                                           (lambda ctx: database.enable_random_complement(ctx.channel.name))
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -687,7 +688,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} random complements are now muted.",
                                           None,
                                           (lambda ctx: database.mute_random_complement(ctx.channel.name))
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -722,7 +723,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} random complements are already unmuted!",
                                           (lambda ctx: database.unmute_random_complement(ctx.channel.name)),
                                           None
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -740,7 +741,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} custom complements are now enabled!",
                                           None,
                                           (lambda ctx: database.enable_custom_complements(ctx.channel.name))
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -758,7 +759,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} default complements are now enabled!",
                                           None,
                                           (lambda ctx: database.enable_default_complements(ctx.channel.name))
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -777,7 +778,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} custom complements are already disabled.",
                                           (lambda ctx: database.disable_custom_complements(ctx.channel.name)),
                                           None
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -795,7 +796,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{F_USER} default complements are already disabled!",
                                           (lambda ctx: database.disable_default_complements(ctx.channel.name)),
                                           None
-                                          )
+                                      )
                                       )
 
     @commands.command()
@@ -842,8 +843,3 @@ class ComplementsBot(commands.Bot):
         """
 
         await self.leaveme(ctx)
-
-
-if __name__ == "__main__":
-    bot: ComplementsBot = ComplementsBot()
-    bot.run()
