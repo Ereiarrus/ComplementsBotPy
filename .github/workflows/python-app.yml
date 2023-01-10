@@ -74,4 +74,5 @@ jobs:
         python-version: "3.10"
     - name: Test with pytest
       run: |
+        echo "$FIREBASE_CONFIG" > .firebase_config.json
         pytest
