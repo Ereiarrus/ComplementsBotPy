@@ -439,10 +439,7 @@ class ComplementsBot(commands.Bot):
         (the bot itself and creator also has this permission)
         """
 
-        return ctx.author.is_broadcaster \
-               or ctx.author.is_mod \
-               or ctx.author.name == BOT_NICK \
-               or ctx.author.name == OWNER_NICK
+        return ctx.author.is_broadcaster or ctx.author.is_mod or ctx.author.name in (BOT_NICK, OWNER_NICK)
 
     @commands.command()
     async def setchance(self, ctx: commands.Context) -> None:
