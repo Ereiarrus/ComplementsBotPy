@@ -16,7 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
       env:
-        TEST: ${{ secrets.SuperSecret }}
+        TEST: ${{ secrets.TEST }}
     - name: TEST
       run: |
         echo "$TEST"
