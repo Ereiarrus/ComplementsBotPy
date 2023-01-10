@@ -44,6 +44,25 @@ jobs:
     needs: [build]
     steps:
     - uses: actions/checkout@v3
+    - name: TEST
+      run: |
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
+        echo $TEST
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
