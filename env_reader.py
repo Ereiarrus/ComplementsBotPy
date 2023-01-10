@@ -4,7 +4,7 @@ import os
 def is_env_read(var_str):
     try:
         return os.environ[var_str]
-    except:
+    except KeyError:
         with open(".env", "r") as f:
             for line in f:
                 split_line = line.strip().split("=", 1)

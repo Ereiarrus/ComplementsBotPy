@@ -1,6 +1,6 @@
 import re
 from firebase_admin import credentials, db
-from env_reader import *
+from env_reader import databaseURL
 from typing import Any, Dict, Tuple, Optional
 import firebase_admin
 
@@ -116,7 +116,7 @@ def number_of_joined_channels() -> int:
 
 
 def set_tts_ignore_prefix(user: str, prefix: str) -> None:
-    tts_ignore_prefix = USERS_DB_REF.child(user).child(MUTE_PREFIX).set(prefix)
+    USERS_DB_REF.child(user).child(MUTE_PREFIX).set(prefix)
 
 
 def get_tts_ignore_prefix(user: str) -> str:
