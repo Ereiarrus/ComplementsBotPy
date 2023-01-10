@@ -12,9 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    - name: TEST
       env:
         TEST: ${{ secrets.TEST }}
-    - name: TEST
       run: |
         echo "$TEST"
         echo "$TEST"
