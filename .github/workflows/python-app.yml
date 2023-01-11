@@ -35,10 +35,10 @@ jobs:
     - name: Lint with pylint
       run: |
         pylint ComplementsBot/bot.py
+        # pylint .
     - name: Typecheck with mypy
       run: |
-        mypy *.py
-        mypy --package ComplementsBot  # typecheck the package 'ComplementsBot'
+        mypy .
 
   test:
     timeout-minutes: 30
