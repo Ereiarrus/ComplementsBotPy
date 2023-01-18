@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
+      with:
+        secrets: ${{ toJSON(secrets) }}
     - name: Install mypy and flake8
       run: |
         pip install mypy
@@ -38,6 +40,8 @@ jobs:
     needs: [build]
     steps:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
+      with:
+        secrets: ${{ toJSON(secrets) }}
 
     - name: Install pytest
       run: |
@@ -55,6 +59,8 @@ jobs:
     if: github.ref == 'refs/heads/main'  # Only deploy if this was a push to main
     steps:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
+      with:
+        secrets: ${{ toJSON(secrets) }}
     - name: deploying
       run: |
         echo: "Deploying..."
