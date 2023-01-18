@@ -15,6 +15,7 @@ jobs:
     - uses: oNaiPs/secrets-to-env-action@v1 # exports all github secrets as environment variables
       with:
         secrets: ${{ toJSON(secrets) }}
+    - uses: ${{ github.action_path }}/python-init@main
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
