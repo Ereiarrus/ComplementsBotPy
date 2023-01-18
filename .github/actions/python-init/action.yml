@@ -8,7 +8,7 @@ runs:
     - uses: actions/checkout@v3
     - uses: oNaiPs/secrets-to-env-action@v1 # exports all github secrets as env variables (when used with the next 2 lines)
       with:
-        secrets: ${{ toJSON(secrets) }}
+        secrets: ${{ toJSON(github.event.inputs.secrets) }}
 
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
