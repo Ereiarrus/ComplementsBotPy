@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
       with:
-        secrets: ${{ toJSON(secrets) }}
+        secrets: ${{ secrets }}
     - name: Install mypy and flake8
       run: |
         pip install mypy
