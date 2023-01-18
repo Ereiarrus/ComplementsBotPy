@@ -90,6 +90,4 @@ jobs:
     steps:
       << : [*initialise, {
         name: deploying
-        , run: |
-            echo: "Deploying..."
-      }]
+        , run: 'echo: "Deploying..."'}]
