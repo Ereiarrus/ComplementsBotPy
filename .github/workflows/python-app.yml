@@ -11,7 +11,7 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-    - uses: ${GITHUB_WORKSPACE}/.github/actions/python-init@main
+    - uses: ./.github/actions/python-init@main
       with:
         secrets: ${{ toJSON(secrets) }}
     - name: Install mypy and flake8
