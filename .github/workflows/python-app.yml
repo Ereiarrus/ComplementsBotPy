@@ -14,6 +14,9 @@ jobs:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
       with:
         secrets: ${{ toJSON(secrets) }}
+    - name: print secrets
+      run: |
+        echo "$CLIENT_ID"
     - name: Install mypy and flake8
       run: |
         pip install mypy
