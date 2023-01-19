@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
       with:
-        secrets: ${{ toJSON(secrets) }}
+        secrets: ${{ secrets }}
 #    - name: print secrets
 #      run: |
 #        echo "Hello!"
@@ -21,6 +21,7 @@ jobs:
       run: |
         pip install mypy
         pip install flake8
+        pip install mypy
 
     - name: Check for syntax errors or undefined names
       run: |
