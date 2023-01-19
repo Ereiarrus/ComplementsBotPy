@@ -41,7 +41,7 @@ jobs:
     steps:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
       with:
-        secrets: {{ toJSON(secrets) }}
+        secrets: ${{ toJSON(secrets) }}
 
     - name: Install pytest
       run: |
@@ -60,7 +60,7 @@ jobs:
     steps:
     - uses: Ereiarrus/ComplementsBotPy/.github/actions/python-init@main
       with:
-        secrets: {{ toJSON(secrets) }}
+        secrets: ${{ toJSON(secrets) }}
     - name: deploying
       run: |
         echo: "Deploying..."
