@@ -67,4 +67,4 @@ jobs:
         secrets: ${{ toJSON(secrets) }}
     - name: deploying
       run: |
-        echo: "Deploying..."
+        echo "Deploying..."
