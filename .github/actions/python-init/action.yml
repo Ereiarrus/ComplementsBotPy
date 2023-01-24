@@ -1,10 +1,16 @@
+name: python-env-init
+description: Initialises a Python environment
+
+
 inputs:
   secrets:
     required: true
+    description: a JSON object of all GitHub secrets
 
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v3
     - uses: oNaiPs/secrets-to-env-action@v1 # exports all github secrets as env variables (when used with the next 2 lines)
       with:
         secrets: ${{ inputs.secrets }}
