@@ -15,10 +15,11 @@ jobs:
     - uses: ./.github/actions/python-init
       with:
         secrets: ${{ toJSON(secrets) }}
-    - name: Install mypy and flake8
+    - name: Install mypy, flake8 and pylint
       run: |
         pip install mypy
         pip install flake8
+        pip install pylint
 
     - name: Check for syntax errors or undefined names
       run: |
@@ -30,7 +31,7 @@ jobs:
     - name: Lint with pylint
       run: |
         pylint ComplementsBot/bot.py
-        # pylint .
+        # pylint ComplementsBot env_reader.py main.py
     - name: Typecheck with mypy
       run: |
         mypy .
