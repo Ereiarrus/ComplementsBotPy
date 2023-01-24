@@ -477,7 +477,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{channel} complement chance set to "
                                           f"{str(database.get_complement_chance(channel))}!")
 
-    @commands.command()
+    @commands.command(aliases=["disablecommandcomplement"])
     async def disablecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Prevent chatter from being able to use the !complement command in user's channel
@@ -496,7 +496,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["enablecommandcomplement"])
     async def enablecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Allow chatters in user's chat to use the !complement command
@@ -656,7 +656,7 @@ class ComplementsBot(commands.Bot):
         database.set_mute_prefix(ctx.channel.name, prefix)
         await ComplementsBot.send_and_log(ctx, f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'.")
 
-    @commands.command()
+    @commands.command(aliases=["mutecommandcomplement"])
     async def mutecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Mutes TTS for complements sent with !complement command
@@ -691,7 +691,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["unmutecommandcomplement"])
     async def unmutecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Unmutes TTS for complements sent with !complement command
