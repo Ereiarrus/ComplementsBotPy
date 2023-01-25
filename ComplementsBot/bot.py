@@ -481,7 +481,7 @@ class ComplementsBot(commands.Bot):
                                           f"@{channel} complement chance set to "
                                           f"{str(database.get_complement_chance(channel))}!")
 
-    @commands.command(aliases=["disablecommandcomplement"])
+    @commands.command(aliases=["disablecommandcomplement", "disablecommandcomp", "disablecmdcomp"])
     async def disablecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Prevent chatter from being able to use the !complement command in user's channel
@@ -500,7 +500,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command(aliases=["enablecommandcomplement"])
+    @commands.command(aliases=["enablecommandcomplement", "enablecommandcomp", "enablecmdcomp"])
     async def enablecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Allow chatters in user's chat to use the !complement command
@@ -519,7 +519,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["disablerandcomplement", "disablerandcomp", "disablerandomcomp"])
     async def disablerandomcomplement(self, ctx: commands.Context) -> None:
         """
         Prevent the bot from randomly complementing chatters in user's chat
@@ -537,7 +537,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["enablerandcomplement", "enablerandcomp", "enablerandomcomp"])
     async def enablerandomcomplement(self, ctx: commands.Context) -> None:
         """
         Allow the bot to randomly complement chatters in user's chat
@@ -555,7 +555,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["addcomp"])
     async def addcomplement(self, ctx: commands.Context) -> None:
         """
         Add a complement for user's chat only that might be chosen to complement the user's chatters
@@ -576,7 +576,7 @@ class ComplementsBot(commands.Bot):
         database.add_complement(user, complement)
         await ComplementsBot.send_and_log(ctx, f"@{user} new complements added: '{complement}'")
 
-    @commands.command()
+    @commands.command(aliases=["listcomps"])
     async def listcomplements(self, ctx: commands.Context) -> None:
         """
         Show the user all of their custom complements.
@@ -600,7 +600,7 @@ class ComplementsBot(commands.Bot):
             msg = f"@{user} No complements found."
             await ComplementsBot.send_and_log(ctx, msg)
 
-    @commands.command()
+    @commands.command(aliases=["removecomp"])
     async def removecomplement(self, ctx: commands.Context) -> None:
         """
         Remove a custom complement, and show the ones that were removed (similarly to !listallcomplements, this might
@@ -633,7 +633,7 @@ class ComplementsBot(commands.Bot):
             send_msg = f"@{user} No complements with that phrase found."
             await ComplementsBot.send_and_log(ctx, send_msg)
 
-    @commands.command()
+    @commands.command(aliases=["removeallcomps"])
     async def removeallcomplements(self, ctx: commands.Context) -> None:
         """
         Remove all custom complements a user has added
@@ -660,7 +660,7 @@ class ComplementsBot(commands.Bot):
         database.set_mute_prefix(ctx.channel.name, prefix)
         await ComplementsBot.send_and_log(ctx, f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'.")
 
-    @commands.command(aliases=["mutecommandcomplement"])
+    @commands.command(aliases=["mutecommandcomplement", "mutecommandcomp", "mutecmdcomp"])
     async def mutecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Mutes TTS for complements sent with !complement command
@@ -678,7 +678,7 @@ class ComplementsBot(commands.Bot):
                                           )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["muterandcomplement", "muterandcomp", "muterandomcomp"])
     async def muterandomcomplement(self, ctx: commands.Context) -> None:
         """
         Mutes TTS for complements given out randomly
@@ -696,7 +696,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command(aliases=["unmutecommandcomplement"])
+    @commands.command(aliases=["unmutecommandcomplement", "unmutecommandcomp", "unmutecmdcomp"])
     async def unmutecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Unmutes TTS for complements sent with !complement command
@@ -714,7 +714,7 @@ class ComplementsBot(commands.Bot):
                                           )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["unmuterandcomplement", "unmuterandcomp", "unmuterandomcomp"])
     async def unmuterandomcomplement(self, ctx: commands.Context) -> None:
         """
         Unmutes TTS for complements given out randomly
@@ -732,7 +732,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["enablecustomcomps"])
     async def enablecustomcomplements(self, ctx: commands.Context) -> None:
         """
         All custom complements will be added to the pool that we choose complements for chatters from
@@ -750,7 +750,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["enabledefaultcomps"])
     async def enabledefaultcomplements(self, ctx: commands.Context) -> None:
         """
         All default complements will be added to the pool that we choose complements for chatters from
@@ -768,7 +768,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["disablecustomcomps"])
     async def disablecustomcomplements(self, ctx: commands.Context) -> None:
         """
         All custom complements will be removed from the pool that we choose complements for chatters from; this does NOT
@@ -787,7 +787,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["disabledefaultcomps"])
     async def disabledefaultcomplements(self, ctx: commands.Context) -> None:
         """
         All default complements will be removed from the pool that we choose complements for chatters from
@@ -805,7 +805,7 @@ class ComplementsBot(commands.Bot):
                                       )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["unignorebot"])
     async def unignorebots(self, ctx: commands.Context) -> None:
         """
         Chatters that count as bots might be complemented by ComplementsBot
@@ -822,7 +822,7 @@ class ComplementsBot(commands.Bot):
                                                               )
                                       )
 
-    @commands.command()
+    @commands.command(aliases=["ignorebot"])
     async def ignorebots(self, ctx: commands.Context) -> None:
         """
         Chatters that count as bots will not be complemented by ComplementsBot
