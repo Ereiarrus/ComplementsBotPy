@@ -110,7 +110,8 @@ class ComplementsBot(commands.Bot):
                 and (not is_author_ignored) \
                 and (not is_author_bot) \
                 and database.get_random_complement_enabled(message.channel.name):
-            comp_msg, exists = self.complement_msg(message, message.author.name, database.is_random_complement_muted(channel))
+            comp_msg, exists = self.complement_msg(message, message.author.name,
+                                                   database.is_random_complement_muted(channel))
             if exists:
                 await message.channel.send(comp_msg)
                 if SHOULD_LOG:
@@ -224,10 +225,10 @@ class ComplementsBot(commands.Bot):
                      if_check: Callable[[commands.Context], bool],
                      true_msg: str,
                      false_msg: str,
-                     do_true: Optional[
-                         Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]] = None,
-                     do_false: Optional[
-                         Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]] = None) -> None:
+                     do_true: Optional[Union[
+                         Callable[[commands.Context], Awaitable[None]], Callable[[commands.Context], None]]] = None,
+                     do_false: Optional[Union[Callable[[commands.Context], Awaitable[None]], Callable[
+                         [commands.Context], None]]] = None) -> None:
             """
             :param if_check: what the condition for entering 'if' statement is
             :param do_true: what to do when the if_check succeeds (done before sending message to chat);
@@ -244,16 +245,18 @@ class ComplementsBot(commands.Bot):
             self.true_msg: str = true_msg
             self.false_msg: str = false_msg
 
-            self.do_true: Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None] = do_true or (
+            self.do_true: Union[Callable[[commands.Context], Awaitable[None]], Callable[
+                [commands.Context], None]] = do_true or (
                 lambda ctx: None)
-            self.do_false: Callable[[commands.Context], None] | Callable[[commands.Context], Awaitable[None]] = do_false or (
+            self.do_false: Union[Callable[[commands.Context], None], Callable[
+                [commands.Context], Awaitable[None]]] = do_false or (
                 lambda ctx: None)
 
     @staticmethod
     async def cmd_body(ctx: commands.Context,
                        permission_check: Callable[[commands.Context], bool],
                        do_before_if: Optional[
-                           Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]] = None,
+                           Union[Callable[[commands.Context], Awaitable[None]], Callable[[commands.Context], None]]] = None,
                        do_if_else: Optional[DoIfElse] = None,
                        always_msg: Optional[str] = None) -> bool:
         """
@@ -273,7 +276,8 @@ class ComplementsBot(commands.Bot):
             return False
 
         async def run_with_appropriate_awaiting(
-                func: Optional[Callable[[commands.Context], Awaitable[None]] | Callable[[commands.Context], None]]) -> None:
+                func: Optional[
+                    Union[Callable[[commands.Context], Awaitable[None]], Callable[[commands.Context], None]]]) -> None:
             if func is None:
                 return
             to_do: Union[None, Awaitable[None]] = func(ctx)
@@ -665,12 +669,13 @@ class ComplementsBot(commands.Bot):
         await ComplementsBot.cmd_body(ctx,
                                       ComplementsBot.is_by_broadcaster_or_mod,
                                       None,
-                                      ComplementsBot.DoIfElse((lambda ctx: database.is_cmd_complement_muted(ctx.channel.name)),
-                                                              f"@{F_USER} command complements are already muted!",
-                                                              f"@{F_USER} command complements are now muted.",
-                                                              None,
-                                                              (lambda ctx: database.mute_cmd_complement(ctx.channel.name))
-                                                              )
+                                      ComplementsBot.DoIfElse(
+                                          (lambda ctx: database.is_cmd_complement_muted(ctx.channel.name)),
+                                          f"@{F_USER} command complements are already muted!",
+                                          f"@{F_USER} command complements are now muted.",
+                                          None,
+                                          (lambda ctx: database.mute_cmd_complement(ctx.channel.name))
+                                          )
                                       )
 
     @commands.command()
@@ -700,12 +705,13 @@ class ComplementsBot(commands.Bot):
         await ComplementsBot.cmd_body(ctx,
                                       ComplementsBot.is_by_broadcaster_or_mod,
                                       None,
-                                      ComplementsBot.DoIfElse((lambda ctx: database.is_cmd_complement_muted(ctx.channel.name)),
-                                                              f"@{F_USER} command complements are no longer muted!",
-                                                              f"@{F_USER} command complements are already unmuted!",
-                                                              (lambda ctx: database.unmute_cmd_complement(ctx.channel.name)),
-                                                              None
-                                                              )
+                                      ComplementsBot.DoIfElse(
+                                          (lambda ctx: database.is_cmd_complement_muted(ctx.channel.name)),
+                                          f"@{F_USER} command complements are no longer muted!",
+                                          f"@{F_USER} command complements are already unmuted!",
+                                          (lambda ctx: database.unmute_cmd_complement(ctx.channel.name)),
+                                          None
+                                          )
                                       )
 
     @commands.command()
