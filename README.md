@@ -110,6 +110,7 @@ Make sure create a .env file in the root directory with the following variables:
   for name, give it the channel name (ComplementsBot in our case), OAuth Redirect URLs: https:localhost:8000,
   Category: Chat Bot; then go to 'Manage' and copy the Client ID
 - DATABASE_URL= the URL to your realtime database as shown in firebase
+- CLIENT_SECRET= go to https://dev.twitch.tv/console/apps, click 'Manage', and generate a 'New Secret'.
 
 Once you have your firebase app, go to 'Service accounts' in project settings. From here, generate a new private key,
 and save the file as '.firebase_config.json' in the root directory.

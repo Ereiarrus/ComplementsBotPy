@@ -10,6 +10,7 @@ from twitchio.ext import commands
 from twitchio import Message
 from env_reader import CLIENT_ID, TMI_TOKEN
 from . import database
+from .userid_to_from_username import name_to_id, id_to_name
 
 # TODO:
 #  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
@@ -29,6 +30,7 @@ MAX_COMPLEMENT_LENGTH: int = 350
 F_USER: str = "{user}"
 
 BOT_NICK: str = "complementsbot"
+BOT_ID: str = "845759020"
 OWNER_NICK: str = 'ereiarrus'
 
 SHOULD_LOG: bool = True
