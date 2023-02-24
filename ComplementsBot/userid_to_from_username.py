@@ -51,5 +51,3 @@ def name_to_id(name: str) -> str:
 
 def id_to_name(id: str) -> str:
     return from_one_to_other(name, 'id', 'login')
-
-print(name_to_id("ereiarrus"))

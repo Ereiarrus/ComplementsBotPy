@@ -481,7 +481,7 @@ class ComplementsBot(commands.Bot):
             await ComplementsBot.send_and_log(ctx, to_send)
             return
 
-        database.set_complement_chance(channel, chance)
+        database.set_complement_chance(chance, channel)
         await ComplementsBot.send_and_log(ctx,
                                           f"@{channel} complement chance set to "
                                           f"{str(database.get_complement_chance(channel))}!")
@@ -578,7 +578,7 @@ class ComplementsBot(commands.Bot):
             await ComplementsBot.send_and_log(ctx, to_send)
             return
 
-        database.add_complement(user, complement)
+        database.add_complement(complement, user)
         await ComplementsBot.send_and_log(ctx, f"@{user} new complements added: '{complement}'")
 
     @commands.command(aliases=["listcomps"])
@@ -663,7 +663,7 @@ class ComplementsBot(commands.Bot):
         msg: str = ctx.message.content
         msg = msg.strip()
         prefix: str = msg[msg.find(" ") + 1:]
-        database.set_mute_prefix(ctx.channel.name, prefix)
+        database.set_mute_prefix(prefix, ctx.channel.name)
         await ComplementsBot.send_and_log(ctx, f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'.")
 
     @commands.command(aliases=["mutecommandcomplement", "mutecommandcomp", "mutecmdcomp"])
