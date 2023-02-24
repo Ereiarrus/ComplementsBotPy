@@ -5,6 +5,7 @@ from env_reader import CLIENT_ID, CLIENT_SECRET
 
 app_access_token: str = ""
 app_access_token_lock = threading.RLock()
+MAX_RETRIES = 5
 
 
 def renew_app_access_token() -> None:
@@ -20,36 +21,35 @@ def renew_app_access_token() -> None:
     finally:
         app_access_token_lock.release()
 
+    return app_access_token
 
-def name_to_id(name: str) -> str:
+
+def from_one_to_other(one: str, one_literal: str, other_literal: str) -> str:
     global app_access_token
 
+    x = None
+    retries = 0
+    headers = {"Authorization": "", "Client-Id": f"{CLIENT_ID}"}
     app_access_token_lock.acquire()
     try:
-        headers = {"Authorization": f"Bearer {app_access_token}", "Client-Id": f"{CLIENT_ID}"}
-        x = requests.get(f"https://api.twitch.tv/helix/users?login={name}", headers=headers)
-        while x.status_code == 401:
+        headers["Authorization"] = f"Bearer {app_access_token}"
+        x = requests.get(f"https://api.twitch.tv/helix/users?{one_literal}={one}", headers=headers)
+        while x.status_code == 401 and retries < MAX_RETRIES:
             renew_app_access_token()
-            headers = {"Authorization": f"Bearer {app_access_token}", "Client-Id": f"{CLIENT_ID}"}
-            x = requests.get(f"https://api.twitch.tv/helix/users?login={name}", headers=headers)
+            headers["Authorization"] = f"Bearer {app_access_token}"
+            x = requests.get(f"https://api.twitch.tv/helix/users?{one_literal}={one}", headers=headers)
+            retries += 1
     finally:
         app_access_token_lock.release()
 
-    return x.json()["data"][0]["id"]
+    return x.json()["data"][0][f"{other_literal}"]
+
+
+def name_to_id(name: str) -> str:
+    return from_one_to_other(name, 'login', 'id')
 
 
 def id_to_name(id: str) -> str:
-    global app_access_token
+    return from_one_to_other(name, 'id', 'login')
 
-    app_access_token_lock.acquire()
-    try:
-        headers = {"Authorization": f"Bearer {app_access_token}", "Client-Id": f"{CLIENT_ID}"}
-        x = requests.get(f"https://api.twitch.tv/helix/users?id={id}", headers=headers)
-        while x.status_code == 401:
-            renew_app_access_token()
-            headers = {"Authorization": f"Bearer {app_access_token}", "Client-Id": f"{CLIENT_ID}"}
-            x = requests.get(f"https://api.twitch.tv/helix/users?id={id}", headers=headers)
-    finally:
-        app_access_token_lock.release()
-
-    return x.json()["data"][0]["login"]
+print(name_to_id("ereiarrus"))
