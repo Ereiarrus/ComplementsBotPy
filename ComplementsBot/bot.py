@@ -8,20 +8,18 @@ from typing import Callable, Optional, Awaitable, Union, Tuple
 import random
 from twitchio.ext import commands
 from twitchio import Message
-from env_reader import CLIENT_ID, TMI_TOKEN
+from env_reader import CLIENT_ID, TMI_TOKEN, CLIENT_SECRET
 from . import database
+from .userid_to_from_username import id_to_name, name_to_id
 
 # TODO:
-#  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone.
-#  allow streamers to control which user groups can receive which complements
-#  when people try complementing the bot, say something different
-#  when people reply to bot (e.g. say thank you), say something different
+#  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone
+#  when people try complementing the bot, say something different/thank them
 #  |
 #  make a website where users can see all of their info
 #  make a docker container for app
-#  Change primary key for users - from username to user id
-#  deploy app to server
-#  set up database with data type rules
+#  deploy app to server automatically if it passes all tests
+#  set up database with data type rules - on DynamoDB(?)
 
 
 BOT_NICK: str = "complementsbot"
@@ -49,14 +47,17 @@ class ComplementsBot(commands.Bot):
     OWNER_ID: str = '118034879'
 
     def __init__(self) -> None:
+        # print(list(map(lambda x: (x, name_to_id(x)), database.get_joined_channels())))
+        # exit()
 
         database.join_channel(BOT_NICK)
         super().__init__(
             token=TMI_TOKEN,
+            client_secret=CLIENT_SECRET,
+            initial_channels=list(map(lambda x: id_to_name(x), database.get_joined_channels())),
             client_id=CLIENT_ID,
             nick=BOT_NICK,
-            prefix=ComplementsBot.CMD_PREFIX,
-            initial_channels=database.get_joined_channels()
+            prefix=ComplementsBot.CMD_PREFIX
         )
 
         # Read the default complements from file
