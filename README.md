@@ -8,10 +8,6 @@ which you can extend yourself, or disregard completely.
 Note that you might need to VIP me in your chat, especially if your viewers tend to make heavy use of the !complement
 command - this is because Twitch seems to count many bot messages as spam, and mutes/times out the bot.
 
-### Implemented commands
-
-The following commands have been implemented:
-
 #### Anywhere commands
 
 The following commands work anywhere that I have joined:
@@ -24,7 +20,10 @@ Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 
 - !joinme - I will join your channel
 - !leaveme - I will leave your channel, but keep your settings in case you decide you want me back
-- !deleteme - I will leave your channel and delete all of your settings
+- !deleteme - I will leave your channel and delete all of your settings; this does not affect your ignored status, 
+so if you did !ignoreme, I will still know that you don't want to be complemented after doing !deleteme, and your 
+twitch username/user id will still be stored in my database. If you don't want this, then also do !unignore me - 
+this will remove any reference of you from my database
 
 - !ignoreme - I will never complement you
 - !unignoreme - undo !ignoreme
@@ -36,42 +35,46 @@ Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 
 These commands must be used by the channel owner in their own channel:
 
-- !compleave - same as !leaveme, but you can do it in your own channel.
+- !compleave/!compleaveme - same as !leaveme, but you can do it in your own channel. (**NOT WORKING YET**)
 
 - !setchance - change how likely it is that person sending message gets complemented; default is 3.33%; setting it to a
   number over 100 makes it always trigger, and to 0 or less to never trigger
 
-- !addcomplement <complement> - add a custom complement for to your own channel
-- !removeallcomplements - removes all custom complements added by you
-- !removecomplement <phrase> - remove a complement from your own channel; the complement which gets removed is one which contains "phrase" in it, after "phrase" has gone through the process of:
+- !addcomplement/!addcomp <complement> - add a custom complement for to your own channel
+- !removeallcomplements/!removeallcomps - removes all custom complements added by you
+- !removecomplement/!removecomp <phrase> - remove a complement from your own channel; the complement which gets removed is one which contains "phrase" in it, after "phrase" has gone through the process of:
   - all non-alphanumeric (numbers and letters) characters get removed; this includes spaces
   - all letters in "phrase" get converted into lowercase
   - the resulting string (which was originally "phrase") will be compared to all custom complements with the same two things done to them, and any complement containing the phrase will be removed.
   - any removed complements will be showed in the chat
   - this might get the bot timed out/banned from your channel, especially if you are removing a lot of custom complements. Consider VIPing it if you plan on using it!
+  - **Example usage**: say that one of your custom complements is "You arw an awful person!"; you can remove this by typing '!removecomp youarwa', assuming no other custom complements contain the phrase 'youarwa' after having gone through the above process.
 
-- !disablecmdcomplement - ComplementsBot will no longer send out complements when a viewer uses the !complement
-  command; by default, this is off
-- !enablecmdcomplement - undoes !disablecommandcomplement; this is the default
-- !disablerandomcomplement - ComplementsBot will no longer send out complements randomly; by default, ComplementsBot
-  does randomly send out complements
-- !enablerandomcomplement - undoes !disablerandomcomplement; this is the default
+- !disablecmdcomplement/!disablecommandcomplement/!disablecommandcomp/!disablecmdcomp - 
+ComplementsBot will no longer send out complements when a viewer uses the !complement command; by default, this is off
+- !enablecmdcomplement/!enablecommandcomplement/!enablecommandcomp/!enablecmdcomp - undoes !disablecommandcomplement; 
+this is the default
+- !disablerandomcomplement/!disablerandcomplement/!disablerandcomp/!disablerandomcomp - ComplementsBot will no longer 
+send out complements randomly; by default, ComplementsBot does randomly send out complements
+- !enablerandomcomplement/!enablerandcomplement/!enablerandcomp/!enablerandomcomp - undoes !disablerandomcomplement; 
+this is the default
 
 - !setmutettsprefix - the character/string to put in front of a message to mute TTS (text-to-speech); default is "!"
-- !mutecmdcomplement - mutes tts for complements sent with !complement command; this is the default
-- !unmutecmdcomplement - undoes !mutecmdcomplement;
-- !muterandomcomplement - mutes tts for complements randomly given out;
-- !unmuterandomcomplement - undoes !muterandomcomplement; this is the default
+- !mutecmdcomplement/!mutecommandcomplement/!mutecommandcomp/!mutecmdcomp - mutes tts for complements sent with !complement command; this is the default
+- !unmutecmdcomplement/!unmutecommandcomplement/!unmutecommandcomp/!unmutecmdcomp - undoes !mutecmdcomplement;
+- !muterandomcomplement/!muterandcomplement/!muterandcomp/!muterandomcomp - mutes tts for complements randomly given out;
+- !unmuterandomcomplement/!unmuterandcomplement/!unmuterandcomp/!unmuterandomcomp - undoes !muterandomcomplement; this is the default
 
-- !disablecustomcomplements - I will not complement people using your own complements
-- !enablecustomcomplements - I will complement people using your complements; this is the default
-- !disabledefaultcomplements - I will not complement people using the default complements
-- !enabledefaultcomplements - I will complement people using the default; this is the default
-- !listcomplements - lists all complements which have been added; this might get the bot timed out/banned from your channel, especially if you have a lot of custom complements. Consider VIPing it if you plan on using it!
+- !disablecustomcomplements/!disablecustomcomps - I will not complement people using your own complements
+- !enablecustomcomplements/!enablecustomcomps - I will complement people using your complements; this is the default
+- !disabledefaultcomplements/!disabledefaultcomps - I will not complement people using the default complements
+- !enabledefaultcomplements/!enabledefaultcomps - I will complement people using the default; this is the default
+- !listcomplements/!listcomps - lists all complements which have been added; this might get the bot timed out/banned 
+from your channel, especially if you have a lot of custom complements. Consider VIPing it if you plan on using it!
 
-- !ignorebots - ignores users whose name ends in 'bot' for random complement (they can still be manually complemented
+- !ignorebots/!ignorebot - ignores users whose name ends in 'bot' for random complement (they can still be manually complemented
   using the !complement command if command complements are enabled (!enablecmdcomplement)); this is the case by default
-- !unignorebots - undo ignorebots; by default, bots are ignored.
+- !unignorebots/!unignorebot - undo ignorebots; by default, bots are ignored.
 
 ### Unimplemented commands
 
