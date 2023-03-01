@@ -8,6 +8,11 @@ which you can extend yourself, or disregard completely.
 Note that you might need to VIP me in your chat, especially if your viewers tend to make heavy use of the !complement
 command - this is because Twitch seems to count many bot messages as spam, and mutes/times out the bot.
 
+If, for whatever reason, you decide to change your Twitch username, know that the bot will NOT be in your chat if you don't take action.
+You will have to come into the bot's channel chat and type !refresh. MAKE SURE you run the !refresh command after changing your username,
+as if you change your username a second time without having run the !refresh command after the first time you changed it, you will not be
+able to get the bot to join your chat on your own (i.e. you will have to contact me and get me to run the !refreshall command)
+
 #### Anywhere commands
 
 The following commands work anywhere that I have joined:
@@ -24,6 +29,8 @@ Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 so if you did !ignoreme, I will still know that you don't want to be complemented after doing !deleteme, and your 
 twitch username/user id will still be stored in my database. If you don't want this, then also do !unignore me - 
 this will remove any reference of you from my database
+- !refresh - When you change your Twitch username, you must make use of this, as otherwise the bot might not join your (new) chat (unless/when I restart it)
+- !refreshall - (NOT AVAILABLE TO GENERAL PUBLIC due to potentially high overhead) refreshes the full list of joined channels, and joins renamed users' (new) chats
 
 - !ignoreme - I will never complement you
 - !unignoreme - undo !ignoreme

@@ -1,7 +1,7 @@
 import re
 from firebase_admin import credentials, db
 from env_reader import databaseURL
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Tuple, Optional, Callable
 import firebase_admin
 
 cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
@@ -49,24 +49,19 @@ DEFAULT_USER: Dict[str, Any] = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE,
                                 }
 
 
-def name_to_id(name: str) -> int:
-    pass
-
-
-def id_to_name(uid: int) -> str:
-    pass
-
-
-def is_user_ignored(username: str = None, userid: int = None) -> bool:
+def is_user_ignored(username: Optional[str] = None, userid: Optional[int] = None,
+                    name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
-    At least one of 'username' or 'userid' must be specified; userid is preferred whenever possible due to
-     being guaranteed to not ever change
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
     :param username: twitch username which we are checking if they are ignored
     :param userid: twitch user id which we are checking if they are ignored
     :return: whether the specified user is ignored from getting complements or not
     """
 
     assert username or userid
+    assert userid or name_to_id
 
     users: list[int] = IGNORED_DB_REF.get()
     if users is None:
@@ -79,8 +74,18 @@ def is_user_ignored(username: str = None, userid: int = None) -> bool:
     return userid in users
 
 
-def ignore(username: str = None, userid: int = None) -> None:
+def ignore(username: str = None, userid: int = None,
+           name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Adds the user to the ignored users list (so that they can't be complemented)
+    """
     assert username or userid
+    assert userid or name_to_id
 
     def ignore_transaction(data: list[str]):
         if data is None:
@@ -94,8 +99,18 @@ def ignore(username: str = None, userid: int = None) -> None:
     IGNORED_DB_REF.transaction(ignore_transaction)
 
 
-def unignore(username: str = None, userid: int = None) -> None:
+def unignore(username: str = None, userid: int = None,
+             name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Removes the user from the ignored users list (so that they can be complemented)
+    """
     assert username or userid
+    assert userid or name_to_id
 
     def unignore_transaction(data: list[int]) -> list[int]:
         data.remove(userid)
@@ -107,16 +122,38 @@ def unignore(username: str = None, userid: int = None) -> None:
     IGNORED_DB_REF.transaction(unignore_transaction)
 
 
-def channel_exists(username: str = None, userid: int = None) -> bool:
+def channel_exists(username: str = None, userid: int = None,
+                   name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return: whether the channel has an entry in the database of ever being joined by the bot
+    """
     assert username or userid
+    assert userid or name_to_id
+
     users = USERS_DB_REF.get(False, True)
     if not userid:
         userid = name_to_id(username)
     return (users is not None) and userid in users
 
 
-def is_channel_joined(username: str = None, userid: int = None) -> bool:
+def is_channel_joined(username: str = None, userid: int = None,
+                      name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return: whether the bot is active in the channel
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     if not channel_exists(userid=userid):
@@ -125,8 +162,19 @@ def is_channel_joined(username: str = None, userid: int = None) -> bool:
     return bool(USERS_DB_REF.child(userid).child(IS_JOINED).get())
 
 
-def join_channel(username: str = None, userid: int = None) -> None:
+def join_channel(username: str = None, userid: int = None,
+                 name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    The user is added to the database (if not already there) and marked as having the bot active in their chat
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     if not channel_exists(userid=userid):
@@ -135,15 +183,37 @@ def join_channel(username: str = None, userid: int = None) -> None:
         USERS_DB_REF.child(userid).child(IS_JOINED).set(True)
 
 
-def leave_channel(username: str = None, userid: int = None) -> None:
+def leave_channel(username: str = None, userid: int = None,
+                  name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    The bot is marked as inactive in the user's channel
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(IS_JOINED).set(False)
 
 
-def delete_channel(username: str = None, userid: int = None) -> None:
+def delete_channel(username: str = None, userid: int = None,
+                   name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Deletes any mention of the channel from the database; does not affect ignored users
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).delete()
@@ -164,33 +234,79 @@ def number_of_joined_channels() -> int:
     return len(get_joined_channels())
 
 
-def set_tts_ignore_prefix(prefix: str, username: str = None, userid: int = None) -> None:
+def set_tts_mute_prefix(prefix: str, username: str = None, userid: int = None,
+                        name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param prefix: the new prefix for messages so that they are muted on tts
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Changes the character that is prepended to messages so that tts does not pick them up
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(MUTE_PREFIX).set(prefix)
 
 
-def get_tts_ignore_prefix(username: str = None, userid: int = None) -> str:
+def get_tts_mute_prefix(username: str = None, userid: int = None,
+                        name_to_id: Optional[Callable[[str], int]] = None) -> str:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return: the currently set prefix that mutes tts
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     tts_ignore_prefix = USERS_DB_REF.child(userid).child(MUTE_PREFIX).get()
     if tts_ignore_prefix is None:
-        set_tts_ignore_prefix(DEFAULT_TTS_IGNORE_PREFIX, userid=userid)
+        set_tts_mute_prefix(DEFAULT_TTS_IGNORE_PREFIX, userid=userid)
         tts_ignore_prefix = DEFAULT_TTS_IGNORE_PREFIX
     return tts_ignore_prefix
 
 
-def set_complement_chance(chance: float, username: str = None, userid: int = None) -> None:
+def set_complement_chance(chance: float, username: str = None, userid: int = None,
+                          name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param chance: what the new chance (in percentage) of being complemented at random should be
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Updates the chance of being randomly complemented by the bot
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).set(chance)
 
 
-def get_complement_chance(username: str = None, userid: int = None) -> float:
+def get_complement_chance(username: str = None, userid: int = None,
+                          name_to_id: Optional[Callable[[str], int]] = None) -> float:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return: the currently set chance (in percents) of being randomly complemented
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     chance = USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).get()
@@ -200,47 +316,115 @@ def get_complement_chance(username: str = None, userid: int = None) -> float:
     return chance
 
 
-def set_command_complement_enabled(is_enabled: bool, username: str = None, userid: int = None) -> None:
+def set_cmd_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
+                               name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param is_enabled: the new state of whether !complement command can be used
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    updates the status of whether chatters are allowed to complement other using the !complement command
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).set(is_enabled)
 
 
-def get_cmd_complement_enabled(username: str = None, userid: int = None) -> bool:
+def get_cmd_complement_enabled(username: str = None, userid: int = None,
+                               name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return: whether chatters may use the !complement command
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     is_enabled = USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).get()
     if is_enabled is None:
-        set_command_complement_enabled(DEFAULT_COMMAND_COMPLEMENT_ENABLED, userid=userid)
+        set_cmd_complement_enabled(DEFAULT_COMMAND_COMPLEMENT_ENABLED, userid=userid)
         is_enabled = DEFAULT_COMMAND_COMPLEMENT_ENABLED
     return is_enabled
 
 
-def disable_cmd_complement(username: str = None, userid: int = None) -> None:
+def disable_cmd_complement(username: str = None, userid: int = None,
+                           name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Marks in the database that chatters may no longer use the !complement command
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
-    set_command_complement_enabled(False, userid=userid)
+    set_cmd_complement_enabled(False, userid=userid)
 
 
-def enable_cmd_complement(username: str = None, userid: int = None) -> None:
+def enable_cmd_complement(username: str = None, userid: int = None,
+                          name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Marks in the DB that chatters are now allowed to use the !complement command
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
-    set_command_complement_enabled(True, userid=userid)
+    set_cmd_complement_enabled(True, userid=userid)
 
 
-def set_random_complement_enabled(is_enabled: bool, username: str = None, userid: int = None) -> None:
+def set_random_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
+                                  name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param is_enabled: is the bot allowed to complement chatters at random
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Marks in the DB whether the bot may complement chatters at random
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).set(is_enabled)
 
 
-def get_random_complement_enabled(username: str = None, userid: int = None) -> bool:
+def get_random_complement_enabled(username: str = None, userid: int = None,
+                                  name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return: Whether the bot is allowed to randomly complement chatters
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     is_enabled = USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).get()
@@ -250,22 +434,55 @@ def get_random_complement_enabled(username: str = None, userid: int = None) -> b
     return is_enabled
 
 
-def disable_random_complement(username: str = None, userid: int = None) -> None:
+def disable_random_complement(username: str = None, userid: int = None,
+                              name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Marks in the DB that the bot should not complement chatters at random
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     set_random_complement_enabled(False, userid=userid)
 
 
-def enable_random_complement(username: str = None, userid: int = None) -> None:
+def enable_random_complement(username: str = None, userid: int = None,
+                             name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Marks in the DB that the bot may complement chatters at random
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     set_random_complement_enabled(True, userid=userid)
 
 
-def add_complement(complement: str, username: str = None, userid: int = None) -> None:
+def add_complement(complement: str, username: str = None, userid: int = None,
+                   name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
 
@@ -299,9 +516,20 @@ def complements_to_remove(data: list[str], phrase: str) -> Tuple[list[str], list
 
 
 def remove_complements(username: str = None, userid: int = None, to_keep: Optional[list[str]] = None,
-                       to_remove: Optional[list[str]] = None) -> None:
+                       to_remove: Optional[list[str]] = None,
+                       name_to_id: Optional[Callable[[str], int]] = None) -> None:
     # either provide to_remove or to_keep; if both given, to_remove takes precedence
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
 
@@ -315,30 +543,56 @@ def remove_complements(username: str = None, userid: int = None, to_keep: Option
     USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).transaction(remove_transaction)
 
 
-def remove_all_complements(username: str = None, userid: int = None) -> None:
+def remove_all_complements(username: str = None, userid: int = None,
+                           name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).delete()
 
 
-def get_custom_complements(username: str = None, userid: int = None) -> list[str]:
+def get_custom_complements(username: str = None, userid: int = None,
+                           name_to_id: Optional[Callable[[str], int]] = None) -> list[str]:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     complements = USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).get()
     return complements or []
 
 
-def set_mute_prefix(prefix: str, username: str = None, userid: int = None) -> None:
+def get_mute_prefix(username: str = None, userid: int = None,
+                    name_to_id: Optional[Callable[[str], int]] = None) -> str:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
-    if not userid:
-        userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(MUTE_PREFIX).set(prefix)
+    assert userid or name_to_id
 
-
-def get_mute_prefix(username: str = None, userid: int = None) -> str:
-    assert username or userid
     if not userid:
         userid = name_to_id(username)
     prefix = USERS_DB_REF.child(userid).child(MUTE_PREFIX).get()
@@ -347,8 +601,19 @@ def get_mute_prefix(username: str = None, userid: int = None) -> str:
     return str(prefix)
 
 
-def is_cmd_complement_muted(username: str = None, userid: int = None) -> bool:
+def is_cmd_complement_muted(username: str = None, userid: int = None,
+                            name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     is_muted = USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).get()
@@ -357,22 +622,55 @@ def is_cmd_complement_muted(username: str = None, userid: int = None) -> bool:
     return bool(is_muted)
 
 
-def mute_cmd_complement(username: str = None, userid: int = None) -> None:
+def mute_cmd_complement(username: str = None, userid: int = None,
+                        name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).set(True)
 
 
-def unmute_cmd_complement(username: str = None, userid: int = None) -> None:
+def unmute_cmd_complement(username: str = None, userid: int = None,
+                          name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).set(False)
 
 
-def is_random_complement_muted(username: str = None, userid: int = None) -> bool:
+def is_random_complement_muted(username: str = None, userid: int = None,
+                               name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     is_muted = USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).get()
@@ -381,22 +679,55 @@ def is_random_complement_muted(username: str = None, userid: int = None) -> bool
     return bool(is_muted)
 
 
-def mute_random_complement(username: str = None, userid: int = None) -> None:
+def mute_random_complement(username: str = None, userid: int = None,
+                           name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).set(True)
 
 
-def unmute_random_complement(username: str = None, userid: int = None) -> None:
+def unmute_random_complement(username: str = None, userid: int = None,
+                             name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).set(False)
 
 
-def are_default_complements_enabled(username: str = None, userid: int = None) -> bool:
+def are_default_complements_enabled(username: str = None, userid: int = None,
+                                    name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     is_enabled = USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).get()
@@ -405,22 +736,55 @@ def are_default_complements_enabled(username: str = None, userid: int = None) ->
     return bool(is_enabled)
 
 
-def enable_default_complements(username: str = None, userid: int = None) -> None:
+def enable_default_complements(username: str = None, userid: int = None,
+                               name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).set(True)
 
 
-def enable_custom_complements(username: str = None, userid: int = None) -> None:
+def enable_custom_complements(username: str = None, userid: int = None,
+                              name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).set(True)
 
 
-def are_custom_complements_enabled(username: str = None, userid: int = None) -> bool:
+def are_custom_complements_enabled(username: str = None, userid: int = None,
+                                   name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     is_enabled = USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).get()
@@ -429,22 +793,55 @@ def are_custom_complements_enabled(username: str = None, userid: int = None) -> 
     return bool(is_enabled)
 
 
-def disable_custom_complements(username: str = None, userid: int = None) -> None:
+def disable_custom_complements(username: str = None, userid: int = None,
+                               name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).set(False)
 
 
-def disable_default_complements(username: str = None, userid: int = None) -> None:
+def disable_default_complements(username: str = None, userid: int = None,
+                                name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).set(False)
 
 
-def is_ignoring_bots(username: str = None, userid: int = None) -> bool:
+def is_ignoring_bots(username: str = None, userid: int = None,
+                     name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     is_ignoring = USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).get()
@@ -453,15 +850,37 @@ def is_ignoring_bots(username: str = None, userid: int = None) -> bool:
     return bool(is_ignoring)
 
 
-def ignore_bots(username: str = None, userid: int = None) -> None:
+def ignore_bots(username: str = None, userid: int = None,
+                name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).set(True)
 
 
-def unignore_bots(username: str = None, userid: int = None) -> None:
+def unignore_bots(username: str = None, userid: int = None,
+                  name_to_id: Optional[Callable[[str], int]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    :return:
+    """
     assert username or userid
+    assert userid or name_to_id
+
     if not userid:
         userid = name_to_id(username)
     USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).set(False)
