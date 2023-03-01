@@ -1,3 +1,7 @@
+"""
+The API through which items in our database are accessed
+"""
+
 import re
 from firebase_admin import credentials, db
 from env_reader import databaseURL
@@ -442,10 +446,9 @@ def remove_chars(some_str: str, regex: str = r"[^a-z0-9]") -> str:
 
 def complements_to_remove(data: list[str], phrase: str) -> Tuple[list[str], list[str]]:
     """
-
-    :param data:
-    :param phrase:
-    :return:
+    :param data: The list of items we are selecting items to keep/remove from
+    :param phrase: the phrase that tells us which items in 'data' we want to get rid of
+    :return: Tuple of (complements that we removed, complements that we kept)
     """
     if data is None:
         data = []
