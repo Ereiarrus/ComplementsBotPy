@@ -8,9 +8,8 @@ from typing import Callable, Optional, Awaitable, Union, Tuple
 import random
 from twitchio.ext import commands
 from twitchio import Message
-from env_reader import CLIENT_ID, TMI_TOKEN, CLIENT_SECRET
+from env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
-from .userid_to_from_username import ids_to_names
 
 # TODO:
 #  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone
@@ -22,9 +21,8 @@ from .userid_to_from_username import ids_to_names
 #  set up database with data type rules - on DynamoDB(?)
 #  get the website to also have a tool to convert between userid and username
 
-
-BOT_NICK: str = "complementsbot"
-BOT_ID: str = "845759020"
+#  get_channel, part_channels, join_channels, connected_channels, fetch_users, fetch_channel, fetch_channels, event_channel_joined
+#  event_command_error
 
 
 def custom_log(msg: str) -> None:
@@ -49,13 +47,10 @@ class ComplementsBot(commands.Bot):
     OWNER_ID: str = '118034879'
 
     def __init__(self) -> None:
-        database.join_channel(BOT_NICK)
         super().__init__(
             token=TMI_TOKEN,
             client_secret=CLIENT_SECRET,
-            initial_channels=ids_to_names(database.get_joined_channels()),
-            client_id=CLIENT_ID,
-            nick=BOT_NICK,
+            initial_channels=database.get_joined_channels(),
             prefix=ComplementsBot.CMD_PREFIX
         )
 
@@ -71,8 +66,11 @@ class ComplementsBot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
 
+        print(await self.fetch_users(["ereiarrus", "complementsbot", 'misshoneypeaches'], [112426499]))
+        exit()
+        database.join_channel(self.nick)
         if ComplementsBot.SHOULD_LOG:
-            custom_log(f"{BOT_NICK} is online!")
+            custom_log(f"{self.nick} is online!")
 
     @staticmethod
     def is_bot(username) -> bool:
@@ -208,7 +206,7 @@ class ComplementsBot(commands.Bot):
         Checks if the context was created in the bot's channel (or the creator's)
         """
 
-        return ctx.channel.name in (BOT_NICK, ComplementsBot.OWNER_NICK)
+        return ctx.channel.name in (self.nick, ComplementsBot.OWNER_NICK)
 
     @staticmethod
     async def send_and_log(ctx: commands.Context, msg: str) -> None:
@@ -447,7 +445,7 @@ class ComplementsBot(commands.Bot):
         """
 
         return ctx.author.is_broadcaster or ctx.author.is_mod or ctx.author.name in (
-        BOT_NICK, ComplementsBot.OWNER_NICK)
+        self.nick, ComplementsBot.OWNER_NICK)
 
     @commands.command()
     async def setchance(self, ctx: commands.Context) -> None:

@@ -28,7 +28,6 @@ def is_env_read(var_str) -> str:
             return ""
 
 
-CLIENT_ID: str = is_env_read('CLIENT_ID')
 TMI_TOKEN: str = is_env_read('TMI_TOKEN')
 CLIENT_SECRET: str = is_env_read('CLIENT_SECRET')
 databaseURL: str = is_env_read('DATABASE_URL')
