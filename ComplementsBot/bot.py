@@ -50,7 +50,6 @@ class ComplementsBot(commands.Bot):
         super().__init__(
             token=TMI_TOKEN,
             client_secret=CLIENT_SECRET,
-            initial_channels=database.get_joined_channels(),
             prefix=ComplementsBot.CMD_PREFIX
         )
 
@@ -66,9 +65,13 @@ class ComplementsBot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
 
-        print(await self.fetch_users(["ereiarrus", "complementsbot", 'misshoneypeaches'], [112426499]))
-        exit()
         database.join_channel(self.nick)
+        joined_channels = database.get_joined_channels()
+        max_num_user_reqs = 100
+        for i in range(len(joined_channels) // max_num_user_reqs):
+            chunk = joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs, len(joined_channels))]
+            channel_names = list(map(lambda x: x.user.name, await self.fetch_channels(broadcaster_ids=chunk)))
+            await self.join_channels(channel_names)
         if ComplementsBot.SHOULD_LOG:
             custom_log(f"{self.nick} is online!")
 
