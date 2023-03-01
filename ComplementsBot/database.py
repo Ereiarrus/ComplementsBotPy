@@ -74,6 +74,7 @@ def is_user_ignored(username: str = None, userid: str = None) -> bool:
 
 def ignore(username: str = None, userid: str = None) -> None:
     assert username or userid
+
     def ignore_transaction(data: list[str]):
         if data is None:
             data = []

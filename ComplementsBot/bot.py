@@ -10,7 +10,7 @@ from twitchio.ext import commands
 from twitchio import Message
 from env_reader import CLIENT_ID, TMI_TOKEN, CLIENT_SECRET
 from . import database
-from .userid_to_from_username import id_to_name, name_to_id
+from .userid_to_from_username import ids_to_names
 
 # TODO:
 #  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone
@@ -20,6 +20,7 @@ from .userid_to_from_username import id_to_name, name_to_id
 #  make a docker container for app
 #  deploy app to server automatically if it passes all tests
 #  set up database with data type rules - on DynamoDB(?)
+#  get the website to also have a tool to convert between userid and username
 
 
 BOT_NICK: str = "complementsbot"
@@ -38,6 +39,7 @@ class ComplementsBot(commands.Bot):
     """
     Inherits from TwitchIO's commands.Bot class, and adds twitch chat commands for using the bot
     """
+
     CMD_PREFIX: str = '!'
     DEFAULT_MAX_MSG_LEN: int = 500
     MAX_COMPLEMENT_LENGTH: int = 350
@@ -47,14 +49,11 @@ class ComplementsBot(commands.Bot):
     OWNER_ID: str = '118034879'
 
     def __init__(self) -> None:
-        # print(list(map(lambda x: (x, name_to_id(x)), database.get_joined_channels())))
-        # exit()
-
         database.join_channel(BOT_NICK)
         super().__init__(
             token=TMI_TOKEN,
             client_secret=CLIENT_SECRET,
-            initial_channels=list(map(lambda x: id_to_name(x), database.get_joined_channels())),
+            initial_channels=ids_to_names(database.get_joined_channels()),
             client_id=CLIENT_ID,
             nick=BOT_NICK,
             prefix=ComplementsBot.CMD_PREFIX
@@ -99,7 +98,8 @@ class ComplementsBot(commands.Bot):
             return
         if ComplementsBot.SHOULD_LOG:
             custom_log(
-                f"In channel {message.channel.name}, at {message.timestamp}, {message.author.name} said: {message.content}")
+                f"In channel {message.channel.name}, at {message.timestamp}, "
+                f"{message.author.name} said: {message.content}")
 
         sender: str = message.author.name
         channel: str = message.channel.name
@@ -318,7 +318,6 @@ class ComplementsBot(commands.Bot):
         async def do_false(ctx: commands.Context) -> None:
             # Have to save to database and update in memory so bot starts working straight away
             database.join_channel(ctx.author.name)
-            # TODO: follow the user
             await self.join_channels([ctx.author.name])
 
         await ComplementsBot.cmd_body(ctx,
@@ -341,7 +340,6 @@ class ComplementsBot(commands.Bot):
         async def do_true(ctx: commands.Context) -> None:
             # Update database and in realtime for "instant" effect
             database.leave_channel(ctx.author.name)
-            # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
 
         await ComplementsBot.cmd_body(ctx,
@@ -364,7 +362,6 @@ class ComplementsBot(commands.Bot):
         async def do_true(ctx: commands.Context) -> None:
             # Remove any user records from database and leave their channel NOW
             database.delete_channel(ctx.author.name)
-            # TODO: unfollow the user
             await self.part_channels([ctx.author.name])
 
         await ComplementsBot.cmd_body(ctx,

@@ -56,6 +56,7 @@ def from_one_to_other(ones: list[str], one_literal: str, other_literal: str) -> 
             all_names.append([item[f"{other_literal}"] for item in data])
         if resp.status_code == 400:
             raise requests.RequestException(
+                f"in the {i+1}th loop:\n" +
                 resp.json()["message"] +
                 "\nThe id or login query parameter is required unless the request uses a user access token; "
                 "The request exceeded the maximum allowed number of id and/or login query parameters. "
@@ -63,6 +64,7 @@ def from_one_to_other(ones: list[str], one_literal: str, other_literal: str) -> 
                 response=resp)
         if resp.status_code == 401:
             raise requests.RequestException(
+                f"in the {i+1}th loop:\n" +
                 resp.json()["message"] +
                 "\nThe Authorization header is required and must contain an app access token or user access token; "
                 "The access token is not valid; "
@@ -75,7 +77,7 @@ def from_one_to_other(ones: list[str], one_literal: str, other_literal: str) -> 
 
 def names_to_ids(names: list[str]) -> list[str]:
     """
-    :param name: the users' usernames
+    :param names: the users' usernames
     :return: the userids of the specified users
     """
     return from_one_to_other(names, 'login', 'id')
@@ -92,20 +94,20 @@ def name_to_id(name: str) -> str:
     return ids[0]
 
 
-def ids_to_names(ids: list[str]) -> list[str]:
+def ids_to_names(uids: list[str]) -> list[str]:
     """
-    :param ids: the users' ids
+    :param uids: the users' ids
     :return: the usernames of the specified users
     """
-    return from_one_to_other(ids, 'id', 'login')
+    return from_one_to_other(uids, 'id', 'login')
 
 
-def id_to_name(id: str) -> str:
+def id_to_name(uid: str) -> str:
     """
-    :param id: the user's id
+    :param uid: the user's id
     :return: the username of the specified user
     """
-    names = ids_to_names([id])
+    names = ids_to_names([uid])
     if len(names) == 0:
         raise IndexError("The specified id could not be found")
     return names[0]
