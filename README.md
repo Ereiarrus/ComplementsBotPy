@@ -48,7 +48,7 @@ These commands must be used by the channel owner in their own channel:
   - the resulting string (which was originally "phrase") will be compared to all custom complements with the same two things done to them, and any complement containing the phrase will be removed.
   - any removed complements will be showed in the chat
   - this might get the bot timed out/banned from your channel, especially if you are removing a lot of custom complements. Consider VIPing it if you plan on using it!
-  - **Example usage**: say that one of your custom complements is "You arw an awful person!"; you can remove this by typing '!removecomp youarwa', assuming no other custom complements contain the phrase 'youarwa' after having gone through the above process.
+  - **Example usage**: say that one of your custom complements is "You arw an awful person!"; you can remove this by typing '!removecomp youar wa', assuming no other custom complements contain the phrase 'youarwa' after having gone through the above process.
 
 - !disablecmdcomplement/!disablecommandcomplement/!disablecommandcomp/!disablecmdcomp - 
 ComplementsBot will no longer send out complements when a viewer uses the !complement command; by default, this is off
