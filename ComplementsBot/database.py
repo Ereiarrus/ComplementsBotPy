@@ -7,7 +7,7 @@ import firebase_admin
 cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
 firebase_admin.initialize_app(cred, {'databaseURL': databaseURL})
 
-REF: db.Reference = db.reference('/')
+REF: db.Reference = db.reference('/db1')
 IGNORED_DB_REF: db.Reference = REF.child('Ignored')
 USERS_DB_REF: db.Reference = REF.child('Users')
 
