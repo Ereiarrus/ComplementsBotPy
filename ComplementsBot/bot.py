@@ -4,12 +4,14 @@ Holds all commands (and their logic) for how ComplementsBot should complement Tw
 
 import os
 import textwrap
-from typing import Callable, Optional, Awaitable, Union, Tuple
+from typing import Callable, Optional, Awaitable, Union, Tuple, TypeVar
 import random
 from twitchio.ext import commands
 from twitchio import Message
 from env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
+
+T = TypeVar("T")
 
 
 # TODO:
@@ -241,7 +243,7 @@ class ComplementsBot(commands.Bot):
         """
 
         def __init__(self,
-                     if_check: Callable[[commands.Context], bool],
+                     if_check: Union[Callable[[commands.Context], Awaitable[bool]], Callable[[commands.Context], bool]],
                      true_msg: str,
                      false_msg: str,
                      do_true: Optional[Union[
@@ -261,7 +263,8 @@ class ComplementsBot(commands.Bot):
                 in the string is replaced with the name of the user in chat who called the original command
             """
 
-            self.if_check: Callable[[commands.Context], bool] = if_check
+            self.if_check: Union[Callable[[commands.Context], Awaitable[bool]], Callable[[commands.Context], bool]]\
+                = if_check
             self.true_msg: str = true_msg
             self.false_msg: str = false_msg
 
@@ -298,12 +301,13 @@ class ComplementsBot(commands.Bot):
 
         async def run_with_appropriate_awaiting(
                 func: Optional[
-                    Union[Callable[[commands.Context], Awaitable[None]], Callable[[commands.Context], None]]]) -> None:
+                    Union[Callable[[commands.Context], Awaitable[T]], Callable[[commands.Context], T]]]) -> T:
             if func is None:
                 return
             to_do: Union[None, Awaitable[None]] = func(ctx)
             if isinstance(to_do, Awaitable):
-                await to_do
+                return await to_do
+            return to_do
 
         await run_with_appropriate_awaiting(do_before_if)
 
@@ -311,7 +315,7 @@ class ComplementsBot(commands.Bot):
 
         if do_if_else is not None:
             to_send: str
-            if do_if_else.if_check(ctx):
+            if await run_with_appropriate_awaiting(do_if_else.if_check):
                 await run_with_appropriate_awaiting(do_if_else.do_true)
                 to_send = do_if_else.true_msg.replace(ComplementsBot.F_USER, user)
             else:
