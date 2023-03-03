@@ -7,6 +7,9 @@ from firebase_admin import credentials, db
 from env_reader import databaseURL
 from typing import Any, Dict, Tuple, Optional, Callable
 import firebase_admin
+import asyncio
+
+event_loop = asyncio.get_event_loop()
 
 cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
 firebase_admin.initialize_app(cred, {'databaseURL': databaseURL})
@@ -39,6 +42,7 @@ COMMAND_COMPLEMENT_MUTED: str = "command_complement_muted"
 RANDOM_COMPLEMENT_MUTED: str = "random_complement_muted"
 DEFAULT_COMPLEMENTS_ENABLED: str = "default_complements_enabled"
 CUSTOM_COMPLEMENTS_ENABLED: str = "custom_complements_enabled"
+USERNAME: str = "last_known_username"
 
 DEFAULT_USER: Dict[str, Any] = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE,
                                 SHOULD_IGNORE_BOTS: DEFAULT_SHOULD_IGNORE_BOTS,
@@ -53,8 +57,8 @@ DEFAULT_USER: Dict[str, Any] = {COMPLEMENT_CHANCE: DEFAULT_COMPLEMENT_CHANCE,
                                 }
 
 
-def is_user_ignored(username: Optional[str] = None, userid: Optional[int] = None,
-                    name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def is_user_ignored(username: Optional[str] = None, userid: Optional[int] = None,
+                          name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -67,7 +71,7 @@ def is_user_ignored(username: Optional[str] = None, userid: Optional[int] = None
     assert username or userid
     assert userid or name_to_id
 
-    users: list[int] = IGNORED_DB_REF.get()
+    users: list[int] = await event_loop.run_in_executor(None, IGNORED_DB_REF.get)
     if users is None:
         # No ignored users exist
         return False
@@ -78,8 +82,8 @@ def is_user_ignored(username: Optional[str] = None, userid: Optional[int] = None
     return userid in users
 
 
-def ignore(username: str = None, userid: int = None,
-           name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def ignore(username: str = None, userid: int = None,
+                 name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -100,11 +104,11 @@ def ignore(username: str = None, userid: int = None,
     if not userid:
         userid = name_to_id(username)
 
-    IGNORED_DB_REF.transaction(ignore_transaction)
+    await event_loop.run_in_executor(None, IGNORED_DB_REF.transaction, ignore_transaction)
 
 
-def unignore(username: str = None, userid: int = None,
-             name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def unignore(username: str = None, userid: int = None,
+                   name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -123,11 +127,11 @@ def unignore(username: str = None, userid: int = None,
     if not userid:
         userid = name_to_id(username)
 
-    IGNORED_DB_REF.transaction(unignore_transaction)
+    await event_loop.run_in_executor(None, IGNORED_DB_REF.transaction, unignore_transaction)
 
 
-def channel_exists(username: str = None, userid: int = None,
-                   name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def channel_exists(username: str = None, userid: int = None,
+                         name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -139,14 +143,14 @@ def channel_exists(username: str = None, userid: int = None,
     assert username or userid
     assert userid or name_to_id
 
-    users = USERS_DB_REF.get(False, True)
+    users = await event_loop.run_in_executor(None, USERS_DB_REF.get, False, True)
     if not userid:
         userid = name_to_id(username)
     return (users is not None) and userid in users
 
 
-def is_channel_joined(username: str = None, userid: int = None,
-                      name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def is_channel_joined(username: str = None, userid: int = None,
+                            name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -163,11 +167,11 @@ def is_channel_joined(username: str = None, userid: int = None,
     if not channel_exists(userid=userid):
         return False
 
-    return bool(USERS_DB_REF.child(userid).child(IS_JOINED).get())
+    return bool(await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(IS_JOINED).get))
 
 
-def join_channel(username: str = None, userid: int = None,
-                 name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def join_channel(username: str = None, userid: int = None,
+                       name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -182,13 +186,14 @@ def join_channel(username: str = None, userid: int = None,
     if not userid:
         userid = name_to_id(username)
     if not channel_exists(userid=userid):
-        USERS_DB_REF.child(userid).set(DEFAULT_USER)
+        await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).set, DEFAULT_USER)
+        await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(USERNAME).set, username)
     else:
-        USERS_DB_REF.child(userid).child(IS_JOINED).set(True)
+        await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(IS_JOINED).set, True)
 
 
-def leave_channel(username: str = None, userid: int = None,
-                  name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def leave_channel(username: str = None, userid: int = None,
+                        name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -202,11 +207,11 @@ def leave_channel(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(IS_JOINED).set(False)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(IS_JOINED).set, False)
 
 
-def delete_channel(username: str = None, userid: int = None,
-                   name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def delete_channel(username: str = None, userid: int = None,
+                         name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -220,33 +225,33 @@ def delete_channel(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).delete()
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).delete)
 
 
-def get_joined_channels() -> list[int]:
+async def get_joined_channels() -> list[int]:
     """
     :return: a list of all joined channels (in the form of a list of user IDs) where the bot is currently active
     """
 
-    all_users = USERS_DB_REF.get(False, True)
+    all_users = await event_loop.run_in_executor(None, USERS_DB_REF.get, False, True)
     joined_users: list[int] = []
     if all_users is None:
         return joined_users
     for user in all_users:
-        if USERS_DB_REF.child(user).child(IS_JOINED).get():
+        if await event_loop.run_in_executor(None, USERS_DB_REF.child(user).child(IS_JOINED).get):
             joined_users.append(user)
     return joined_users
 
 
-def number_of_joined_channels() -> int:
+async def number_of_joined_channels() -> int:
     """
     :return: The number of joined channels where the bot is currently active
     """
-    return len(get_joined_channels())
+    return len(await get_joined_channels())
 
 
-def set_tts_mute_prefix(prefix: str, username: str = None, userid: int = None,
-                        name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_tts_mute_prefix(prefix: str, username: str = None, userid: int = None,
+                              name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -261,11 +266,11 @@ def set_tts_mute_prefix(prefix: str, username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(MUTE_PREFIX).set(prefix)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(MUTE_PREFIX).set, prefix)
 
 
-def get_tts_mute_prefix(username: str = None, userid: int = None,
-                        name_to_id: Optional[Callable[[str], int]] = None) -> str:
+async def get_tts_mute_prefix(username: str = None, userid: int = None,
+                              name_to_id: Optional[Callable[[str], int]] = None) -> str:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -279,15 +284,15 @@ def get_tts_mute_prefix(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    prefix = USERS_DB_REF.child(userid).child(MUTE_PREFIX).get()
+    prefix = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(MUTE_PREFIX).get)
     if prefix is None:
-        set_tts_mute_prefix(DEFAULT_TTS_IGNORE_PREFIX, userid=userid)
+        await set_tts_mute_prefix(DEFAULT_TTS_IGNORE_PREFIX, userid=userid)
         prefix = DEFAULT_TTS_IGNORE_PREFIX
     return prefix
 
 
-def set_complement_chance(chance: float, username: str = None, userid: int = None,
-                          name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_complement_chance(chance: float, username: str = None, userid: int = None,
+                                name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -302,11 +307,11 @@ def set_complement_chance(chance: float, username: str = None, userid: int = Non
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).set(chance)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).set, chance)
 
 
-def get_complement_chance(username: str = None, userid: int = None,
-                          name_to_id: Optional[Callable[[str], int]] = None) -> float:
+async def get_complement_chance(username: str = None, userid: int = None,
+                                name_to_id: Optional[Callable[[str], int]] = None) -> float:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -320,15 +325,15 @@ def get_complement_chance(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    chance = USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).get()
+    chance = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).get)
     if chance is None:
-        set_complement_chance(DEFAULT_COMPLEMENT_CHANCE, userid=userid)
+        await set_complement_chance(DEFAULT_COMPLEMENT_CHANCE, userid=userid)
         chance = DEFAULT_COMPLEMENT_CHANCE
     return chance
 
 
-def set_cmd_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
-                               name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_cmd_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
+                                     name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -343,11 +348,11 @@ def set_cmd_complement_enabled(is_enabled: bool, username: str = None, userid: i
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).set(is_enabled)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).set, is_enabled)
 
 
-def get_cmd_complement_enabled(username: str = None, userid: int = None,
-                               name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def get_cmd_complement_enabled(username: str = None, userid: int = None,
+                                     name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -361,15 +366,16 @@ def get_cmd_complement_enabled(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    is_enabled = USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).get()
+    is_enabled = await event_loop.run_in_executor(
+        None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).get)
     if is_enabled is None:
-        set_cmd_complement_enabled(DEFAULT_COMMAND_COMPLEMENT_ENABLED, userid=userid)
+        await set_cmd_complement_enabled(DEFAULT_COMMAND_COMPLEMENT_ENABLED, userid=userid)
         is_enabled = DEFAULT_COMMAND_COMPLEMENT_ENABLED
     return is_enabled
 
 
-def set_random_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
-                                  name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_random_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
+                                        name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -384,11 +390,11 @@ def set_random_complement_enabled(is_enabled: bool, username: str = None, userid
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).set(is_enabled)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).set, is_enabled)
 
 
-def get_random_complement_enabled(username: str = None, userid: int = None,
-                                  name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def get_random_complement_enabled(username: str = None, userid: int = None,
+                                        name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -402,15 +408,15 @@ def get_random_complement_enabled(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    is_enabled = USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).get()
+    is_enabled = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).get)
     if is_enabled is None:
-        set_random_complement_enabled(DEFAULT_RANDOM_COMPLEMENT_ENABLED, userid=userid)
+        await set_random_complement_enabled(DEFAULT_RANDOM_COMPLEMENT_ENABLED, userid=userid)
         is_enabled = DEFAULT_RANDOM_COMPLEMENT_ENABLED
     return is_enabled
 
 
-def add_complement(complement: str, username: str = None, userid: int = None,
-                   name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def add_complement(complement: str, username: str = None, userid: int = None,
+                         name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -432,7 +438,8 @@ def add_complement(complement: str, username: str = None, userid: int = None,
         data.append(complement)
         return data
 
-    USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).transaction(add_transaction)
+    await event_loop.run_in_executor(
+        None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).transaction, add_transaction)
 
 
 def remove_chars(some_str: str, regex: str = r"[^a-z0-9]") -> str:
@@ -465,9 +472,9 @@ def complements_to_remove(data: list[str], phrase: str) -> Tuple[list[str], list
     return removed_comps, leftover_comps
 
 
-def remove_complements(username: str = None, userid: int = None, to_keep: Optional[list[str]] = None,
-                       to_remove: Optional[list[str]] = None,
-                       name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def remove_complements(username: str = None, userid: int = None, to_keep: Optional[list[str]] = None,
+                             to_remove: Optional[list[str]] = None,
+                             name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change.
@@ -493,11 +500,12 @@ def remove_complements(username: str = None, userid: int = None, to_keep: Option
             return data
         return to_keep or []
 
-    USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).transaction(remove_transaction)
+    await event_loop.run_in_executor(
+        None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).transaction, remove_transaction)
 
 
-def remove_all_complements(username: str = None, userid: int = None,
-                           name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def remove_all_complements(username: str = None, userid: int = None,
+                                 name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -511,11 +519,11 @@ def remove_all_complements(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).delete()
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).delete)
 
 
-def get_custom_complements(username: str = None, userid: int = None,
-                           name_to_id: Optional[Callable[[str], int]] = None) -> list[str]:
+async def get_custom_complements(username: str = None, userid: int = None,
+                                 name_to_id: Optional[Callable[[str], int]] = None) -> list[str]:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -529,12 +537,12 @@ def get_custom_complements(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    complements = USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).get()
+    complements = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).get)
     return complements or []
 
 
-def is_cmd_complement_muted(username: str = None, userid: int = None,
-                            name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def is_cmd_complement_muted(username: str = None, userid: int = None,
+                                  name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -548,14 +556,14 @@ def is_cmd_complement_muted(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    is_muted = USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).get()
+    is_muted = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).get)
     if is_muted is None:
         return DEFAULT_COMMAND_COMPLEMENT_MUTED
     return bool(is_muted)
 
 
-def set_cmd_complement_is_muted(is_muted: bool, username: str = None, userid: int = None,
-                                name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_cmd_complement_is_muted(is_muted: bool, username: str = None, userid: int = None,
+                                      name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -570,11 +578,11 @@ def set_cmd_complement_is_muted(is_muted: bool, username: str = None, userid: in
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).set(is_muted)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).set, is_muted)
 
 
-def are_random_complements_muted(username: str = None, userid: int = None,
-                                 name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def are_random_complements_muted(username: str = None, userid: int = None,
+                                       name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -588,14 +596,14 @@ def are_random_complements_muted(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    is_muted = USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).get()
+    is_muted = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).get)
     if is_muted is None:
         return DEFAULT_RANDOM_COMPLEMENT_MUTED
     return bool(is_muted)
 
 
-def set_random_complements_are_muted(are_muted: bool, username: str = None, userid: int = None,
-                                     name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_random_complements_are_muted(are_muted: bool, username: str = None, userid: int = None,
+                                           name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -610,11 +618,11 @@ def set_random_complements_are_muted(are_muted: bool, username: str = None, user
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).set(are_muted)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).set, are_muted)
 
 
-def are_default_complements_enabled(username: str = None, userid: int = None,
-                                    name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def are_default_complements_enabled(username: str = None, userid: int = None,
+                                          name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -628,14 +636,15 @@ def are_default_complements_enabled(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    is_enabled = USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).get()
+    is_enabled = await event_loop.run_in_executor(
+        None, USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).get)
     if is_enabled is None:
         return DEFAULT_DEFAULT_COMPLEMENTS_ENABLED
     return bool(is_enabled)
 
 
-def set_are_default_complements_enabled(are_enabled: bool, username: str = None, userid: int = None,
-                                        name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_are_default_complements_enabled(are_enabled: bool, username: str = None, userid: int = None,
+                                              name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -650,11 +659,12 @@ def set_are_default_complements_enabled(are_enabled: bool, username: str = None,
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).set(are_enabled)
+    await event_loop.run_in_executor(
+        None, USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).set, are_enabled)
 
 
-def set_are_custom_complements_enabled(are_enabled: bool, username: str = None, userid: int = None,
-                                       name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_are_custom_complements_enabled(are_enabled: bool, username: str = None, userid: int = None,
+                                             name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -669,11 +679,12 @@ def set_are_custom_complements_enabled(are_enabled: bool, username: str = None, 
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).set(are_enabled)
+    await event_loop.run_in_executor(
+        None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).set, are_enabled)
 
 
-def are_custom_complements_enabled(username: str = None, userid: int = None,
-                                   name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def are_custom_complements_enabled(username: str = None, userid: int = None,
+                                         name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -687,14 +698,15 @@ def are_custom_complements_enabled(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    is_enabled = USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).get()
+    is_enabled = await event_loop.run_in_executor(
+        None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).get)
     if is_enabled is None:
         return DEFAULT_CUSTOM_COMPLEMENTS_ENABLED
     return bool(is_enabled)
 
 
-def is_ignoring_bots(username: str = None, userid: int = None,
-                     name_to_id: Optional[Callable[[str], int]] = None) -> bool:
+async def is_ignoring_bots(username: str = None, userid: int = None,
+                           name_to_id: Optional[Callable[[str], int]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -708,14 +720,14 @@ def is_ignoring_bots(username: str = None, userid: int = None,
 
     if not userid:
         userid = name_to_id(username)
-    is_ignoring = USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).get()
+    is_ignoring = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).get)
     if is_ignoring is None:
         return DEFAULT_SHOULD_IGNORE_BOTS
     return bool(is_ignoring)
 
 
-def set_should_ignore_bots(should_ignore_bots: bool, username: str = None, userid: int = None,
-                           name_to_id: Optional[Callable[[str], int]] = None) -> None:
+async def set_should_ignore_bots(should_ignore_bots: bool, username: str = None, userid: int = None,
+                                 name_to_id: Optional[Callable[[str], int]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -730,4 +742,4 @@ def set_should_ignore_bots(should_ignore_bots: bool, username: str = None, useri
 
     if not userid:
         userid = name_to_id(username)
-    USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).set(should_ignore_bots)
+    await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).set, should_ignore_bots)
