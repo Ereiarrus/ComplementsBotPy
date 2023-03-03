@@ -32,8 +32,8 @@ Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 so if you did !ignoreme, I will still know that you don't want to be complemented after doing !deleteme, and your 
 twitch username/user id will still be stored in my database. If you don't want this, then also do !unignore me - 
 this will remove any reference of you from my database
-- !refresh - When you change your Twitch username, you must make use of this, as otherwise the bot might not join your (new) chat (unless/when I restart it)
-- !refreshall - (NOT AVAILABLE TO GENERAL PUBLIC due to potentially high overhead) refreshes the full list of joined channels, and joins renamed users' (new) chats
+- !refresh - When you change your Twitch username, you must make use of this, as otherwise the bot might not join your (new) chat (unless/when I restart it) (**NOT WORKING YET**)
+- !refreshall - (NOT AVAILABLE TO GENERAL PUBLIC due to potentially high overhead) refreshes the full list of joined channels, and joins renamed users' (new) chats (**NOT WORKING YET**)
 
 - !ignoreme - I will stop complementing you
 - !unignoreme - undo !ignoreme

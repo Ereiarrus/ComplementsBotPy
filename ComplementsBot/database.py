@@ -5,10 +5,11 @@ The API through which items in our database are accessed
 import re
 from firebase_admin import credentials, db
 from env_reader import databaseURL
-from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union
+from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union, TypeVar
 import firebase_admin
 import asyncio
 from .utilities import run_with_appropriate_awaiting
+from enum import Enum
 
 event_loop = asyncio.get_event_loop()
 
@@ -772,3 +773,63 @@ async def set_should_ignore_bots(should_ignore_bots: bool, username: str = None,
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).set, should_ignore_bots)
+
+
+T = TypeVar('T')
+
+
+class Field(Enum):
+    COMPLEMENT_CHANCE = 0
+    SHOULD_IGNORE_BOTS = 1
+    IS_JOINED = 2
+    MUTE_PREFIX = 3
+    COMMAND_COMPLEMENT_ENABLED = 4
+    RANDOM_COMPLEMENT_ENABLED = 5
+    CUSTOM_COMPLEMENTS = 6
+    COMMAND_COMPLEMENT_MUTED = 7
+    RANDOM_COMPLEMENT_MUTED = 8
+    DEFAULT_COMPLEMENTS_ENABLED = 9
+    CUSTOM_COMPLEMENTS_ENABLED = 10
+    USERNAME = 11
+
+
+async def get_func(
+        to_get: Field,
+        username: str = None,
+        userid: int = None,
+        name_to_id: Optional[Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> Any:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param to_get:
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Allows for toggling of whether the bot is allowed to complement other bots
+    """
+    assert username or userid
+    assert userid or name_to_id
+
+    if not userid:
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
+
+
+async def set_func(
+        to_set: Field,
+        username: str = None,
+        userid: int = None,
+        name_to_id: Optional[Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param to_set:
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Allows for toggling of whether the bot is allowed to complement other bots
+    """
+    assert username or userid
+    assert userid or name_to_id
+
+    if not userid:
+        userid = await run_with_appropriate_awaiting(name_to_id, username)

@@ -66,7 +66,8 @@ class ComplementsBot(commands.Bot):
                 self.complements_list.append(line.strip())
 
     async def name_to_id(self, username: str) -> str:
-        return str((await self.fetch_users(names=[username]))[0].id)
+        to_ret = str((await self.fetch_users(names=[username]))[0].id)
+        return to_ret
 
     async def id_to_name(self, uid: str) -> str:
         return (await self.fetch_users(ids=[int(uid)]))[0].name
@@ -95,7 +96,7 @@ class ComplementsBot(commands.Bot):
             - streamlabs
         """
 
-        return len(username) >= 3 and username[-3:].lower() == 'bot' or username == "streamlabs"
+        return len(username) >= 3 and username[-3:].lower() == 'bot' or username in ("streamlabs", "streamelements")
 
     async def event_message(self, message: Message) -> None:
         """
@@ -222,8 +223,7 @@ class ComplementsBot(commands.Bot):
 
     # -------------------- bot channel only commands --------------------
 
-    @staticmethod
-    def is_in_bot_channel(ctx: commands.Context) -> bool:
+    def is_in_bot_channel(self, ctx: commands.Context) -> bool:
         """
         Checks if the context was created in the bot's channel (or the creator's)
         """
@@ -338,7 +338,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_in_bot_channel,
+            self.is_in_bot_channel,
             None,
             ComplementsBot.DoIfElse((lambda ctx: database.is_channel_joined(
                 username=ctx.author.name,
@@ -363,7 +363,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_in_bot_channel,
+            self.is_in_bot_channel,
             None,
             ComplementsBot.DoIfElse((lambda ctx: database.is_channel_joined(
                 username=ctx.author.name,
@@ -388,7 +388,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_in_bot_channel,
+            self.is_in_bot_channel,
             None,
             ComplementsBot.DoIfElse((lambda ctx: database.channel_exists(
                 username=ctx.author.name,
@@ -408,7 +408,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_in_bot_channel,
+            self.is_in_bot_channel,
             None,
             ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(
                 username=ctx.author.name,
@@ -453,7 +453,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_in_bot_channel,
+            self.is_in_bot_channel,
             None,
             ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(
                 username=ctx.author.name,
@@ -498,7 +498,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_in_bot_channel,
+            self.is_in_bot_channel,
             always_msg=f"@{ComplementsBot.F_USER} "
                        f"{str(await database.number_of_joined_channels())} channels and counting!"
         )
@@ -511,7 +511,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_in_bot_channel,
+            self.is_in_bot_channel,
             always_msg=f"@{ComplementsBot.F_USER} "
                        "For most up-to-date information on commands, please have a look at "
                        "https://github.com/Ereiarrus/ComplementsBotPy#readme "
