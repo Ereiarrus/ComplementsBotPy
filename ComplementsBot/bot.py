@@ -228,10 +228,13 @@ class ComplementsBot(commands.Bot):
         return ctx.channel.name in (self.nick, ComplementsBot.OWNER_NICK)
 
     @staticmethod
-    async def send_and_log(ctx: commands.Context, msg: str) -> None:
+    async def send_and_log(ctx: commands.Context, msg: Optional[str]) -> None:
         """
         Send the message to the channel of ctx and also logs it
         """
+
+        if msg is None:
+            return
 
         await ctx.channel.send(msg)
         if ComplementsBot.SHOULD_LOG:
@@ -244,8 +247,8 @@ class ComplementsBot(commands.Bot):
 
         def __init__(self,
                      if_check: Union[Callable[[commands.Context], Awaitable[bool]], Callable[[commands.Context], bool]],
-                     true_msg: str,
-                     false_msg: str,
+                     true_msg: Optional[str],
+                     false_msg: Optional[str],
                      do_true: Optional[Union[
                          Callable[[commands.Context], Awaitable[None]], Callable[[commands.Context], None]]] = None,
                      do_false: Optional[Union[Callable[[commands.Context], Awaitable[None]], Callable[
@@ -427,6 +430,28 @@ class ComplementsBot(commands.Bot):
         )
 
     @commands.command()
+    async def compignoreme(self, ctx: commands.Context) -> None:
+        """
+        The user of this command will not get any complements sent their way from ComplementsBot
+        """
+
+        await ComplementsBot.cmd_body(
+            ctx,
+            lambda x: True,
+            None,
+            ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(
+                username=ctx.author.name,
+                name_to_id=self.name_to_id)),
+                                    None,
+                                    None,
+                                    None,
+                                    (lambda ctx: database.ignore(
+                                        username=ctx.author.name,
+                                        name_to_id=self.name_to_id))
+                                    )
+        )
+
+    @commands.command()
     async def unignoreme(self, ctx: commands.Context) -> None:
         """
         Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
@@ -442,6 +467,29 @@ class ComplementsBot(commands.Bot):
                 name_to_id=self.name_to_id)),
                                     f"@{ComplementsBot.F_USER} I am no longer ignoring you!",
                                     f"@{ComplementsBot.F_USER} I am not ignoring you!",
+                                    (lambda ctx: database.unignore(
+                                        username=ctx.author.name,
+                                        name_to_id=self.name_to_id)),
+                                    None
+                                    )
+        )
+
+    @commands.command()
+    async def compunignoreme(self, ctx: commands.Context) -> None:
+        """
+        Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
+        complement using the 'complement' command will work.
+        """
+
+        await ComplementsBot.cmd_body(
+            ctx,
+            lambda x: True,
+            None,
+            ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(
+                username=ctx.author.name,
+                name_to_id=self.name_to_id)),
+                                    None,
+                                    None,
                                     (lambda ctx: database.unignore(
                                         username=ctx.author.name,
                                         name_to_id=self.name_to_id)),

@@ -19,6 +19,9 @@ The following commands work anywhere that I have joined:
 
 - !complement \[username\] - If username present, complement that user; otherwise, get a complement yourself!
 
+- !compignoreme - I will stop complementing you (see !ignoreme in '[ComplementsBot chat only](#ComplementsBot chat only)'); note that this command gives no feedback whether it was successful
+- !compunignoreme - undo !compignoreme/!ignoreme (see in '[ComplementsBot chat only](#ComplementsBot chat only)'); note that this command gives no feedback whether it was successful
+
 #### ComplementsBot chat only
 
 Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
@@ -32,7 +35,7 @@ this will remove any reference of you from my database
 - !refresh - When you change your Twitch username, you must make use of this, as otherwise the bot might not join your (new) chat (unless/when I restart it)
 - !refreshall - (NOT AVAILABLE TO GENERAL PUBLIC due to potentially high overhead) refreshes the full list of joined channels, and joins renamed users' (new) chats
 
-- !ignoreme - I will never complement you
+- !ignoreme - I will stop complementing you
 - !unignoreme - undo !ignoreme
 
 - !count - Check out how many channels I'm in
