@@ -8,6 +8,7 @@ from env_reader import databaseURL
 from typing import Any, Dict, Tuple, Optional, Callable
 import firebase_admin
 import asyncio
+from .utilities import run_with_appropriate_awaiting
 
 event_loop = asyncio.get_event_loop()
 
@@ -77,7 +78,7 @@ async def is_user_ignored(username: Optional[str] = None, userid: Optional[int] 
         return False
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
 
     return userid in users
 
@@ -102,7 +103,7 @@ async def ignore(username: str = None, userid: int = None,
         return data
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
 
     await event_loop.run_in_executor(None, IGNORED_DB_REF.transaction, ignore_transaction)
 
@@ -125,7 +126,7 @@ async def unignore(username: str = None, userid: int = None,
         return data
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
 
     await event_loop.run_in_executor(None, IGNORED_DB_REF.transaction, unignore_transaction)
 
@@ -145,7 +146,7 @@ async def channel_exists(username: str = None, userid: int = None,
 
     users = await event_loop.run_in_executor(None, USERS_DB_REF.get, False, True)
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     return (users is not None) and userid in users
 
 
@@ -163,7 +164,7 @@ async def is_channel_joined(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     if not channel_exists(userid=userid):
         return False
 
@@ -184,7 +185,7 @@ async def join_channel(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     if not channel_exists(userid=userid):
         await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).set, DEFAULT_USER)
         await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(USERNAME).set, username)
@@ -206,7 +207,7 @@ async def leave_channel(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(IS_JOINED).set, False)
 
 
@@ -224,7 +225,7 @@ async def delete_channel(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).delete)
 
 
@@ -265,7 +266,7 @@ async def set_tts_mute_prefix(prefix: str, username: str = None, userid: int = N
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(MUTE_PREFIX).set, prefix)
 
 
@@ -283,7 +284,7 @@ async def get_tts_mute_prefix(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     prefix = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(MUTE_PREFIX).get)
     if prefix is None:
         await set_tts_mute_prefix(DEFAULT_TTS_IGNORE_PREFIX, userid=userid)
@@ -306,7 +307,7 @@ async def set_complement_chance(chance: float, username: str = None, userid: int
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).set, chance)
 
 
@@ -324,7 +325,7 @@ async def get_complement_chance(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     chance = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMPLEMENT_CHANCE).get)
     if chance is None:
         await set_complement_chance(DEFAULT_COMPLEMENT_CHANCE, userid=userid)
@@ -347,7 +348,7 @@ async def set_cmd_complement_enabled(is_enabled: bool, username: str = None, use
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).set, is_enabled)
 
 
@@ -365,7 +366,7 @@ async def get_cmd_complement_enabled(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_enabled = await event_loop.run_in_executor(
         None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_ENABLED).get)
     if is_enabled is None:
@@ -389,7 +390,7 @@ async def set_random_complement_enabled(is_enabled: bool, username: str = None, 
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).set, is_enabled)
 
 
@@ -407,7 +408,7 @@ async def get_random_complement_enabled(username: str = None, userid: int = None
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_enabled = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_ENABLED).get)
     if is_enabled is None:
         await set_random_complement_enabled(DEFAULT_RANDOM_COMPLEMENT_ENABLED, userid=userid)
@@ -430,7 +431,7 @@ async def add_complement(complement: str, username: str = None, userid: int = No
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
 
     def add_transaction(data):
         if data is None:
@@ -491,7 +492,7 @@ async def remove_complements(username: str = None, userid: int = None, to_keep: 
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
 
     def remove_transaction(data):
         if to_remove:
@@ -518,7 +519,7 @@ async def remove_all_complements(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).delete)
 
 
@@ -536,7 +537,7 @@ async def get_custom_complements(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     complements = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS).get)
     return complements or []
 
@@ -555,7 +556,7 @@ async def is_cmd_complement_muted(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_muted = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).get)
     if is_muted is None:
         return DEFAULT_COMMAND_COMPLEMENT_MUTED
@@ -577,7 +578,7 @@ async def set_cmd_complement_is_muted(is_muted: bool, username: str = None, user
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(COMMAND_COMPLEMENT_MUTED).set, is_muted)
 
 
@@ -595,7 +596,7 @@ async def are_random_complements_muted(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_muted = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).get)
     if is_muted is None:
         return DEFAULT_RANDOM_COMPLEMENT_MUTED
@@ -617,7 +618,7 @@ async def set_random_complements_are_muted(are_muted: bool, username: str = None
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(RANDOM_COMPLEMENT_MUTED).set, are_muted)
 
 
@@ -635,7 +636,7 @@ async def are_default_complements_enabled(username: str = None, userid: int = No
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_enabled = await event_loop.run_in_executor(
         None, USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).get)
     if is_enabled is None:
@@ -658,7 +659,7 @@ async def set_are_default_complements_enabled(are_enabled: bool, username: str =
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(
         None, USERS_DB_REF.child(userid).child(DEFAULT_COMPLEMENTS_ENABLED).set, are_enabled)
 
@@ -678,7 +679,7 @@ async def set_are_custom_complements_enabled(are_enabled: bool, username: str = 
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(
         None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).set, are_enabled)
 
@@ -697,7 +698,7 @@ async def are_custom_complements_enabled(username: str = None, userid: int = Non
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_enabled = await event_loop.run_in_executor(
         None, USERS_DB_REF.child(userid).child(CUSTOM_COMPLEMENTS_ENABLED).get)
     if is_enabled is None:
@@ -719,7 +720,7 @@ async def is_ignoring_bots(username: str = None, userid: int = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_ignoring = await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).get)
     if is_ignoring is None:
         return DEFAULT_SHOULD_IGNORE_BOTS
@@ -741,5 +742,5 @@ async def set_should_ignore_bots(should_ignore_bots: bool, username: str = None,
     assert userid or name_to_id
 
     if not userid:
-        userid = name_to_id(username)
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
     await event_loop.run_in_executor(None, USERS_DB_REF.child(userid).child(SHOULD_IGNORE_BOTS).set, should_ignore_bots)

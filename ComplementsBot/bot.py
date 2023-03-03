@@ -4,14 +4,13 @@ Holds all commands (and their logic) for how ComplementsBot should complement Tw
 
 import os
 import textwrap
-from typing import Callable, Optional, Awaitable, Union, Tuple, TypeVar
+from typing import Callable, Optional, Awaitable, Union, Tuple
 import random
 from twitchio.ext import commands
 from twitchio import Message
 from env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
-
-T = TypeVar("T")
+from .utilities import run_with_appropriate_awaiting
 
 
 # TODO:
@@ -302,27 +301,17 @@ class ComplementsBot(commands.Bot):
         if not permission_check(ctx):
             return False
 
-        async def run_with_appropriate_awaiting(
-                func: Optional[
-                    Union[Callable[[commands.Context], Awaitable[T]], Callable[[commands.Context], T]]]) -> T:
-            if func is None:
-                return
-            to_do: Union[None, Awaitable[None]] = func(ctx)
-            if isinstance(to_do, Awaitable):
-                return await to_do
-            return to_do
-
-        await run_with_appropriate_awaiting(do_before_if)
+        await run_with_appropriate_awaiting(do_before_if, ctx)
 
         user: str = ctx.author.name
 
         if do_if_else is not None:
             to_send: str
-            if await run_with_appropriate_awaiting(do_if_else.if_check):
-                await run_with_appropriate_awaiting(do_if_else.do_true)
+            if await run_with_appropriate_awaiting(do_if_else.if_check, ctx):
+                await run_with_appropriate_awaiting(do_if_else.do_true, ctx)
                 to_send = do_if_else.true_msg.replace(ComplementsBot.F_USER, user)
             else:
-                await run_with_appropriate_awaiting(do_if_else.do_false)
+                await run_with_appropriate_awaiting(do_if_else.do_false, ctx)
                 to_send = do_if_else.false_msg.replace(ComplementsBot.F_USER, user)
             await ComplementsBot.send_and_log(ctx, to_send)
 
