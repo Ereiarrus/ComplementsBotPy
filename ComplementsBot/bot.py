@@ -73,7 +73,7 @@ class ComplementsBot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
 
-        joined_channels = database.get_joined_channels()
+        joined_channels = await database.get_joined_channels()
         max_num_user_reqs = 100
         for i in range((len(joined_channels) // max_num_user_reqs) + 1):
             chunk = joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs, len(joined_channels))]
@@ -81,7 +81,7 @@ class ComplementsBot(commands.Bot):
             await self.join_channels(channel_names)
         self.name_to_id = lambda x: await self.fetch_users(names=[x])[0].id
         self.id_to_name = lambda x: await self.fetch_users(names=[x])[0].name
-        database.join_channel(username=self.nick, name_to_id=self.name_to_id)
+        await database.join_channel(username=self.nick, name_to_id=self.name_to_id)
         if ComplementsBot.SHOULD_LOG:
             custom_log(f"{self.nick} is online!")
 
@@ -113,10 +113,10 @@ class ComplementsBot(commands.Bot):
 
         sender: str = message.author.name
         channel: str = message.channel.name
-        is_author_ignored: bool = database.is_user_ignored(username=sender,
-                                                           name_to_id=self.name_to_id)
-        should_rng_choose: bool = (random.random() * 100) <= database.get_complement_chance(message.channel.name,
-                                                                                            name_to_id=self.name_to_id)
+        is_author_ignored: bool = await database.is_user_ignored(username=sender,
+                                                                 name_to_id=self.name_to_id)
+        should_rng_choose: bool = (random.random() * 100) <= await database.get_complement_chance(
+            message.channel.name, name_to_id=self.name_to_id)
         is_author_bot: bool = \
             database.is_ignoring_bots(channel, name_to_id=self.name_to_id) and ComplementsBot.is_bot(sender)
 
@@ -129,7 +129,7 @@ class ComplementsBot(commands.Bot):
                 and database.get_random_complement_enabled(message.channel.name, name_to_id=self.name_to_id):
             comp_msg, exists = self.complement_msg(
                 message, message.author.name,
-                database.are_random_complements_muted(channel, name_to_id=self.name_to_id))
+                await database.are_random_complements_muted(channel, name_to_id=self.name_to_id))
             if exists:
                 await message.channel.send(comp_msg)
                 if ComplementsBot.SHOULD_LOG:
@@ -148,7 +148,7 @@ class ComplementsBot(commands.Bot):
         channel: str = ctx.channel.name
         custom_complements: list[str] = []
         if database.are_custom_complements_enabled(channel, name_to_id=self.name_to_id):
-            custom_complements = database.get_custom_complements(channel, name_to_id=self.name_to_id)
+            custom_complements = await database.get_custom_complements(channel, name_to_id=self.name_to_id)
         default_complements: list[str] = []
         if database.are_default_complements_enabled(channel, name_to_id=self.name_to_id):
             default_complements = self.complements_list
@@ -209,8 +209,8 @@ class ComplementsBot(commands.Bot):
                 not database.get_cmd_complement_enabled(channel, name_to_id=self.name_to_id):
             return
 
-        comp_msg, exists = self.complement_msg(ctx.message, who,
-                                               database.is_cmd_complement_muted(channel, name_to_id=self.name_to_id))
+        comp_msg, exists = self.complement_msg(
+            ctx.message, who, await database.is_cmd_complement_muted(channel, name_to_id=self.name_to_id))
         if exists:
             await ctx.channel.send(comp_msg)
             if ComplementsBot.SHOULD_LOG:
@@ -266,7 +266,7 @@ class ComplementsBot(commands.Bot):
                 in the string is replaced with the name of the user in chat who called the original command
             """
 
-            self.if_check: Union[Callable[[commands.Context], Awaitable[bool]], Callable[[commands.Context], bool]]\
+            self.if_check: Union[Callable[[commands.Context], Awaitable[bool]], Callable[[commands.Context], bool]] \
                 = if_check
             self.true_msg: str = true_msg
             self.false_msg: str = false_msg
@@ -340,7 +340,7 @@ class ComplementsBot(commands.Bot):
 
         async def do_false(ctx: commands.Context) -> None:
             # Have to save to database and update in memory so bot starts working straight away
-            database.join_channel(username=ctx.author.name, name_to_id=self.name_to_id)
+            await database.join_channel(username=ctx.author.name, name_to_id=self.name_to_id)
             await self.join_channels([ctx.author.name])
 
         await ComplementsBot.cmd_body(
@@ -365,7 +365,7 @@ class ComplementsBot(commands.Bot):
 
         async def do_true(ctx: commands.Context) -> None:
             # Update database and in realtime for "instant" effect
-            database.leave_channel(username=ctx.author.name, name_to_id=self.name_to_id)
+            await database.leave_channel(username=ctx.author.name, name_to_id=self.name_to_id)
             await self.part_channels([ctx.author.name])
 
         await ComplementsBot.cmd_body(
@@ -390,7 +390,7 @@ class ComplementsBot(commands.Bot):
 
         async def do_true(ctx: commands.Context) -> None:
             # Remove any user records from database and leave their channel NOW
-            database.delete_channel(ctx.author.name, name_to_id=self.name_to_id)
+            await database.delete_channel(ctx.author.name, name_to_id=self.name_to_id)
             await self.part_channels([ctx.author.name])
 
         await ComplementsBot.cmd_body(
@@ -567,7 +567,7 @@ class ComplementsBot(commands.Bot):
             await ComplementsBot.send_and_log(ctx, to_send)
             return
 
-        database.set_complement_chance(chance, channel, name_to_id=self.name_to_id)
+        await database.set_complement_chance(chance, channel, name_to_id=self.name_to_id)
         await ComplementsBot.send_and_log(
             ctx,
             f"@{channel} complement chance set to "
@@ -671,7 +671,7 @@ class ComplementsBot(commands.Bot):
             await ComplementsBot.send_and_log(ctx, to_send)
             return
 
-        database.add_complement(complement, user, name_to_id=self.name_to_id)
+        await database.add_complement(complement, user, name_to_id=self.name_to_id)
         await ComplementsBot.send_and_log(ctx, f"@{user} new complements added: '{complement}'")
 
     @commands.command(aliases=["listcomps"])
@@ -686,7 +686,8 @@ class ComplementsBot(commands.Bot):
             return
 
         user: str = ctx.channel.name
-        comps_msg: str = '"' + '", "'.join(database.get_custom_complements(user, name_to_id=self.name_to_id)) + '"'
+        comps_msg: str = '"' + \
+                         '", "'.join(await database.get_custom_complements(user, name_to_id=self.name_to_id)) + '"'
 
         msgs: list[str] = textwrap.wrap(f"@{user} complements: {comps_msg}", ComplementsBot.DEFAULT_MAX_MSG_LEN)
 
@@ -716,8 +717,8 @@ class ComplementsBot(commands.Bot):
         phrase: str = database.remove_chars(msg[msg.find(" ") + 1:])
         user: str = ctx.channel.name
         to_remove_comps, to_keep_comps = database.complements_to_remove(
-            database.get_custom_complements(user, name_to_id=self.name_to_id), phrase)
-        database.remove_complements(user, to_keep=to_keep_comps, name_to_id=self.name_to_id)
+            await database.get_custom_complements(user, name_to_id=self.name_to_id), phrase)
+        await database.remove_complements(user, to_keep=to_keep_comps, name_to_id=self.name_to_id)
 
         removed_comps_msg: str = '"' + '", "'.join(to_remove_comps) + '"'
 
@@ -758,7 +759,7 @@ class ComplementsBot(commands.Bot):
         msg: str = ctx.message.content
         msg = msg.strip()
         prefix: str = msg[msg.find(" ") + 1:]
-        database.set_tts_mute_prefix(prefix, ctx.channel.name, name_to_id=self.name_to_id)
+        await database.set_tts_mute_prefix(prefix, ctx.channel.name, name_to_id=self.name_to_id)
         await ComplementsBot.send_and_log(ctx, f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'.")
 
     @commands.command(aliases=["mutecommandcomplement", "mutecommandcomp", "mutecmdcomp"])
@@ -936,7 +937,7 @@ class ComplementsBot(commands.Bot):
                 f"@{ComplementsBot.F_USER} bots can already get complements!",
                 (lambda ctx: database.set_should_ignore_bots(False, ctx.channel.name, name_to_id=self.name_to_id)),
                 None
-                )
+            )
         )
 
     @commands.command(aliases=["ignorebot"])
@@ -955,7 +956,7 @@ class ComplementsBot(commands.Bot):
                 f"@{ComplementsBot.F_USER} bots will no longer get complemented.",
                 None,
                 (lambda ctx: database.set_should_ignore_bots(True, ctx.channel.name, name_to_id=self.name_to_id))
-                )
+            )
         )
 
     # TODO: this command currently does not work due
