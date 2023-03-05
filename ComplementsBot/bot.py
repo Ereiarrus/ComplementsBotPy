@@ -66,15 +66,15 @@ class ComplementsBot(commands.Bot):
                 self.complements_list.append(line.strip())
 
     async def name_to_id(self, username: str) -> Optional[str]:
-        abc = await self.fetch_users(names=[username])
-        if len(abc) > 0:
-            return str(abc[0].id)
+        res = await self.fetch_users(names=[username])
+        if len(res) > 0:
+            return str(res[0].id)
         return None
 
     async def id_to_name(self, uid: str) -> Optional[str]:
-        abc = await self.fetch_users(ids=[int(uid)])
-        if len(abc) > 0:
-            return abc[0].name
+        res = await self.fetch_users(ids=[int(uid)])
+        if len(res) > 0:
+            return res[0].name
         return None
 
     async def event_ready(self) -> None:
@@ -276,8 +276,8 @@ class ComplementsBot(commands.Bot):
 
             self.if_check: Union[Callable[[commands.Context], Awaitable[bool]], Callable[[commands.Context], bool]] \
                 = if_check
-            self.true_msg: str = true_msg
-            self.false_msg: str = false_msg
+            self.true_msg: Optional[str] = true_msg
+            self.false_msg: Optional[str] = false_msg
 
             self.do_true: Union[Callable[[commands.Context], Awaitable[None]], Callable[
                 [commands.Context], None]] = do_true or (
@@ -315,13 +315,15 @@ class ComplementsBot(commands.Bot):
         user: str = ctx.author.name
 
         if do_if_else is not None:
-            to_send: str
+            to_send: Optional[str] = None
             if await run_with_appropriate_awaiting(do_if_else.if_check, ctx):
                 await run_with_appropriate_awaiting(do_if_else.do_true, ctx)
-                to_send = do_if_else.true_msg.replace(ComplementsBot.F_USER, user)
+                if do_if_else.true_msg:
+                    to_send = do_if_else.true_msg.replace(ComplementsBot.F_USER, user)
             else:
                 await run_with_appropriate_awaiting(do_if_else.do_false, ctx)
-                to_send = do_if_else.false_msg.replace(ComplementsBot.F_USER, user)
+                if do_if_else.false_msg:
+                    to_send = do_if_else.false_msg.replace(ComplementsBot.F_USER, user)
             await ComplementsBot.send_and_log(ctx, to_send)
 
         if always_msg is not None:

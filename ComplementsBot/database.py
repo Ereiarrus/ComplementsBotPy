@@ -8,13 +8,13 @@ from env_reader import databaseURL
 from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union, TypeVar
 import firebase_admin
 import asyncio
-from enum import IntEnum
 from .utilities import run_with_appropriate_awaiting, remove_chars
-
-_event_loop = asyncio.get_event_loop()
 
 _cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
 firebase_admin.initialize_app(_cred, {'databaseURL': databaseURL})
+
+
+_event_loop = asyncio.get_event_loop()
 
 _REF: db.Reference = db.reference('/')
 _IGNORED_DB_REF: db.Reference = _REF.child('Ignored')
@@ -59,7 +59,21 @@ _DEFAULT_USER: Dict[str, Any] = {_COMPLEMENT_CHANCE: _DEFAULT_COMPLEMENT_CHANCE,
                                  }
 
 
-async def is_user_ignored(username: Optional[str] = None, userid: Optional[int] = None,
+class Database:
+    def __init__(self,
+                 name_to_id: Union[Callable[[str], str], Callable[[str], Awaitable[str]]],
+                 id_to_name: Union[Callable[[str], str], Callable[[str], Awaitable[str]]]) -> None:
+        self.name_to_id_init: Union[Callable[[str], str], Callable[[str], Awaitable[str]]] = name_to_id
+        self.id_to_name_init: Union[Callable[[str], str], Callable[[str], Awaitable[str]]] = id_to_name
+
+    async def name_to_id(self, name: str) -> str:
+        return await run_with_appropriate_awaiting(self.name_to_id_init, name)
+
+    async def id_to_name(self, uid: str) -> str:
+        return await run_with_appropriate_awaiting(self.id_to_name_init, uid)
+
+
+async def is_user_ignored(username: Optional[str] = None, userid: Optional[str] = None,
                           name_to_id: Optional[Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) \
         -> bool:
     """
@@ -74,7 +88,7 @@ async def is_user_ignored(username: Optional[str] = None, userid: Optional[int] 
     assert username or userid
     assert userid or name_to_id
 
-    users: list[int] = await _event_loop.run_in_executor(None, _IGNORED_DB_REF.get)
+    users: list[str] = await _event_loop.run_in_executor(None, _IGNORED_DB_REF.get)
     if users is None:
         # No ignored users exist
         return False
@@ -85,7 +99,7 @@ async def is_user_ignored(username: Optional[str] = None, userid: Optional[int] 
     return userid in users
 
 
-async def ignore(username: str = None, userid: int = None,
+async def ignore(username: Optional[str] = None, userid: Optional[str] = None,
                  name_to_id: Optional[Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
@@ -98,7 +112,7 @@ async def ignore(username: str = None, userid: int = None,
     assert username or userid
     assert userid or name_to_id
 
-    def ignore_transaction(data: list[str]):
+    def ignore_transaction(data: list[str]) -> list[str]:
         if data is None:
             data = []
         data.append(userid)
@@ -110,7 +124,7 @@ async def ignore(username: str = None, userid: int = None,
     await _event_loop.run_in_executor(None, _IGNORED_DB_REF.transaction, ignore_transaction)
 
 
-async def unignore(username: str = None, userid: int = None,
+async def unignore(username: Optional[str] = None, userid: str = None,
                    name_to_id: Optional[Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
@@ -123,7 +137,7 @@ async def unignore(username: str = None, userid: int = None,
     assert username or userid
     assert userid or name_to_id
 
-    def unignore_transaction(data: list[int]) -> list[int]:
+    def unignore_transaction(data: list[str]) -> list[str]:
         data.remove(userid)
         return data
 
@@ -133,7 +147,7 @@ async def unignore(username: str = None, userid: int = None,
     await _event_loop.run_in_executor(None, _IGNORED_DB_REF.transaction, unignore_transaction)
 
 
-async def channel_exists(username: str = None, userid: int = None,
+async def channel_exists(username: Optional[str] = None, userid: Optional[str] = None,
                          name_to_id: Optional[
                              Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -153,7 +167,7 @@ async def channel_exists(username: str = None, userid: int = None,
     return (users is not None) and userid in users
 
 
-async def is_channel_joined(username: str = None, userid: int = None,
+async def is_channel_joined(username: Optional[str] = None, userid: Optional[str] = None,
                             name_to_id: Optional[
                                 Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -175,7 +189,7 @@ async def is_channel_joined(username: str = None, userid: int = None,
     return bool(await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).get))
 
 
-async def join_channel(username: str = None, userid: int = None,
+async def join_channel(username: Optional[str] = None, userid: Optional[str] = None,
                        name_to_id: Optional[
                            Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -198,7 +212,7 @@ async def join_channel(username: str = None, userid: int = None,
         await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).set, True)
 
 
-async def leave_channel(username: str = None, userid: int = None,
+async def leave_channel(username: Optional[str] = None, userid: Optional[str] = None,
                         name_to_id: Optional[
                             Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -217,7 +231,7 @@ async def leave_channel(username: str = None, userid: int = None,
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).set, False)
 
 
-async def delete_channel(username: str = None, userid: int = None,
+async def delete_channel(username: Optional[str] = None, userid: Optional[str] = None,
                          name_to_id: Optional[
                              Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -236,13 +250,13 @@ async def delete_channel(username: str = None, userid: int = None,
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).delete)
 
 
-async def get_joined_channels() -> list[int]:
+async def get_joined_channels() -> list[str]:
     """
     :return: a list of all joined channels (in the form of a list of user IDs) where the bot is currently active
     """
 
     all_users = await _event_loop.run_in_executor(None, _USERS_DB_REF.get, False, True)
-    joined_users: list[int] = []
+    joined_users: list[str] = []
     if all_users is None:
         return joined_users
     for user in all_users:
@@ -258,7 +272,7 @@ async def number_of_joined_channels() -> int:
     return len(await get_joined_channels())
 
 
-async def set_tts_mute_prefix(prefix: str, username: str = None, userid: int = None,
+async def set_tts_mute_prefix(prefix: str, username: Optional[str] = None, userid: Optional[str] = None,
                               name_to_id: Optional[
                                   Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -278,7 +292,7 @@ async def set_tts_mute_prefix(prefix: str, username: str = None, userid: int = N
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_MUTE_PREFIX).set, prefix)
 
 
-async def get_tts_mute_prefix(username: str = None, userid: int = None,
+async def get_tts_mute_prefix(username: Optional[str] = None, userid: Optional[str] = None,
                               name_to_id: Optional[
                                   Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> str:
     """
@@ -301,7 +315,7 @@ async def get_tts_mute_prefix(username: str = None, userid: int = None,
     return prefix
 
 
-async def set_complement_chance(chance: float, username: str = None, userid: int = None,
+async def set_complement_chance(chance: float, username: Optional[str] = None, userid: Optional[str] = None,
                                 name_to_id: Optional[
                                     Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -321,7 +335,7 @@ async def set_complement_chance(chance: float, username: str = None, userid: int
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_COMPLEMENT_CHANCE).set, chance)
 
 
-async def get_complement_chance(username: str = None, userid: int = None,
+async def get_complement_chance(username: Optional[str] = None, userid: Optional[str] = None,
                                 name_to_id: Optional[
                                     Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> float:
     """
@@ -344,7 +358,7 @@ async def get_complement_chance(username: str = None, userid: int = None,
     return chance
 
 
-async def set_cmd_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
+async def set_cmd_complement_enabled(is_enabled: bool, username: Optional[str] = None, userid: Optional[str] = None,
                                      name_to_id: Optional[
                                          Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -364,7 +378,7 @@ async def set_cmd_complement_enabled(is_enabled: bool, username: str = None, use
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_COMMAND_COMPLEMENT_ENABLED).set, is_enabled)
 
 
-async def get_cmd_complement_enabled(username: str = None, userid: int = None,
+async def get_cmd_complement_enabled(username: Optional[str] = None, userid: Optional[str] = None,
                                      name_to_id: Optional[
                                          Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -388,7 +402,7 @@ async def get_cmd_complement_enabled(username: str = None, userid: int = None,
     return is_enabled
 
 
-async def set_random_complement_enabled(is_enabled: bool, username: str = None, userid: int = None,
+async def set_random_complement_enabled(is_enabled: bool, username: Optional[str] = None, userid: Optional[str] = None,
                                         name_to_id: Optional[Union[
                                             Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -408,7 +422,7 @@ async def set_random_complement_enabled(is_enabled: bool, username: str = None, 
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_RANDOM_COMPLEMENT_ENABLED).set, is_enabled)
 
 
-async def get_random_complement_enabled(username: str = None, userid: int = None,
+async def get_random_complement_enabled(username: Optional[str] = None, userid: Optional[str] = None,
                                         name_to_id: Optional[Union[
                                             Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -431,7 +445,7 @@ async def get_random_complement_enabled(username: str = None, userid: int = None
     return is_enabled
 
 
-async def add_complement(complement: str, username: str = None, userid: int = None,
+async def add_complement(complement: str, username: Optional[str] = None, userid: Optional[str] = None,
                          name_to_id: Optional[
                              Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -480,7 +494,7 @@ def complements_to_remove(data: list[str], phrase: str) -> Tuple[list[str], list
     return removed_comps, leftover_comps
 
 
-async def remove_complements(username: str = None, userid: int = None, to_keep: Optional[list[str]] = None,
+async def remove_complements(username: Optional[str] = None, userid: Optional[str] = None, to_keep: Optional[list[str]] = None,
                              to_remove: Optional[list[str]] = None,
                              name_to_id: Optional[
                                  Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
@@ -513,7 +527,7 @@ async def remove_complements(username: str = None, userid: int = None, to_keep: 
         None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS).transaction, remove_transaction)
 
 
-async def remove_all_complements(username: str = None, userid: int = None,
+async def remove_all_complements(username: Optional[str] = None, userid: Optional[str] = None,
                                  name_to_id: Optional[
                                      Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -532,7 +546,7 @@ async def remove_all_complements(username: str = None, userid: int = None,
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS).delete)
 
 
-async def get_custom_complements(username: str = None, userid: int = None,
+async def get_custom_complements(username: Optional[str] = None, userid: Optional[str] = None,
                                  name_to_id: Optional[
                                      Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> list[str]:
     """
@@ -552,7 +566,7 @@ async def get_custom_complements(username: str = None, userid: int = None,
     return complements or []
 
 
-async def is_cmd_complement_muted(username: str = None, userid: int = None,
+async def is_cmd_complement_muted(username: Optional[str] = None, userid: Optional[str] = None,
                                   name_to_id: Optional[
                                       Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -574,7 +588,7 @@ async def is_cmd_complement_muted(username: str = None, userid: int = None,
     return bool(is_muted)
 
 
-async def set_cmd_complement_is_muted(is_muted: bool, username: str = None, userid: int = None,
+async def set_cmd_complement_is_muted(is_muted: bool, username: Optional[str] = None, userid: Optional[str] = None,
                                       name_to_id: Optional[
                                           Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -594,7 +608,7 @@ async def set_cmd_complement_is_muted(is_muted: bool, username: str = None, user
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_COMMAND_COMPLEMENT_MUTED).set, is_muted)
 
 
-async def are_random_complements_muted(username: str = None, userid: int = None,
+async def are_random_complements_muted(username: Optional[str] = None, userid: Optional[str] = None,
                                        name_to_id: Optional[Union[
                                            Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -616,7 +630,7 @@ async def are_random_complements_muted(username: str = None, userid: int = None,
     return bool(is_muted)
 
 
-async def set_random_complements_are_muted(are_muted: bool, username: str = None, userid: int = None,
+async def set_random_complements_are_muted(are_muted: bool, username: Optional[str] = None, userid: Optional[str] = None,
                                            name_to_id: Optional[Union[
                                                Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -636,7 +650,7 @@ async def set_random_complements_are_muted(are_muted: bool, username: str = None
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_RANDOM_COMPLEMENT_MUTED).set, are_muted)
 
 
-async def are_default_complements_enabled(username: str = None, userid: int = None,
+async def are_default_complements_enabled(username: Optional[str] = None, userid: Optional[str] = None,
                                           name_to_id: Optional[Union[
                                               Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -659,7 +673,7 @@ async def are_default_complements_enabled(username: str = None, userid: int = No
     return bool(is_enabled)
 
 
-async def set_are_default_complements_enabled(are_enabled: bool, username: str = None, userid: int = None,
+async def set_are_default_complements_enabled(are_enabled: bool, username: Optional[str] = None, userid: Optional[str] = None,
                                               name_to_id: Optional[Union[Callable[[str], str], Callable[
                                                   [str], Awaitable[str]]]] = None) -> None:
     """
@@ -680,7 +694,7 @@ async def set_are_default_complements_enabled(are_enabled: bool, username: str =
         None, _USERS_DB_REF.child(userid).child(_DEFAULT_COMPLEMENTS_ENABLED).set, are_enabled)
 
 
-async def set_are_custom_complements_enabled(are_enabled: bool, username: str = None, userid: int = None,
+async def set_are_custom_complements_enabled(are_enabled: bool, username: Optional[str] = None, userid: Optional[str] = None,
                                              name_to_id: Optional[Union[Callable[[str], str], Callable[
                                                  [str], Awaitable[str]]]] = None) -> None:
     """
@@ -701,7 +715,7 @@ async def set_are_custom_complements_enabled(are_enabled: bool, username: str = 
         None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS_ENABLED).set, are_enabled)
 
 
-async def are_custom_complements_enabled(username: str = None, userid: int = None,
+async def are_custom_complements_enabled(username: Optional[str] = None, userid: Optional[str] = None,
                                          name_to_id: Optional[Union[
                                              Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -724,7 +738,7 @@ async def are_custom_complements_enabled(username: str = None, userid: int = Non
     return bool(is_enabled)
 
 
-async def is_ignoring_bots(username: str = None, userid: int = None,
+async def is_ignoring_bots(username: Optional[str] = None, userid: Optional[str] = None,
                            name_to_id: Optional[
                                Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> bool:
     """
@@ -746,7 +760,7 @@ async def is_ignoring_bots(username: str = None, userid: int = None,
     return bool(is_ignoring)
 
 
-async def set_should_ignore_bots(should_ignore_bots: bool, username: str = None, userid: int = None,
+async def set_should_ignore_bots(should_ignore_bots: bool, username: Optional[str] = None, userid: Optional[str] = None,
                                  name_to_id: Optional[
                                      Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None) -> None:
     """
@@ -764,77 +778,3 @@ async def set_should_ignore_bots(should_ignore_bots: bool, username: str = None,
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_SHOULD_IGNORE_BOTS).set, should_ignore_bots)
-
-
-T = TypeVar('T')
-
-
-class Field(IntEnum):
-    _COMPLEMENT_CHANCE = None
-    _SHOULD_IGNORE_BOTS = None
-    _IS_JOINED = None
-    _MUTE_PREFIX = None
-    _COMMAND_COMPLEMENT_ENABLED = None
-    _RANDOM_COMPLEMENT_ENABLED = None
-    _CUSTOM_COMPLEMENTS = None
-    _COMMAND_COMPLEMENT_MUTED = None
-    _RANDOM_COMPLEMENT_MUTED = None
-    _DEFAULT_COMPLEMENTS_ENABLED = None
-    _CUSTOM_COMPLEMENTS_ENABLED = None
-    _USERNAME = None
-
-
-SET_FUNCS = []
-GET_FUNCS = []
-
-
-async def get_func(
-        to_get: Field,
-        username: str = None,
-        userid: int = None,
-        name_to_id: Optional[Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None,
-        *args) -> Any:
-    """
-    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
-    specified; userid is preferred whenever possible due to being guaranteed to never change
-    :param to_get:
-    :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
-    Allows for toggling of whether the bot is allowed to complement other bots
-    """
-    assert username or userid
-    assert userid or name_to_id
-
-    if not userid:
-        userid = await run_with_appropriate_awaiting(name_to_id, username)
-    if userid is None:
-        return None
-
-    GET_FUNCS[to_set](*args, username, userid)
-
-
-async def set_func(
-        to_set: Field,
-        username: str = None,
-        userid: int = None,
-        name_to_id: Optional[Union[Callable[[str], str], Callable[[str], Awaitable[str]]]] = None,
-        *args) -> None:
-    """
-    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
-    specified; userid is preferred whenever possible due to being guaranteed to never change
-    :param to_set:
-    :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
-    Allows for toggling of whether the bot is allowed to complement other bots
-    """
-    assert username or userid
-    assert userid or name_to_id
-
-    if not userid:
-        userid = await run_with_appropriate_awaiting(name_to_id, username)
-    if userid is None:
-        return
-
-    SET_FUNCS[to_set](*args, username, userid)
