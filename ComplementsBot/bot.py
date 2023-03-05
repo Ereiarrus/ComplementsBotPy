@@ -10,7 +10,7 @@ from twitchio.ext import commands
 from twitchio import Message
 from env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
-from .utilities import run_with_appropriate_awaiting
+from .utilities import run_with_appropriate_awaiting, remove_chars
 
 
 # TODO:
@@ -65,12 +65,17 @@ class ComplementsBot(commands.Bot):
             for line in complements_file:
                 self.complements_list.append(line.strip())
 
-    async def name_to_id(self, username: str) -> str:
-        to_ret = str((await self.fetch_users(names=[username]))[0].id)
-        return to_ret
+    async def name_to_id(self, username: str) -> Optional[str]:
+        abc = await self.fetch_users(names=[username])
+        if len(abc) > 0:
+            return str(abc[0].id)
+        return None
 
-    async def id_to_name(self, uid: str) -> str:
-        return (await self.fetch_users(ids=[int(uid)]))[0].name
+    async def id_to_name(self, uid: str) -> Optional[str]:
+        abc = await self.fetch_users(ids=[int(uid)])
+        if len(abc) > 0:
+            return abc[0].name
+        return None
 
     async def event_ready(self) -> None:
         """
@@ -708,7 +713,7 @@ class ComplementsBot(commands.Bot):
             return
 
         msg: str = ctx.message.content.strip()
-        phrase: str = database.remove_chars(msg[msg.find(" ") + 1:])
+        phrase: str = remove_chars(msg[msg.find(" ") + 1:], regex=r"[^a-z0-9]")
         user: str = ctx.channel.name
         to_remove_comps, to_keep_comps = database.complements_to_remove(
             await database.get_custom_complements(user, name_to_id=self.name_to_id), phrase)
@@ -962,7 +967,24 @@ class ComplementsBot(commands.Bot):
         Allows the user to kick ComplementsBot out of their channel from their own channel chat
         """
 
-        await self.leaveme(ctx)
+        async def do_true(ctx: commands.Context) -> None:
+            # Update database and in realtime for "instant" effect
+            await database.leave_channel(username=ctx.author.name, name_to_id=self.name_to_id)
+            await self.part_channels([ctx.author.name])
+
+        await ComplementsBot.cmd_body(
+            ctx,
+            (lambda ctx: ctx.author.name == ctx.channel.name),
+            None,
+            ComplementsBot.DoIfElse((lambda ctx: database.is_channel_joined(
+                username=ctx.author.name,
+                name_to_id=self.name_to_id)),
+                                    f"@{ComplementsBot.F_USER} I have left your channel.",
+                                    f"@{ComplementsBot.F_USER} I have not joined your channel.",
+                                    do_true,
+                                    None
+                                    )
+        )
 
     @commands.command()
     async def refresh(self, ctx: commands.Context) -> None:
