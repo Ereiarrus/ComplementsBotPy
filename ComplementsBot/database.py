@@ -2,7 +2,6 @@
 The API through which items in our database are accessed
 """
 
-import re
 from firebase_admin import credentials, db
 from env_reader import databaseURL
 from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union, TypeVar

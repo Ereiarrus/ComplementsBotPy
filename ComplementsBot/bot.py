@@ -10,6 +10,7 @@ from twitchio.ext import commands
 from twitchio import Message
 from env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
+from .database import Database
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
 
