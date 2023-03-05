@@ -1,12 +1,13 @@
-from typing import TypeVar, ParamSpec, Optional, Awaitable, Callable, Union
+from typing import TypeVar, Optional, Awaitable, Callable, Union
+from typing_extensions import ParamSpec
 import re
 
-T = TypeVar("T")
-U = ParamSpec("U")
+_T = TypeVar("_T")
+_U = ParamSpec("_U")
 
 
-async def run_with_appropriate_awaiting(func: Optional[Union[Callable[U, Awaitable[T]], Callable[U, T]]], *args,
-                                        **kwargs) -> T:
+async def run_with_appropriate_awaiting(func: Optional[Union[Callable[_U, Awaitable[_T]], Callable[_U, _T]]], *args,
+                                        **kwargs) -> _T:
     if func is None:
         return
     to_do: Union[None, Awaitable[None]] = func(*args, **kwargs)
