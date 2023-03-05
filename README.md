@@ -45,7 +45,7 @@ this will remove any reference of you from my database
 
 These commands must be used by the channel owner in their own channel:
 
-- !compleave/!compleaveme - same as !leaveme, but you can do it in your own channel. (**NOT WORKING YET**)
+- !compleave/!compleaveme - same as !leaveme, but you can do it in your own channel.
 
 - !setchance - change how likely it is that person sending message gets complemented; default is 3.33%; setting it to a
   number over 100 makes it always trigger, and to 0 or less to never trigger
