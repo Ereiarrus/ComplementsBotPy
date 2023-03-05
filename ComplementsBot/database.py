@@ -12,6 +12,9 @@ from .utilities import run_with_appropriate_awaiting, remove_chars
 _cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
 firebase_admin.initialize_app(_cred, {'databaseURL': databaseURL})
 
+REF: db.Reference = db.reference('/')
+IGNORED_DB_REF: db.Reference = REF.child('Ignored')
+USERS_DB_REF: db.Reference = REF.child('Users')
 
 _event_loop = asyncio.get_event_loop()
 
