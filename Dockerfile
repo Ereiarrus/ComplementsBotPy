@@ -3,6 +3,7 @@
 FROM python:3.9-alpine
 WORKDIR /
 COPY . .
+RUN apk add build-base
 RUN pip install -r requirements.txt
 # CMD ["python", "main.py"]
 RUN pip install cython
