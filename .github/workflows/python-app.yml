@@ -33,6 +33,7 @@ jobs:
         pylint env_reader.py
         pylint main.py
         pylint complements_bot
+        pylint test_complements_bot
     - name: Typecheck with mypy
       run: |
         mypy .

@@ -19,4 +19,4 @@ def test_remove_chars():
     Tests the 'remove_chars' function of utilities
     """
 
-    assert remove_chars("rteybhdrty   .,.5464   thjfg ??>~~``") == "rteybhdrty5464thjfg"
+    assert remove_chars(" []{{{]/rteybhdrty   .,.5464   thjfg ??>~~``") == "rteybhdrty5464thjfg"
