@@ -78,10 +78,8 @@ jobs:
         apt-cache policy docker-ce
         sudo apt install docker-ce
         
-        pip install cython
-        python -m cython main.py --embed
-        
         docker build -t complements-bot-py .
     - name: deploying
       run: |
         echo "Deploying..."
+        docker run -d complements-bot-py
