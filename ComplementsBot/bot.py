@@ -10,7 +10,6 @@ from twitchio.ext import commands
 from twitchio import Message
 from env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
-from .database import Database
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
 
@@ -67,12 +66,20 @@ class ComplementsBot(commands.Bot):
                 self.complements_list.append(line.strip())
 
     async def name_to_id(self, username: str) -> Optional[str]:
+        """
+        :param username: the username of the user whose user id we want
+        :return: the user id of the specified user, if the user exists; otherwise 'None'
+        """
         res = await self.fetch_users(names=[username])
         if len(res) > 0:
             return str(res[0].id)
         return None
 
     async def id_to_name(self, uid: str) -> Optional[str]:
+        """
+        :param uid: the user id of the user whose username we want
+        :return: the username of the specified user, if the user exists; otherwise 'None'
+        """
         res = await self.fetch_users(ids=[int(uid)])
         if len(res) > 0:
             return res[0].name
@@ -86,7 +93,7 @@ class ComplementsBot(commands.Bot):
         joined_channels = await database.get_joined_channels()
         max_num_user_reqs = 100
         for i in range((len(joined_channels) // max_num_user_reqs) + 1):
-            chunk = list(map(lambda x: int(x), joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs,
+            chunk = list(map(int, joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs,
                                                                                           len(joined_channels))]))
             channel_names = list(map(lambda x: x.user.name, await self.fetch_channels(broadcaster_ids=chunk)))
             await self.join_channels(channel_names)
@@ -529,8 +536,7 @@ class ComplementsBot(commands.Bot):
 
     # -------------------- any channel, but must be by owner --------------------
 
-    @staticmethod
-    def is_by_broadcaster_or_mod(ctx: commands.Context) -> bool:
+    def is_by_broadcaster_or_mod(self, ctx: commands.Context) -> bool:
         """
         Checks if the user who created the context is the streamer or a mod in the channel
         (the bot itself and creator also has this permission)
@@ -547,7 +553,7 @@ class ComplementsBot(commands.Bot):
             below guaranteeing no complement.
         """
 
-        if not ComplementsBot.is_by_broadcaster_or_mod(ctx):
+        if not self.is_by_broadcaster_or_mod(ctx):
             return
 
         channel: str = ctx.channel.name
@@ -583,7 +589,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.get_cmd_complement_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -603,7 +609,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.get_cmd_complement_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -623,7 +629,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.get_random_complement_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -643,7 +649,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.get_random_complement_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -660,7 +666,7 @@ class ComplementsBot(commands.Bot):
         Add a complement for user's chat only that might be chosen to complement the user's chatters
         """
 
-        if not ComplementsBot.is_by_broadcaster_or_mod(ctx):
+        if not self.is_by_broadcaster_or_mod(ctx):
             return
 
         msg: str = ctx.message.content.strip()
@@ -684,7 +690,7 @@ class ComplementsBot(commands.Bot):
             split to make sure all complements are visible.
         """
 
-        if not ComplementsBot.is_by_broadcaster_or_mod(ctx):
+        if not self.is_by_broadcaster_or_mod(ctx):
             return
 
         user: str = ctx.channel.name
@@ -712,7 +718,7 @@ class ComplementsBot(commands.Bot):
             complements list.
         """
 
-        if not ComplementsBot.is_by_broadcaster_or_mod(ctx):
+        if not self.is_by_broadcaster_or_mod(ctx):
             return
 
         msg: str = ctx.message.content.strip()
@@ -744,7 +750,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             (lambda ctx: database.remove_all_complements(ctx.channel.name, name_to_id=self.name_to_id)),
             None,
             f"@{ComplementsBot.F_USER} all of your custom complements have been removed.")
@@ -755,7 +761,7 @@ class ComplementsBot(commands.Bot):
         Set the character/string to put in front of a message to mute TTS
         """
 
-        if not ComplementsBot.is_by_broadcaster_or_mod(ctx):
+        if not self.is_by_broadcaster_or_mod(ctx):
             return
 
         msg: str = ctx.message.content
@@ -772,7 +778,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.is_cmd_complement_muted(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -791,7 +797,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.are_random_complements_muted(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -811,7 +817,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.is_cmd_complement_muted(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -830,7 +836,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.are_random_complements_muted(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -850,7 +856,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.are_custom_complements_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -870,7 +876,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.are_default_complements_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -891,7 +897,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.are_custom_complements_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -911,7 +917,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.are_default_complements_enabled(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -931,7 +937,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.is_ignoring_bots(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -950,7 +956,7 @@ class ComplementsBot(commands.Bot):
 
         await ComplementsBot.cmd_body(
             ctx,
-            ComplementsBot.is_by_broadcaster_or_mod,
+            self.is_by_broadcaster_or_mod,
             None,
             ComplementsBot.DoIfElse(
                 (lambda ctx: database.is_ignoring_bots(ctx.channel.name, name_to_id=self.name_to_id)),
@@ -991,11 +997,16 @@ class ComplementsBot(commands.Bot):
 
     @commands.command()
     async def refresh(self, ctx: commands.Context) -> None:
+        """
+        Allows user to keep the bot updated about their username, in case they decided to change it (otherwise the bot
+        will not be in their new chat); all it does is update the last_know_username of the user
+        """
         # TODO: make it so that this updates the database with their 'last known username', joins their new chat,
         #  and leaves their old chat
-        pass
 
     @commands.command()
     async def refreshall(self, ctx: commands.Context) -> None:
+        """
+        Allows owner to do !refresh for all users without having to do it manually one by one
+        """
         # TODO: make it similar to !refresh, but it refreshes ALL entries, and is only usable by bot owner/bot
-        pass

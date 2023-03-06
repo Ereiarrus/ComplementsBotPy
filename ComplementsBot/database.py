@@ -2,15 +2,14 @@
 The API through which items in our database are accessed
 """
 
-from firebase_admin import credentials, db
-from env_reader import databaseURL
-from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union, TypeVar
-import firebase_admin
 import asyncio
+from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union
+from firebase_admin import credentials, db, initialize_app
+from env_reader import databaseURL
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
 _cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
-firebase_admin.initialize_app(_cred, {'databaseURL': databaseURL})
+initialize_app(_cred, {'databaseURL': databaseURL})
 
 REF: db.Reference = db.reference('/')
 IGNORED_DB_REF: db.Reference = REF.child('Ignored')
@@ -62,6 +61,10 @@ _DEFAULT_USER: Dict[str, Any] = {_COMPLEMENT_CHANCE: _DEFAULT_COMPLEMENT_CHANCE,
 
 
 class Database:
+    """
+    The way to interact with the database
+    """
+
     def __init__(self,
                  name_to_id: Union[Callable[[str], str], Callable[[str], Awaitable[str]]],
                  id_to_name: Union[Callable[[str], str], Callable[[str], Awaitable[str]]]) -> None:
@@ -69,9 +72,17 @@ class Database:
         self.id_to_name_init: Union[Callable[[str], str], Callable[[str], Awaitable[str]]] = id_to_name
 
     async def name_to_id(self, name: str) -> str:
+        """
+        :param name: the username of the user whose user id we want
+        :return: the user id of the specified user, if the user exists; otherwise 'None'
+        """
         return await run_with_appropriate_awaiting(self.name_to_id_init, name)
 
     async def id_to_name(self, uid: str) -> str:
+        """
+        :param uid: the user id of the user whose username we want
+        :return: the username of the specified user, if the user exists; otherwise 'None'
+        """
         return await run_with_appropriate_awaiting(self.id_to_name_init, uid)
 
 

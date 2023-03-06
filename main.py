@@ -1,3 +1,7 @@
+"""
+The entry-point of the program
+"""
+
 from ComplementsBot import ComplementsBot
 
 
