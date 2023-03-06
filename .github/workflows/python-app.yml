@@ -30,11 +30,9 @@ jobs:
         flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
     - name: Lint with pylint
       run: |
-        pylint env_reader.py 
+        pylint env_reader.py
         pylint main.py
-        pylint ComplementsBot/bot.py
-        pylint ComplementsBot/database.py
-#        pylint ComplementsBot
+        pylint complements_bot
     - name: Typecheck with mypy
       run: |
         mypy .

@@ -1,16 +1,26 @@
+"""
+Useful functions that can be used generally anywhere across the program
+"""
+
+import re
 from typing import TypeVar, Optional, Awaitable, Callable, Union
 from typing_extensions import ParamSpec
-import re
 
 _T = TypeVar("_T")
 _U = ParamSpec("_U")
 
 
 async def run_with_appropriate_awaiting(func: Optional[Union[Callable[_U, Awaitable[_T]], Callable[_U, _T]]], *args,
-                                        **kwargs) -> _T:
+                                        **kwargs) -> Optional[_T]:
+    """
+    :param func: the function we want to get the result of
+    :return: whatever func returned after being awaited if async, the result of func itself
+    Runs 'func'; if it is a future, then it awaits for its result and returns that; otherwise, returns the result of
+    the run.
+    """
     if func is None:
-        return
-    to_do: Union[None, Awaitable[None]] = func(*args, **kwargs)
+        return None
+    to_do: Union[_T, Awaitable[_T]] = func(*args, **kwargs)
     if isinstance(to_do, Awaitable):
         return await to_do
     return to_do
