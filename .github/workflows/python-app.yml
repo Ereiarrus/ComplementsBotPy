@@ -26,7 +26,7 @@ jobs:
         apt-cache policy docker-ce
         sudo apt install docker-ce
         
-        docker build -t ComplementsBot .
+        docker build -t complements_bot_py .
     - name: Install mypy, flake8 and pylint
       run: |
         pip install mypy
