@@ -10,8 +10,8 @@ def test_run_with_appropriate_awaiting():
     Tests the 'run_with_appropriate_awaiting' function of utilities
     """
 
-    ab = run_with_appropriate_awaiting
-    assert ab
+    abba = run_with_appropriate_awaiting
+    assert abba
 
 
 def test_remove_chars():
