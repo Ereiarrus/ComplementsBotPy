@@ -76,7 +76,7 @@ jobs:
         docker build -t complements-bot-py .
     - name: Test with pytest
       run: |
-        docker run complements-bot-py pytest /test_complements_bot
+        docker run --env-file=/proc/1/environ complements-bot-py pytest /test_complements_bot
 
   deploy:
     timeout-minutes: 10
