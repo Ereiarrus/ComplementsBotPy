@@ -80,9 +80,6 @@ jobs:
         docker build -t complements-bot-py .
     - name: Test with pytest
       run: |
-        pytest /test_complements_bot
-    - name: Test with pytest
-      run: |
         docker run complements-bot-py pytest /test_complements_bot
 
   deploy:
