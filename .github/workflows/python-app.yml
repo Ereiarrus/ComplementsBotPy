@@ -71,6 +71,10 @@ jobs:
     - uses: ./.github/actions/python-init
       with:
         secrets: ${{ toJSON(secrets) }}
+    - name: Test docker image config
+      run: |
+        sudo bash ./docker_install.sh
+        docker build -t complements-bot-py .
     - name: deploying
       run: |
         echo "Deploying..."

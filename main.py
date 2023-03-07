@@ -1,7 +1,3 @@
-"""
-The entry-point of the program
-"""
-
 from src.complements_bot import ComplementsBot
 
 
