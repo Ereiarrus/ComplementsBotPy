@@ -11,4 +11,5 @@ RUN apk add build-base
 RUN pip install cython
 RUN python -m cython -3 --embed -o main.c main.py
 RUN gcc -Os -I /usr/include/python3.10 -o main main.c -lpython3.10 -lpthread -lm -lutil -ldl
+EXPOSE 50994/tcp
 CMD ["./main"]
