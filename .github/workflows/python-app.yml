@@ -72,11 +72,15 @@ jobs:
         sudo apt install docker-ce
 
         echo "$FIREBASE_CONFIG" > .firebase_config.json
+        echo $TMI_TOKEN > .env
+        echo $DATABASE_URL >> .env
+        echo $CLIENT_SECRET >> .env
+        
         cat Dockerfile.test > Dockerfile 
         docker build -t complements-bot-py .
     - name: Test with pytest
       run: |
-        sudo docker run --env-file=/proc/1/environ complements-bot-py pytest /test_complements_bot
+        docker run --env-file=/proc/1/environ complements-bot-py pytest /test_complements_bot
 
   deploy:
     timeout-minutes: 10
