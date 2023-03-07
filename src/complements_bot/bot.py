@@ -90,7 +90,8 @@ class ComplementsBot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
 
-        joined_channels = await database.get_joined_channels()
+        # joined_channels = await database.get_joined_channels()
+        joined_channels = ["118034879"]
         max_num_user_reqs = 100
         for i in range((len(joined_channels) // max_num_user_reqs) + 1):
             chunk = list(map(int, joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs,

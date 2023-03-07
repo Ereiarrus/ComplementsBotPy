@@ -8,7 +8,12 @@ from firebase_admin import credentials, db, initialize_app
 from src.env_reader import databaseURL
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
-_cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")
+
+_cred: credentials.Certificate
+try:
+    _cred = credentials.Certificate("src/.firebase_config.json")
+except IOError:
+    _cred = credentials.Certificate(".firebase_config.json")
 initialize_app(_cred, {'databaseURL': databaseURL})
 
 REF: db.Reference = db.reference('/')
