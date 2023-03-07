@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -a
 source .env
 
@@ -7,5 +9,7 @@ if "$TMI_TOKEN" != "$received_github_token"; then
   echo "Wrong sender; exiting"
   exit 1
 fi
+
+(exec "./docker_run.sh")
 
 set +a

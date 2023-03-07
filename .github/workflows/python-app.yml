@@ -18,7 +18,7 @@ jobs:
 
     - name: set up Docker
       run: |
-        sudo bash ./docker_install.sh
+        sudo bash ./install_docker.sh
 
         cat Dockerfile.compile > Dockerfile
         docker build -t complements-bot-py .
@@ -48,15 +48,15 @@ jobs:
 
     - name: set up Docker
       run: |
-        sudo bash ./docker_install.sh
+        sudo bash ./install_docker.sh
 
         echo "$FIREBASE_CONFIG" > src/.firebase_config.json
         echo "TMI_TOKEN=$TMI_TOKEN" > src/.env
         echo "DATABASE_URL=$DATABASE_URL" >> src/.env
         echo "CLIENT_SECRET=$CLIENT_SECRET" >> src/.env
         
-        cat Dockerfile.test > Dockerfile 
-        docker build -t complements-bot-py .
+        cat Dockerfile.test > Dockerfile
+        bash ./docker_build.sh
     - name: Test with pytest
       run: |
         docker run complements-bot-py pytest test_complements_bot
@@ -73,8 +73,8 @@ jobs:
         secrets: ${{ toJSON(secrets) }}
     - name: Test docker image config
       run: |
-        sudo bash ./docker_install.sh
-        docker build -t complements-bot-py .
+        sudo bash ./install_docker.sh
+        bash ./docker_build.sh
     - name: deploying
       run: |
         echo "Deploying..."
