@@ -78,10 +78,4 @@ jobs:
     - name: deploying
       run: |
         echo "Deploying..."
-#        put the docker image on the server
-#        put the .env/environment vars and .firebase_config files on the server
-
-#        Commands to run once deployed (on the VPS):
-#        if ! docker kill complements-bot-py >/dev/null 2>&1; then echo "Did not find any pre-existing complements-bot-py process that could be terminated; continuing as normal."; fi
-#        if ! kill $(ps -fade | grep complements-bot-py | grep -v grep | awk '{print $2}') > /dev/null 2>&1; then echo "Did not find any pre-existing complements-bot-py process that could be terminated; continuing as normal." >&2; fi
-#        docker run -d complements-bot-py
+#        web hook action goes here
