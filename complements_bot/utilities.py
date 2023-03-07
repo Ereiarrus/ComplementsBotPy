@@ -3,8 +3,7 @@ Useful functions that can be used generally anywhere across the program
 """
 
 import re
-from typing import TypeVar, Optional, Awaitable, Callable, Union
-from typing_extensions import ParamSpec
+from typing import TypeVar, Optional, Awaitable, Callable, Union, ParamSpec
 
 _T = TypeVar("_T")
 _U = ParamSpec("_U")

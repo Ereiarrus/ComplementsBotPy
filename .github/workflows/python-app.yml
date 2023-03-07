@@ -15,25 +15,38 @@ jobs:
     - uses: ./.github/actions/python-init
       with:
         secrets: ${{ toJSON(secrets) }}
-    - name: Install mypy, flake8 and pylint
-      run: |
-        pip install mypy
-        pip install flake8
-        pip install pylint
 
+    - name: set up Docker
+      run: |
+        sudo apt-get update
+        sudo apt install apt-transport-https ca-certificates curl software-properties-common
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt update
+        apt-cache policy docker-ce
+        sudo apt install docker-ce
+
+        cat Dockerfile.compile > Dockerfile 
+        docker build -t complements-bot-py .
     - name: Check for syntax errors or undefined names
       run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        docker run complements-bot-py flake8 env_reader.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        docker run complements-bot-py flake8 main.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        docker run complements-bot-py flake8 complements_bot --count --select=E9,F63,F7,F82 --show-source --statistics
+        docker run complements-bot-py flake8 test_complements_bot --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Lint with flake8
       run: |
         # The GitHub editor is 127 chars wide
-        flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
+        docker run complements-bot-py flake8 env_reader.py --count --max-complexity=10 --max-line-length=127 --statistics
+        docker run complements-bot-py flake8 main.py --count --max-complexity=10 --max-line-length=127 --statistics
+        docker run complements-bot-py flake8 complements_bot --count --max-complexity=10 --max-line-length=127 --statistics
+        docker run complements-bot-py flake8 test_complements_bot --count --max-complexity=10 --max-line-length=127 --statistics
     - name: Lint with pylint
       run: |
-        pylint env_reader.py
-        pylint main.py
-        pylint complements_bot
-        pylint test_complements_bot
+        docker run complements-bot-py pylint env_reader.py
+        docker run complements-bot-py pylint main.py
+        docker run complements-bot-py pylint complements_bot
+        docker run complements-bot-py pylint test_complements_bot
     - name: Typecheck with mypy
       run: |
         mypy .
@@ -42,26 +55,6 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     needs: [build]
-    steps:
-    - uses: actions/checkout@v3
-    - uses: ./.github/actions/python-init
-      with:
-        secrets: ${{ toJSON(secrets) }}
-
-    - name: Install pytest
-      run: |
-        pip install pytest
-
-    - name: Test with pytest
-      run: |
-        echo "$FIREBASE_CONFIG" > .firebase_config.json
-        pytest
-
-  deploy:
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    needs: [test]
-    if: github.ref == 'refs/heads/main'  # Only deploy if this was a push to main
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/python-init
@@ -77,9 +70,31 @@ jobs:
         sudo apt update
         apt-cache policy docker-ce
         sudo apt install docker-ce
-        
+
+        echo "$FIREBASE_CONFIG" > .firebase_config.json
+        cat Dockerfile.test > Dockerfile 
         docker build -t complements-bot-py .
+    - name: Test with pytest
+      run: |
+        docker run complements-bot-py pytest
+
+  deploy:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.ref == 'refs/heads/main'  # Only deploy if this was a push to main
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/python-init
+      with:
+        secrets: ${{ toJSON(secrets) }}
     - name: deploying
       run: |
         echo "Deploying..."
-        docker run -d complements-bot-py
+#        put the docker image on the server
+#        put the .env/environment vars and .firebase_config files on the server
+
+#        Commands to run once deployed (on the VPS):
+#        if ! docker kill complements-bot-py >/dev/null 2>&1; then echo "Did not find any pre-existing complements-bot-py process that could be terminated; continuing as normal."; fi
+#        if ! kill $(ps -fade | grep complements-bot-py | grep -v grep | awk '{print $2}') > /dev/null 2>&1; then echo "Did not find any pre-existing complements-bot-py process that could be terminated; continuing as normal." >&2; fi
+#        docker run -d complements-bot-py
