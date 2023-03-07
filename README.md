@@ -119,9 +119,6 @@ along with looking at https://github.com/TwitchIO/TwitchIO for examples to build
 Make sure create a .env file in the root directory with the following variables:
 
 - TMI_TOKEN= get your token from https://twitchapps.com/tmi/
-- CLIENT_ID= register your app with twitch on https://dev.twitch.tv/console/apps/create -
-  for name, give it the channel name (ComplementsBot in our case), OAuth Redirect URLs: https:localhost:8000,
-  Category: Chat Bot; then go to 'Manage' and copy the Client ID
 - DATABASE_URL= the URL to your realtime database as shown in firebase
 - CLIENT_SECRET= go to https://dev.twitch.tv/console/apps, click 'Manage', and generate a 'New Secret'.
 
@@ -129,3 +126,77 @@ Once you have your firebase app, go to 'Service accounts' in project settings. F
 and save the file as '.firebase_config.json' in the root directory.
 
 Create a Realtime Database in firebase with private access.
+
+
+set up SSH key on server:
+	- ssh-keygen -t ed25519 -C "<your GitHub email here>"
+	- eval `ssh-agent -s`
+	- ssh-add ~/.ssh/id_ed25519
+	- cat ~/.ssh/id_ed25519.pub
+	- paste public key into github https://github.com/settings/keys: new SSH key
+
+### Running program on a VPS
+
+- git pull the repository
+- make sure python is installed (ideally with the same version as used for the program, in this case 3.10.6); also ensure pip was installed with it
+- install requirements: python3 -m pip install -r requirements.txt
+- make .env and .firebase_config files to match your local ones (NEVER PUSH THEM TO GITHUB!)
+- start up the program either directly in the background: `python3 main.py > /dev/null 2>&1 &`, or as a daemon: `setsid python3 main.py >/dev/null 2>&1 < /dev/null &`
+
+
+### Setting up CI/CD with Docker instead
+
+This is the better option than just running it directly.
+
+Mostly following instructions from https://docs.docker.com/engine/install/centos/ and https://docs.docker.com/engine/install/linux-postinstall/ in this part 
+
+First, we have to make a clean installation of Docker on the server (example is for CentOS):
+
+- `sudo yum remove docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine`
+- `sudo yum install -y yum-utils`
+- `sudo yum install -y docker-compose`
+- `sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo`
+- `sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y` - If prompted to accept the GPG key, verify that the fingerprint matches 060A 61C5 1B55 8A7F 742B 77AA C52F EB6B 621E 9F35, and if so, accept it.
+- `sudo systemctl start docker`
+- verify it works using `sudo docker run hello-world`
+
+Add user to the docker usergroup:
+- `sudo groupadd docker` - create it in case it doesn't exist
+- possibly need to `rm -rf ~/.docker`
+- `sudo usermod -aG docker <username>`, and relog into account
+
+Start docker on boot:
+- `sudo systemctl enable docker.service`
+- `sudo systemctl enable containerd.service`
+
+Or to disable it on boot:
+- `sudo systemctl disable docker.service`
+- `sudo systemctl disable containerd.service`
+
+Docker makes log files that could get out of hand (https://docs.docker.com/config/containers/logging/json-file/)
+
+in /etc/docker, create a daemon.json file with contents:
+`{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "30m",
+    "max-file": "3" 
+  }
+}`
+
+Docker has to be restarted before these changes take place; existing containers do not use the new config.
+
+Finally, to start the app (i.e. run the container):
+- `docker run --log-driver json-file --log-opt max-size=30m --log-opt max-file=3 complements-bot-py`
+
+Here I make use of in-line logging alterations `--log-driver json-file --log-opt max-size=30m --log-opt max-file=3`.
+
+
+
+
+
+
+
+
+
+
