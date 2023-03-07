@@ -2,6 +2,6 @@
 
 FROM python:3.10-alpine
 WORKDIR /
-COPY . .
+COPY src .
 RUN pip install mypy flake8 pylint
 RUN pip install -r requirements.txt

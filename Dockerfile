@@ -2,7 +2,7 @@
 
 FROM python:3.10-alpine
 WORKDIR /
-COPY . .
+COPY src .
 RUN apk add python3-dev
 RUN apk add build-base
 RUN pip install -r requirements.txt

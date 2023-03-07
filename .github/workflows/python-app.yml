@@ -20,7 +20,7 @@ jobs:
       run: |
         sudo bash ./docker_install.sh
 
-        cat Dockerfile.compile > Dockerfile 
+        cat Dockerfile.compile > Dockerfile
         docker build -t complements-bot-py .
     - name: Check for syntax errors or undefined names
       run: |
@@ -50,16 +50,16 @@ jobs:
       run: |
         sudo bash ./docker_install.sh
 
-        echo "$FIREBASE_CONFIG" > ./.firebase_config.json
-        echo "TMI_TOKEN=$TMI_TOKEN" > ./.env
-        echo "DATABASE_URL=$DATABASE_URL" >> ./.env
-        echo "CLIENT_SECRET=$CLIENT_SECRET" >> ./.env
+        echo "$FIREBASE_CONFIG" > src/.firebase_config.json
+        echo "TMI_TOKEN=$TMI_TOKEN" > src/.env
+        echo "DATABASE_URL=$DATABASE_URL" >> src/.env
+        echo "CLIENT_SECRET=$CLIENT_SECRET" >> src/.env
         
         cat Dockerfile.test > Dockerfile 
         docker build -t complements-bot-py .
     - name: Test with pytest
       run: |
-        docker run complements-bot-py pytest /test_complements_bot
+        docker run complements-bot-py pytest src/test_complements_bot
 
   deploy:
     timeout-minutes: 10

@@ -116,14 +116,23 @@ along with looking at https://github.com/TwitchIO/TwitchIO for examples to build
 - Run pipenv: pipenv --python 3.10
 - pipenv install twitchio
 
-Make sure create a .env file in the root directory with the following variables:
+Make sure create a .env file in the src directory with the following variables:
 
 - TMI_TOKEN= get your token from https://twitchapps.com/tmi/
 - DATABASE_URL= the URL to your realtime database as shown in firebase
 - CLIENT_SECRET= go to https://dev.twitch.tv/console/apps, click 'Manage', and generate a 'New Secret'.
 
+Also, create a .env file in the root directory with:
+
+- DEFINITELY_GITHUB_SECRET= generate a cryptographically secure random string, e.g. using 'secrets' module in python.
+
+(alternatively, you can set these as environment variables, and do export for each one: 
+`export TMI_TOKEN; export DATABASE_URL; export CLIENT_SECRET; export DEFINITELY_GITHUB_SECRET`).
+
+Also put these environment variables as repository secrets on GitHub, and either as a file or environment variables on your server
+
 Once you have your firebase app, go to 'Service accounts' in project settings. From here, generate a new private key,
-and save the file as '.firebase_config.json' in the root directory.
+and save the file as '.firebase_config.json' in the src directory.
 
 Create a Realtime Database in firebase with private access.
 
