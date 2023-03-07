@@ -73,8 +73,8 @@ jobs:
 
         echo "$FIREBASE_CONFIG" > .firebase_config.json
         echo $TMI_TOKEN > .env
-        echo $DATABASE_URL >> .env
-        echo $CLIENT_SECRET >> .env
+        echo "$DATABASE_URL\n" >> .env
+        echo "$CLIENT_SECRET\n" >> .env
         
         cat Dockerfile.test > Dockerfile 
         docker build -t complements-bot-py .
