@@ -72,15 +72,12 @@ jobs:
         sudo apt install docker-ce
 
         echo "$FIREBASE_CONFIG" > .firebase_config.json
-        echo "$TMI_TOKEN" > .env
-        echo "$DATABASE_URL \n" >> .env
-        echo "$CLIENT_SECRET \n" >> .env
+        echo "TMI_TOKEN=$TMI_TOKEN" > .env
+        echo "DATABASE_URL=$DATABASE_URL" >> .env
+        echo "CLIENT_SECRET=$CLIENT_SECRET" >> .env
         
         cat Dockerfile.test > Dockerfile 
         docker build -t complements-bot-py .
-    - name: Test with pytest
-      run: |
-        pytest /test_complements_bot
     - name: Test with pytest
       run: |
         docker run complements-bot-py pytest /test_complements_bot
