@@ -8,7 +8,7 @@ from typing import Callable, Optional, Awaitable, Union, Tuple
 import random
 from twitchio.ext import commands
 from twitchio import Message
-from src.env_reader import TMI_TOKEN, CLIENT_SECRET
+from ..env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
@@ -90,8 +90,8 @@ class ComplementsBot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
 
-        # joined_channels = await database.get_joined_channels()
-        joined_channels = ["118034879"]
+        joined_channels = await database.get_joined_channels()
+        # joined_channels = ["118034879", "845759020"]
         max_num_user_reqs = 100
         for i in range((len(joined_channels) // max_num_user_reqs) + 1):
             chunk = list(map(int, joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs,

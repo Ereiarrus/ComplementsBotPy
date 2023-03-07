@@ -129,10 +129,10 @@ Also, create a .env file in the root directory with:
 (alternatively, you can set these as environment variables, and do export for each one: 
 `export TMI_TOKEN; export DATABASE_URL; export CLIENT_SECRET; export DEFINITELY_GITHUB_SECRET`).
 
-Also put these environment variables as repository secrets on GitHub, and either as a file or environment variables on your server
+Also put these environment variables as repository secrets on GitHub, and either as a file or environment variables on your server.
 
 Once you have your firebase app, go to 'Service accounts' in project settings. From here, generate a new private key,
-and save the file as '.firebase_config.json' in the src directory.
+and save the file as '.firebase_config.json' in the src directory. Also save the contents of the '.firebase_config.json' file as a repository secret called 'FIREBASE_CONFIG'
 
 Create a Realtime Database in firebase with private access.
 
