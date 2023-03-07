@@ -3,7 +3,7 @@ Tests for bot.py file
 """
 
 from typing import List
-from complements_bot.bot import ComplementsBot
+from src.complements_bot.bot import ComplementsBot
 
 
 def test_is_bot_name_ends_in_bot() -> None:

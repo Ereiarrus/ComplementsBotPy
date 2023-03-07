@@ -5,7 +5,7 @@ The API through which items in our database are accessed
 import asyncio
 from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union
 from firebase_admin import credentials, db, initialize_app
-from env_reader import databaseURL
+from src.env_reader import databaseURL
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
 _cred: credentials.Certificate = credentials.Certificate("./.firebase_config.json")

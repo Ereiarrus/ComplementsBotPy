@@ -17,7 +17,7 @@ def is_env_read(var_str) -> str:
     try:
         return os.environ[var_str]
     except KeyError:
-        with open(".env", "r", encoding="utf-8") as env_file:
+        with open("./.env", "r", encoding="utf-8") as env_file:
             for line in env_file:
                 split_line = line.strip().split("=", 1)
                 if var_str == split_line[0]:

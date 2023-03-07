@@ -18,38 +18,23 @@ jobs:
 
     - name: set up Docker
       run: |
-        sudo apt-get update
-        sudo apt install apt-transport-https ca-certificates curl software-properties-common
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt update
-        apt-cache policy docker-ce
-        sudo apt install docker-ce
+        sudo bash ./docker_install.sh
 
         cat Dockerfile.compile > Dockerfile 
         docker build -t complements-bot-py .
     - name: Check for syntax errors or undefined names
       run: |
-        docker run complements-bot-py flake8 env_reader.py --count --select=E9,F63,F7,F82 --show-source --statistics
-        docker run complements-bot-py flake8 main.py --count --select=E9,F63,F7,F82 --show-source --statistics
-        docker run complements-bot-py flake8 complements_bot --count --select=E9,F63,F7,F82 --show-source --statistics
-        docker run complements-bot-py flake8 test_complements_bot --count --select=E9,F63,F7,F82 --show-source --statistics
+        docker run complements-bot-py flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Lint with flake8
       run: |
         # The GitHub editor is 127 chars wide
-        docker run complements-bot-py flake8 env_reader.py --count --max-complexity=10 --max-line-length=127 --statistics
-        docker run complements-bot-py flake8 main.py --count --max-complexity=10 --max-line-length=127 --statistics
-        docker run complements-bot-py flake8 complements_bot --count --max-complexity=10 --max-line-length=127 --statistics
-        docker run complements-bot-py flake8 test_complements_bot --count --max-complexity=10 --max-line-length=127 --statistics
+        docker run complements-bot-py flake8 src --count --max-complexity=10 --max-line-length=127 --statistics
     - name: Lint with pylint
       run: |
-        docker run complements-bot-py pylint env_reader.py
-        docker run complements-bot-py pylint main.py
-        docker run complements-bot-py pylint complements_bot
-        docker run complements-bot-py pylint test_complements_bot
+        docker run complements-bot-py pylint src
     - name: Typecheck with mypy
       run: |
-        mypy .
+        mypy src
 
   test:
     timeout-minutes: 15
@@ -63,18 +48,12 @@ jobs:
 
     - name: set up Docker
       run: |
-        sudo apt-get update
-        sudo apt install apt-transport-https ca-certificates curl software-properties-common
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt update
-        apt-cache policy docker-ce
-        sudo apt install docker-ce
+        sudo bash ./docker_install.sh
 
-        echo "$FIREBASE_CONFIG" > .firebase_config.json
-        echo "TMI_TOKEN=$TMI_TOKEN" > .env
-        echo "DATABASE_URL=$DATABASE_URL" >> .env
-        echo "CLIENT_SECRET=$CLIENT_SECRET" >> .env
+        echo "$FIREBASE_CONFIG" > ./.firebase_config.json
+        echo "TMI_TOKEN=$TMI_TOKEN" > ./.env
+        echo "DATABASE_URL=$DATABASE_URL" >> ./.env
+        echo "CLIENT_SECRET=$CLIENT_SECRET" >> ./.env
         
         cat Dockerfile.test > Dockerfile 
         docker build -t complements-bot-py .

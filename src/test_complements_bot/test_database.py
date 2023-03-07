@@ -2,7 +2,7 @@
 Tests for database.py file
 """
 
-from complements_bot import database
+from src.complements_bot import database
 from .testing_commons import BOT_ID
 
 

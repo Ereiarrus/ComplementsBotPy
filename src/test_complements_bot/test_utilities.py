@@ -2,7 +2,7 @@
 Tests for utilities.py file
 """
 
-from complements_bot.utilities import run_with_appropriate_awaiting, remove_chars
+from src.complements_bot.utilities import run_with_appropriate_awaiting, remove_chars
 
 
 def test_run_with_appropriate_awaiting():

@@ -8,7 +8,7 @@ from typing import Callable, Optional, Awaitable, Union, Tuple
 import random
 from twitchio.ext import commands
 from twitchio import Message
-from env_reader import TMI_TOKEN, CLIENT_SECRET
+from src.env_reader import TMI_TOKEN, CLIENT_SECRET
 from . import database
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
@@ -560,12 +560,13 @@ class ComplementsBot(commands.Bot):
         msg: str = ctx.message.content.strip()
         to_send: str = ""
         exception: bool = False
+        chance_str: str = msg.split()[1]
         chance: float = 0
         try:
-            chance = float((msg.split())[1])
+            chance = float(chance_str[1])
         except ValueError:
             # user tried putting a non-float after '!setchance'
-            to_send = f"@{channel} '{chance}' is an invalid number. Please try again."
+            to_send = f"@{channel} '{chance_str}' is an invalid number. Please try again."
             exception = True
         except IndexError:
             # user didn't provide anything after '!setchance'
