@@ -2,7 +2,7 @@
 The entry-point of the program
 """
 
-from src.complements_bot import ComplementsBot
+from .complements_bot import ComplementsBot
 
 
 if __name__ == "__main__":

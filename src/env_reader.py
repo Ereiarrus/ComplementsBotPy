@@ -18,6 +18,7 @@ def is_env_read(var_str: str) -> Optional[str]:
     try:
         return os.environ[var_str]
     except KeyError:
+        # pylint: disable=consider-using-with
         try:
             env_file = open("src/.env", "r", encoding="utf-8")
         except OSError:
@@ -35,6 +36,6 @@ def is_env_read(var_str: str) -> Optional[str]:
         return None
 
 
-TMI_TOKEN: str = is_env_read('TMI_TOKEN')
-CLIENT_SECRET: str = is_env_read('CLIENT_SECRET')
-databaseURL: str = is_env_read('DATABASE_URL')
+TMI_TOKEN: Optional[str] = is_env_read('TMI_TOKEN')
+CLIENT_SECRET: Optional[str] = is_env_read('CLIENT_SECRET')
+databaseURL: Optional[str] = is_env_read('DATABASE_URL')
