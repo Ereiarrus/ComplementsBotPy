@@ -93,6 +93,8 @@ class ComplementsBot(commands.Bot):
         joined_channels = await database.get_joined_channels()
         # joined_channels = ["118034879", "845759020"]
         max_num_user_reqs = 100
+        # TODO: instead of awaiting inside the loop, create the username lists
+        #  and await for all of them outside (after the loop)
         for i in range((len(joined_channels) // max_num_user_reqs) + 1):
             chunk = list(map(int, joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs,
                                                                              len(joined_channels))]))
@@ -110,7 +112,8 @@ class ComplementsBot(commands.Bot):
             - streamlabs
         """
 
-        return len(username) >= 3 and username[-3:].lower() == 'bot' or username in ("streamlabs", "streamelements")
+        return len(username) >= 3 and username[-3:].lower() == 'bot' \
+            or username in ("streamlabs", "streamelements")
 
     async def event_message(self, message: Message) -> None:
         """
@@ -214,13 +217,9 @@ class ComplementsBot(commands.Bot):
             behaviour of the command.
         """
 
-        msg: str = ctx.message.content.strip()
-        args: list[str] = msg.split(" ")
-        who: str = ctx.message.author.name
-        if len(args) > 1:
-            who = " ".join(args[1:])
-            if who[0] == "@":
-                who = who[1:]
+        who: str = self.isolate_args(ctx.message.content)
+        if who[0] == "@":
+            who = who[1:]
 
         channel: str = ctx.channel.name
         if await database.is_user_ignored(username=who, name_to_id=self.name_to_id) or \
@@ -242,7 +241,7 @@ class ComplementsBot(commands.Bot):
         Checks if the context was created in the bot's channel (or the creator's)
         """
 
-        return ctx.channel.name in (self.nick, ComplementsBot.OWNER_NICK)
+        return self.name_to_id(ctx.channel.name) in (str(self.user_id), ComplementsBot.OWNER_ID)
 
     @staticmethod
     async def send_and_log(ctx: commands.Context, msg: Optional[str]) -> None:
@@ -558,13 +557,12 @@ class ComplementsBot(commands.Bot):
             return
 
         channel: str = ctx.channel.name
-        msg: str = ctx.message.content.strip()
-        to_send: str = ""
+        to_send: str
         exception: bool = False
-        chance_str: str = msg.split()[1]
-        chance: float = 0
+        chance_str: str = self.isolate_args(ctx.message.content)
+        chance: float
         try:
-            chance = float(chance_str[1])
+            chance = float(chance_str)
         except ValueError:
             # user tried putting a non-float after '!setchance'
             to_send = f"@{channel} '{chance_str}' is an invalid number. Please try again."
@@ -578,10 +576,9 @@ class ComplementsBot(commands.Bot):
             return
 
         await database.set_complement_chance(chance, channel, name_to_id=self.name_to_id)
-        await ComplementsBot.send_and_log(
-            ctx,
-            f"@{channel} complement chance set to "
-            f"{str(await database.get_complement_chance(channel, name_to_id=self.name_to_id))}!")
+        to_send = f"@{channel} complement chance set to " \
+                  f"{str(await database.get_complement_chance(channel, name_to_id=self.name_to_id))}!"
+        await ComplementsBot.send_and_log(ctx, to_send)
 
     @commands.command(aliases=["disablecommandcomplement", "disablecommandcomp", "disablecmdcomp"])
     async def disablecmdcomplement(self, ctx: commands.Context) -> None:
@@ -997,6 +994,24 @@ class ComplementsBot(commands.Bot):
                                     )
         )
 
+    @staticmethod
+    def isolate_args(full_cmd_msg: str) -> str:
+        """
+        :param full_cmd_msg: the command message which includes the command name itself
+        :return: removes the '!command' part of the msg along with exactly one single space after it
+        """
+
+        full_cmd_msg = full_cmd_msg.strip()     # Twitch should already do this before getting the
+                                                #  message, but just done in case they don't
+        first_space_at: int = full_cmd_msg.find(" ")
+        space_found: bool = first_space_at >= 0
+
+        if not space_found:
+            return ""
+
+        # won't give 'index out of range' as message can't end on a space due to the strip()
+        return full_cmd_msg[first_space_at + 1:]
+
     @commands.command()
     async def refresh(self, ctx: commands.Context) -> None:
         """
@@ -1005,6 +1020,7 @@ class ComplementsBot(commands.Bot):
         """
         # TODO: make it so that this updates the database with their 'last known username', joins their new chat,
         #  and leaves their old chat
+        pass
 
     @commands.command()
     async def refreshall(self, ctx: commands.Context) -> None:
@@ -1012,3 +1028,5 @@ class ComplementsBot(commands.Bot):
         Allows owner to do !refresh for all users without having to do it manually one by one
         """
         # TODO: make it similar to !refresh, but it refreshes ALL entries, and is only usable by bot owner/bot
+        if not self.name_to_id(ctx.author.name) in (self.user_id, ComplementsBot.OWNER_ID):
+            return

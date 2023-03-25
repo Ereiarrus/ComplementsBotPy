@@ -8,7 +8,6 @@ from firebase_admin import credentials, db, initialize_app
 from src.env_reader import databaseURL
 from .utilities import run_with_appropriate_awaiting, remove_chars
 
-
 _cred: credentials.Certificate
 try:
     _cred = credentials.Certificate("src/.firebase_config.json")
@@ -50,7 +49,8 @@ _COMMAND_COMPLEMENT_MUTED: str = "command_complement_muted"
 _RANDOM_COMPLEMENT_MUTED: str = "random_complement_muted"
 _DEFAULT_COMPLEMENTS_ENABLED: str = "default_complements_enabled"
 _CUSTOM_COMPLEMENTS_ENABLED: str = "custom_complements_enabled"
-_USERNAME: str = "last_known_username"
+_USERNAME: str = "last_known_username"  # only stored so that the old channel can be left/parted and avoid
+                                        #  its overhead
 
 _DEFAULT_USER: Dict[str, Any] = {_COMPLEMENT_CHANCE: _DEFAULT_COMPLEMENT_CHANCE,
                                  _SHOULD_IGNORE_BOTS: _DEFAULT_SHOULD_IGNORE_BOTS,
@@ -118,7 +118,7 @@ async def is_user_ignored(username: Optional[str] = None, userid: Optional[str] 
 
 
 async def ignore(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -144,7 +144,7 @@ async def ignore(username: Optional[str] = None, userid: Optional[str] = None, n
 
 
 async def unignore(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -168,7 +168,7 @@ async def unignore(username: Optional[str] = None, userid: Optional[str] = None,
 
 
 async def channel_exists(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -187,7 +187,7 @@ async def channel_exists(username: Optional[str] = None, userid: Optional[str] =
 
 
 async def is_channel_joined(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -208,7 +208,7 @@ async def is_channel_joined(username: Optional[str] = None, userid: Optional[str
 
 
 async def join_channel(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -230,7 +230,7 @@ async def join_channel(username: Optional[str] = None, userid: Optional[str] = N
 
 
 async def leave_channel(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -248,7 +248,7 @@ async def leave_channel(username: Optional[str] = None, userid: Optional[str] = 
 
 
 async def delete_channel(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -308,7 +308,7 @@ async def set_tts_mute_prefix(prefix: str, username: Optional[str] = None, useri
 
 
 async def get_tts_mute_prefix(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> str:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> str:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -350,7 +350,7 @@ async def set_complement_chance(chance: float, username: Optional[str] = None, u
 
 
 async def get_complement_chance(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> float:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> float:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -393,7 +393,7 @@ async def set_cmd_complement_enabled(is_enabled: bool, username: Optional[str] =
 
 
 async def get_cmd_complement_enabled(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -543,7 +543,7 @@ async def remove_complements(username: Optional[str] = None, userid: Optional[st
 
 
 async def remove_all_complements(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -561,7 +561,7 @@ async def remove_all_complements(username: Optional[str] = None, userid: Optiona
 
 
 async def get_custom_complements(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> list[str]:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> list[str]:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -580,7 +580,7 @@ async def get_custom_complements(username: Optional[str] = None, userid: Optiona
 
 
 async def is_cmd_complement_muted(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -751,7 +751,7 @@ async def are_custom_complements_enabled(username: Optional[str] = None, userid:
 
 
 async def is_ignoring_bots(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
+    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -790,3 +790,24 @@ async def set_should_ignore_bots(should_ignore_bots: bool, username: Optional[st
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_SHOULD_IGNORE_BOTS).set,
                                       should_ignore_bots)
+
+
+async def set_username(new_username: str, username: Optional[str] = None, userid: Optional[str] = None,
+                       name_to_id: Optional[Union[Callable[[str], Optional[str]], Callable[
+                           [str], Awaitable[Optional[str]]]]] = None) -> None:
+    """
+    At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
+    specified; userid is preferred whenever possible due to being guaranteed to never change
+    :param new_username: the user's updated last known username
+    :param name_to_id: function that allows us to convert a username to a user id
+    :param username: twitch username which we are checking if they are ignored
+    :param userid: twitch user id which we are checking if they are ignored
+    Allows for toggling of whether the bot is allowed to complement other bots
+    """
+    assert username or userid
+    assert userid or name_to_id
+
+    if not userid:
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
+
+    await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_USERNAME).set, new_username)
