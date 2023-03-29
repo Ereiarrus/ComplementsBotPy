@@ -113,7 +113,7 @@ class ComplementsBot(commands.Bot):
         """
 
         return len(username) >= 3 and username[-3:].lower() == 'bot' \
-            or username in ("streamlabs", "streamelements")
+               or username in ("streamlabs", "streamelements")
 
     async def event_message(self, message: Message) -> None:
         """
@@ -1001,8 +1001,10 @@ class ComplementsBot(commands.Bot):
         :return: removes the '!command' part of the msg along with exactly one single space after it
         """
 
-        full_cmd_msg = full_cmd_msg.strip()     # Twitch should already do this before getting the
-                                                #  message, but just done in case they don't
+        full_cmd_msg = full_cmd_msg.strip()
+        # ^ Twitch should already do this before getting
+        # the message, but just done in case they don't
+
         first_space_at: int = full_cmd_msg.find(" ")
         space_found: bool = first_space_at >= 0
 

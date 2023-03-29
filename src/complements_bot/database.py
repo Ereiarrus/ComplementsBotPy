@@ -49,8 +49,7 @@ _COMMAND_COMPLEMENT_MUTED: str = "command_complement_muted"
 _RANDOM_COMPLEMENT_MUTED: str = "random_complement_muted"
 _DEFAULT_COMPLEMENTS_ENABLED: str = "default_complements_enabled"
 _CUSTOM_COMPLEMENTS_ENABLED: str = "custom_complements_enabled"
-_USERNAME: str = "last_known_username"  # only stored so that the old channel can be left/parted and avoid
-                                        #  its overhead
+_USERNAME: str = "last_known_username"  # only stored so that the old channel can be left/parted and avoid its overhead
 
 _DEFAULT_USER: Dict[str, Any] = {_COMPLEMENT_CHANCE: _DEFAULT_COMPLEMENT_CHANCE,
                                  _SHOULD_IGNORE_BOTS: _DEFAULT_SHOULD_IGNORE_BOTS,
