@@ -82,10 +82,10 @@ jobs:
     - name: Copy repository contents via scp
       uses: appleboy/scp-action@master
       env:
-        HOST: ${{ secrets.HOST }}
-        USERNAME: ${{ secrets.USERNAME }}
-        PORT: ${{ secrets.PORT }}
-        KEY: ${{ secrets.SSHKEY }}
+        HOST: ${{ secrets.HOST_IP }}
+        USERNAME: ${{ secrets.VPS_USERNAME }}
+        PORT: ${{ secrets.VPS_PORT }}
+        KEY: ${{ secrets.SSH_KEY }}
       with:
         source: "."
         target: ${{ secrets.DEPLOY_TARGET_LOCATION }}
@@ -93,14 +93,13 @@ jobs:
     - name: Executing remote command
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.HOST }}
-        USERNAME: ${{ secrets.USERNAME }}
-        PORT: ${{ secrets.PORT }}
-        KEY: ${{ secrets.SSHKEY }}
+        host: ${{ secrets.HOST_IP }}
+        USERNAME: ${{ secrets.VPS_USERNAME }}
+        PORT: ${{ secrets.VPS_PORT }}
+        KEY: ${{ secrets.SSH_KEY }}
 #        script: ls
         script:
           chmod +x ./docker_build.sh; \
           ./docker_build.sh; \
           chmod +x ./docker_run.sh; \
-          docker kill complements-bot-py; \
           ./docker_run.sh
