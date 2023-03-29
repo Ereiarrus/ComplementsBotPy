@@ -78,29 +78,29 @@ jobs:
 #    - name: deploying
 #      run: |
 #        echo "Deploying..."
-#
-#    - name: Copy repository contents via scp
-#      uses: appleboy/scp-action@master
-#      env:
-#        HOST: ${{ secrets.HOST }}
-#        USERNAME: ${{ secrets.USERNAME }}
-#        PORT: ${{ secrets.PORT }}
-#        KEY: ${{ secrets.SSHKEY }}
-#      with:
-#        source: "."
-#        target: ${{ secrets.DEPLOY_TARGET_LOCATION }}
-#
-#    - name: Executing remote command
-#      uses: appleboy/ssh-action@master
-#      with:
-#        host: ${{ secrets.HOST }}
-#        USERNAME: ${{ secrets.USERNAME }}
-#        PORT: ${{ secrets.PORT }}
-#        KEY: ${{ secrets.SSHKEY }}
-##        script: ls
-#        script:
-#          chmod +x ./docker_build.sh; \
-#          ./docker_build.sh; \
-#          chmod +x ./docker_run.sh; \
-#          docker kill complements-bot-py; \
-#          ./docker_run.sh
+
+    - name: Copy repository contents via scp
+      uses: appleboy/scp-action@master
+      env:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+        PORT: ${{ secrets.PORT }}
+        KEY: ${{ secrets.SSHKEY }}
+      with:
+        source: "."
+        target: ${{ secrets.DEPLOY_TARGET_LOCATION }}
+
+    - name: Executing remote command
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USERNAME }}
+        PORT: ${{ secrets.PORT }}
+        KEY: ${{ secrets.SSHKEY }}
+#        script: ls
+        script:
+          chmod +x ./docker_build.sh; \
+          ./docker_build.sh; \
+          chmod +x ./docker_run.sh; \
+          docker kill complements-bot-py; \
+          ./docker_run.sh
