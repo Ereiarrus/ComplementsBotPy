@@ -348,7 +348,8 @@ confidence = ["HIGH", "CONTROL_FLOW", "INFERENCE", "INFERENCE_FAILURE", "UNDEFIN
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable = ["raw-checker-failed",
+disable = [
+    "raw-checker-failed",
     "bad-inline-option",
     "locally-disabled",
     "file-ignored",
@@ -361,7 +362,6 @@ disable = ["raw-checker-failed",
     "R0913", # Too many arguments (at most 5 allowed) (too-many-arguments)
     "R0904", # Too many public methods (at most 20 allowed) (too-many-public-methods)
     "C0302", # Too many lines in module (at most 1000 allowed) (too-many-lines)
-    "E125", # continuation line with same indent as next logical line
 ]
 
 # Enable the message, report, category or checker with the given id(s). You can

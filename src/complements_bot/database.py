@@ -3,10 +3,12 @@ The API through which items in our database are accessed
 """
 
 import asyncio
-from typing import Any, Dict, Tuple, Optional, Callable, Awaitable, Union
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
+
 from firebase_admin import credentials, db, initialize_app
+
 from src.env_reader import databaseURL
-from .utilities import run_with_appropriate_awaiting, remove_chars
+from .utilities import remove_chars, run_with_appropriate_awaiting
 
 _cred: credentials.Certificate
 try:
@@ -91,7 +93,7 @@ class Database:
 
 
 async def is_user_ignored(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) \
+        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) \
         -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
@@ -117,7 +119,7 @@ async def is_user_ignored(username: Optional[str] = None, userid: Optional[str] 
 
 
 async def ignore(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -143,7 +145,7 @@ async def ignore(username: Optional[str] = None, userid: Optional[str] = None, n
 
 
 async def unignore(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-    Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
+        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -407,7 +409,7 @@ async def get_cmd_complement_enabled(username: Optional[str] = None, userid: Opt
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_enabled = await _event_loop.run_in_executor(
-        None, _USERS_DB_REF.child(userid).child(_COMMAND_COMPLEMENT_ENABLED).get)
+            None, _USERS_DB_REF.child(userid).child(_COMMAND_COMPLEMENT_ENABLED).get)
     if is_enabled is None:
         await set_cmd_complement_enabled(_DEFAULT_COMMAND_COMPLEMENT_ENABLED, userid=userid)
         is_enabled = _DEFAULT_COMMAND_COMPLEMENT_ENABLED
@@ -484,7 +486,7 @@ async def add_complement(complement: str, username: Optional[str] = None, userid
         return data
 
     await _event_loop.run_in_executor(
-        None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS).transaction, add_transaction)
+            None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS).transaction, add_transaction)
 
 
 def complements_to_remove(data: list[str], phrase: str) -> Tuple[list[str], list[str]]:
@@ -538,7 +540,7 @@ async def remove_complements(username: Optional[str] = None, userid: Optional[st
         return to_keep or []
 
     await _event_loop.run_in_executor(
-        None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS).transaction, remove_transaction)
+            None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS).transaction, remove_transaction)
 
 
 async def remove_all_complements(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
@@ -678,7 +680,7 @@ async def are_default_complements_enabled(username: Optional[str] = None, userid
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_enabled = await _event_loop.run_in_executor(
-        None, _USERS_DB_REF.child(userid).child(_DEFAULT_COMPLEMENTS_ENABLED).get)
+            None, _USERS_DB_REF.child(userid).child(_DEFAULT_COMPLEMENTS_ENABLED).get)
     if is_enabled is None:
         return _DEFAULT_DEFAULT_COMPLEMENTS_ENABLED
     return bool(is_enabled)
@@ -702,7 +704,7 @@ async def set_are_default_complements_enabled(are_enabled: bool, username: Optio
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     await _event_loop.run_in_executor(
-        None, _USERS_DB_REF.child(userid).child(_DEFAULT_COMPLEMENTS_ENABLED).set, are_enabled)
+            None, _USERS_DB_REF.child(userid).child(_DEFAULT_COMPLEMENTS_ENABLED).set, are_enabled)
 
 
 async def set_are_custom_complements_enabled(are_enabled: bool, username: Optional[str] = None,
@@ -723,7 +725,7 @@ async def set_are_custom_complements_enabled(are_enabled: bool, username: Option
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     await _event_loop.run_in_executor(
-        None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS_ENABLED).set, are_enabled)
+            None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS_ENABLED).set, are_enabled)
 
 
 async def are_custom_complements_enabled(username: Optional[str] = None, userid: Optional[str] = None,
@@ -743,7 +745,7 @@ async def are_custom_complements_enabled(username: Optional[str] = None, userid:
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     is_enabled = await _event_loop.run_in_executor(
-        None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS_ENABLED).get)
+            None, _USERS_DB_REF.child(userid).child(_CUSTOM_COMPLEMENTS_ENABLED).get)
     if is_enabled is None:
         return _DEFAULT_CUSTOM_COMPLEMENTS_ENABLED
     return bool(is_enabled)
