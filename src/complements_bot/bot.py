@@ -3,14 +3,16 @@ Holds all commands (and their logic) for how ComplementsBot should complement Tw
 """
 
 import os
-import textwrap
-from typing import Callable, Optional, Awaitable, Union, Tuple
 import random
-from twitchio.ext import commands
+import textwrap
+from typing import Awaitable, Callable, Optional, Tuple, Union
+
 from twitchio import Message
-from ..env_reader import TMI_TOKEN, CLIENT_SECRET
+from twitchio.ext import commands
+
 from . import database
-from .utilities import run_with_appropriate_awaiting, remove_chars
+from .utilities import remove_chars, run_with_appropriate_awaiting
+from ..env_reader import CLIENT_SECRET, TMI_TOKEN
 
 
 # TODO:
@@ -236,7 +238,7 @@ class ComplementsBot(commands.Bot):
 
     # -------------------- bot channel only commands --------------------
 
-    def is_in_bot_channel(self, ctx: commands.Context) -> bool:
+    async def is_in_bot_channel(self, ctx: commands.Context) -> bool:
         """
         Checks if the context was created in the bot's channel (or the creator's)
         """
@@ -296,10 +298,10 @@ class ComplementsBot(commands.Bot):
 
     @staticmethod
     async def cmd_body(ctx: commands.Context,
-                       permission_check: Callable[[commands.Context], bool],
+                       permission_check: Union[
+                           Callable[[commands.Context], bool], Callable[[commands.Context], Awaitable[bool]]],
                        do_before_if: Optional[
-                           Union[Callable[[commands.Context], Awaitable[None]], Callable[
-                               [commands.Context], None]]] = None,
+                           Union[Callable[[commands.Context], Awaitable[None]], Callable[[commands.Context], None]]] = None,
                        do_if_else: Optional[DoIfElse] = None,
                        always_msg: Optional[str] = None) -> bool:
         """
@@ -315,7 +317,7 @@ class ComplementsBot(commands.Bot):
         :return: True if permission_check passes, False otherwise
         """
 
-        if not permission_check(ctx):
+        if not run_with_appropriate_awaiting(permission_check, ctx):
             return False
 
         await run_with_appropriate_awaiting(do_before_if, ctx)

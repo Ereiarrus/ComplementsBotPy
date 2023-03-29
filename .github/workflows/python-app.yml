@@ -78,4 +78,3 @@ jobs:
     - name: deploying
       run: |
         echo "Deploying..."
-#        web hook action goes here
