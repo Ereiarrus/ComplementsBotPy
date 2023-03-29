@@ -122,12 +122,8 @@ Make sure create a .env file in the src directory with the following variables:
 - DATABASE_URL= the URL to your realtime database as shown in firebase
 - CLIENT_SECRET= go to https://dev.twitch.tv/console/apps, click 'Manage', and generate a 'New Secret'.
 
-Also, create a .env file in the root directory with:
-
-- DEFINITELY_GITHUB_SECRET= generate a cryptographically secure random string, e.g. using 'secrets' module in python.
-
 (alternatively, you can set these as environment variables, and do export for each one: 
-`export TMI_TOKEN; export DATABASE_URL; export CLIENT_SECRET; export DEFINITELY_GITHUB_SECRET`).
+`export TMI_TOKEN; export DATABASE_URL; export CLIENT_SECRET`).
 
 Also put these environment variables as repository secrets on GitHub, and either as a file or environment variables on your server.
 

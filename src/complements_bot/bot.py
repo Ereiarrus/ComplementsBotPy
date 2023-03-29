@@ -243,7 +243,7 @@ class ComplementsBot(commands.Bot):
         Checks if the context was created in the bot's channel (or the creator's)
         """
 
-        return (await self.name_to_id(ctx.channel.name)) in (str(self.user_id), ComplementsBot.OWNER_ID)
+        return await self.name_to_id(ctx.channel.name) in (str(self.user_id), ComplementsBot.OWNER_ID)
 
     @staticmethod
     async def send_and_log(ctx: commands.Context, msg: Optional[str]) -> None:
