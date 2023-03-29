@@ -97,4 +97,10 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.SSHKEY }}
-        script: ls
+#        script: ls
+        script:
+          chmod +x ./docker_build.sh; \
+          ./docker_build.sh; \
+          chmod +x ./docker_run.sh; \
+          docker kill complements-bot-py; \
+          ./docker_run.sh
