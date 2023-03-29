@@ -1024,7 +1024,6 @@ class ComplementsBot(commands.Bot):
         """
         # TODO: make it so that this updates the database with their 'last known username', joins their new chat,
         #  and leaves their old chat
-        pass
 
     @commands.command()
     async def refreshall(self, ctx: commands.Context) -> None:
@@ -1032,5 +1031,5 @@ class ComplementsBot(commands.Bot):
         Allows owner to do !refresh for all users without having to do it manually one by one
         """
         # TODO: make it similar to !refresh, but it refreshes ALL entries, and is only usable by bot owner/bot
-        if not self.name_to_id(ctx.author.name) in (self.user_id, ComplementsBot.OWNER_ID):
+        if self.name_to_id(ctx.author.name) not in (self.user_id, ComplementsBot.OWNER_ID):
             return
