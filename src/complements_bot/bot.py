@@ -317,7 +317,7 @@ class ComplementsBot(commands.Bot):
         :return: True if permission_check passes, False otherwise
         """
 
-        if not run_with_appropriate_awaiting(permission_check, ctx):
+        if not await run_with_appropriate_awaiting(permission_check, ctx):
             return False
 
         await run_with_appropriate_awaiting(do_before_if, ctx)
