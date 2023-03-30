@@ -7,74 +7,74 @@ permissions:
   contents: read
 
 jobs:
-#  build:
-#    timeout-minutes: 15
-#    runs-on: ubuntu-latest
-#    steps:
-#    - uses: actions/checkout@v3
-#    - uses: ./.github/actions/python-init
-#      with:
-#        secrets: ${{ toJSON(secrets) }}
-#
-#    - name: set up Docker
-#      run: |
-#        sudo bash ./install_docker.sh
-#
-#        cat Dockerfile.compile > Dockerfile
-#        docker build -t complements-bot-py .
-#    - name: Check for syntax errors or undefined names
-#      run: |
-#        docker run complements-bot-py flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-#    - name: Lint with flake8
-#      run: |
-#        # The GitHub editor is 127 chars wide
-#        docker run complements-bot-py flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
-#    - name: Lint with pylint
-#      run: |
-#        docker run complements-bot-py pylint src
-#    - name: Typecheck with mypy
-#      run: |
-#        docker run complements-bot-py mypy .
+  build:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/python-init
+      with:
+        secrets: ${{ toJSON(secrets) }}
 
-#  test:
-#    timeout-minutes: 15
-#    runs-on: ubuntu-latest
-#    needs: [build]
-#    steps:
-#    - uses: actions/checkout@v3
-#    - uses: ./.github/actions/python-init
-#      with:
-#        secrets: ${{ toJSON(secrets) }}
-#
-#    - name: set up Docker
-#      run: |
-#        sudo bash ./install_docker.sh
-#
-#        echo "$FIREBASE_CONFIG" > src/.firebase_config.json
-#        echo "TMI_TOKEN=$TMI_TOKEN" > src/.env
-#        echo "DATABASE_URL=$DATABASE_URL" >> src/.env
-#        echo "CLIENT_SECRET=$CLIENT_SECRET" >> src/.env
-#
-#        cat Dockerfile.test > Dockerfile
-#        bash ./docker_build.sh
-#    - name: Test with pytest
-#      run: |
-#        docker run complements-bot-py pytest test_complements_bot
+    - name: set up Docker
+      run: |
+        sudo bash ./install_docker.sh
+
+        cat Dockerfile.compile > Dockerfile
+        docker build -t complements-bot-py .
+    - name: Check for syntax errors or undefined names
+      run: |
+        docker run complements-bot-py flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    - name: Lint with flake8
+      run: |
+        # The GitHub editor is 127 chars wide
+        docker run complements-bot-py flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
+    - name: Lint with pylint
+      run: |
+        docker run complements-bot-py pylint src
+    - name: Typecheck with mypy
+      run: |
+        docker run complements-bot-py mypy .
+
+  test:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/python-init
+      with:
+        secrets: ${{ toJSON(secrets) }}
+
+    - name: set up Docker
+      run: |
+        sudo bash ./install_docker.sh
+
+        echo "$FIREBASE_CONFIG" > src/.firebase_config.json
+        echo "TMI_TOKEN=$TMI_TOKEN" > src/.env
+        echo "DATABASE_URL=$DATABASE_URL" >> src/.env
+        echo "CLIENT_SECRET=$CLIENT_SECRET" >> src/.env
+
+        cat Dockerfile.test > Dockerfile
+        bash ./docker_build.sh
+    - name: Test with pytest
+      run: |
+        docker run complements-bot-py pytest test_complements_bot
 
   deploy:
     timeout-minutes: 15
     runs-on: ubuntu-latest
-#    needs: [test]
+    needs: [test]
     if: github.ref == 'refs/heads/main'  # Only deploy if this was a push to main
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/python-init
       with:
         secrets: ${{ toJSON(secrets) }}
-#    - name: Test docker image config
-#      run: |
-#        sudo bash ./install_docker.sh
-#        bash ./docker_build.sh
+    - name: Test docker image config
+      run: |
+        sudo bash ./install_docker.sh
+        bash ./docker_build.sh
 
     - name: Copy repository contents via scp
       uses: appleboy/scp-action@master
@@ -95,7 +95,7 @@ jobs:
         PORT: ${{ secrets.VPS_PORT }}
         KEY: ${{ secrets.SSH_KEY }}
         script: |
-          cd ${{ secrets.DEPLOY_TARGET_LOCATION }}
+          cd $DEPLOY_TARGET_LOCATION
           chmod +x ./docker_build.sh
           ./docker_build.sh
           chmod +x ./docker_run.sh
