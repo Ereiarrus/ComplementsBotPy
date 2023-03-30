@@ -94,10 +94,8 @@ jobs:
         USERNAME: ${{ secrets.VPS_USERNAME }}
         PORT: ${{ secrets.VPS_PORT }}
         KEY: ${{ secrets.SSH_KEY }}
-#        script: ls
         script: |
-          pwd
-          ls -la
+          cd ${{ secrets.DEPLOY_TARGET_LOCATION }}
           chmod +x ./docker_build.sh
           ./docker_build.sh
           chmod +x ./docker_run.sh
