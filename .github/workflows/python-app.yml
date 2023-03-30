@@ -101,7 +101,7 @@ jobs:
         KEY: ${{ secrets.SSH_KEY }}
         script: |
           cd ${{ secrets.DEPLOY_TARGET_LOCATION }}
-          echo "${{ secrets.FIREBASE_CONFIG }}" > src/.firebase_config.json
+          echo '${{ secrets.FIREBASE_CONFIG }}' > src/.firebase_config.json
           echo "TMI_TOKEN=${{ secrets.TMI_TOKEN }}" > src/.env
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> src/.env
           echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> src/.env
