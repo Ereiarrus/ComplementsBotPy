@@ -95,7 +95,7 @@ jobs:
         PORT: ${{ secrets.VPS_PORT }}
         KEY: ${{ secrets.SSH_KEY }}
         script: |
-          cd $DEPLOY_TARGET_LOCATION
+          cd "$DEPLOY_TARGET_LOCATION"
           echo "$FIREBASE_CONFIG" > src/.firebase_config.json
           echo "TMI_TOKEN=$TMI_TOKEN" > src/.env
           echo "DATABASE_URL=$DATABASE_URL" >> src/.env
