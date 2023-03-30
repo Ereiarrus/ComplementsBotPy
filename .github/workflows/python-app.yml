@@ -96,6 +96,11 @@ jobs:
         KEY: ${{ secrets.SSH_KEY }}
         script: |
           cd $DEPLOY_TARGET_LOCATION
+          echo "$FIREBASE_CONFIG" > src/.firebase_config.json
+          echo "TMI_TOKEN=$TMI_TOKEN" > src/.env
+          echo "DATABASE_URL=$DATABASE_URL" >> src/.env
+          echo "CLIENT_SECRET=$CLIENT_SECRET" >> src/.env
+          
           chmod +x ./docker_build.sh
           ./docker_build.sh
           chmod +x ./docker_run.sh
