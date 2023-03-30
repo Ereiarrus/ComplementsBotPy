@@ -139,6 +139,7 @@ set up SSH key on server:
 	- ssh-add ~/.ssh/id_ed25519
 	- cat ~/.ssh/id_ed25519.pub
 	- paste public key into github https://github.com/settings/keys: new SSH key
+    - will possibly also need to `chmod 700 ~`, `chmod 700 ~/.ssh`, `chmod 700 ~/.ssh/authorized_keys` (see https://unix.stackexchange.com/questions/407394/ssh-copy-id-succeeded-but-still-prompt-password-input for more) 
 
 ### Running program on a VPS
 
