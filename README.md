@@ -17,7 +17,7 @@ able to get the bot to join your chat on your own (i.e. you will have to contact
 
 The following commands work anywhere that I have joined:
 
-- !complement \[username\] - If username present, complement that user; otherwise, get a complement yourself!
+- !complement \<username\> - If username present, complement that user; otherwise, get a complement yourself!
 
 - !compignoreme - I will stop complementing you (see !ignoreme in '[ComplementsBot chat only](#ComplementsBot chat only)'); note that this command gives no feedback whether it was successful
 - !compunignoreme - undo !compignoreme/!ignoreme (see in '[ComplementsBot chat only](#ComplementsBot chat only)'); note that this command gives no feedback whether it was successful
@@ -50,9 +50,9 @@ These commands must be used by the channel owner in their own channel:
 - !setchance - change how likely it is that person sending message gets complemented; default is 3.33%; setting it to a
   number over 100 makes it always trigger, and to 0 or less to never trigger
 
-- !addcomplement/!addcomp <complement> - add a custom complement for to your own channel
+- !addcomplement/!addcomp \<complement\> - add a custom complement for to your own channel
 - !removeallcomplements/!removeallcomps - removes all custom complements added by you
-- !removecomplement/!removecomp <phrase> - remove a complement from your own channel; the complement which gets removed is one which contains "phrase" in it, after "phrase" has gone through the process of:
+- !removecomplement/!removecomp \<phrase\> - remove a complement from your own channel; the complement which gets removed is one which contains "phrase" in it, after "phrase" has gone through the process of:
   - all non-alphanumeric (numbers and letters) characters get removed; this includes spaces
   - all letters in "phrase" get converted into lowercase
   - the resulting string (which was originally "phrase") will be compared to all custom complements with the same two things done to them, and any complement containing the phrase will be removed.
@@ -93,7 +93,7 @@ The following commands have not been implemented yet, but are planned to be:
 #### Channel owner and mods only
 
 These commands must be used by the channel owner in their own channel:
-- !getcomplement <index> - shows you the complement of specified index number
+- !getcomplement \<index\> - shows you the complement of specified index number
 - commands which will allow channel owners to change who can use which command (user groups would be: channel owner,
   moderators, VIPs, subscribers, regular user <- this one would allow everyone)
 
@@ -128,20 +128,30 @@ Make sure create a .env file in the src directory with the following variables:
 Also put these environment variables as repository secrets on GitHub, and either as a file or environment variables on your server.
 
 Once you have your firebase app, go to 'Service accounts' in project settings. From here, generate a new private key,
-and save the file as '.firebase_config.json' in the src directory. Also save the contents of the '.firebase_config.json' file as a repository secret called 'FIREBASE_CONFIG'
+and save the file as '.firebase_config.json' in the src directory. Also save the contents of the '.firebase_config.json' 
+file as a repository secret called 'FIREBASE_CONFIG'.
 
 Create a Realtime Database in firebase with private access.
 
-
 set up SSH key on server:
-	- ssh-keygen -t ed25519 -C "<your GitHub email here>"
-	- eval `ssh-agent -s`
-	- ssh-add ~/.ssh/id_ed25519
-	- cat ~/.ssh/id_ed25519.pub
-	- paste public key into github https://github.com/settings/keys: new SSH key
-    - will possibly also need to `chmod 700 ~`, `chmod 700 ~/.ssh`, `chmod 700 ~/.ssh/authorized_keys` (see https://unix.stackexchange.com/questions/407394/ssh-copy-id-succeeded-but-still-prompt-password-input for more) 
 
-### Running program on a VPS
+- ssh-keygen -t ed25519 -C "\<your GitHub email here\>"
+- eval \`ssh-agent -s\`
+- ssh-add ~/.ssh/id_ed25519
+- cat ~/.ssh/id_ed25519 - then add this into your repository secrets as 'SSH_KEY'
+- will possibly also need to `chmod 700 ~`, `chmod 700 ~/.ssh`, `chmod 700 ~/.ssh/authorized_keys` (see https://unix.stackexchange.com/questions/407394/ssh-copy-id-succeeded-but-still-prompt-password-input for more)
+
+Inside your repository secrets (on GitHub), also add:
+
+- HOST_IP= the IP address of your server 
+- DEPLOY_TARGET_LOCATION= where on your server you want the repo files to get copied to (to then have a docker container created out of)
+- VPS_PORT= by default, this is 20, however, you might need to edit it if your FTP port is different.
+- VPS_USERNAME= the user through which you are accessing your server (preferably NOT root)
+
+At the end of the day, you should have the following repository secrets: CLIENT_SECRET, 
+DATABASE_URL, DEPLOY_TARGET_LOCATION, FIREBASE_CONFIG, HOST_IP, SSH_KEY, TMI_TOKEN, VPS_PORT, VPS_USERNAME
+
+### Running program on a server
 
 - git pull the repository
 - make sure python is installed (ideally with the same version as used for the program, in this case 3.10.6); also ensure pip was installed with it
