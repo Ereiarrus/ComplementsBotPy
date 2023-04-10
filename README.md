@@ -26,14 +26,14 @@ The following commands work anywhere that I have joined:
 
 Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 
-- !joinme - I will join your channel
+- !joinme - I will join your channel; if you change your Twitch username, you will have to use this again before I can 
+chat in your channel again. Don't worry, all of your custom settings (such as complement chance, 
+custom complements etc.) will be restored for your new name - no data is lost.
 - !leaveme - I will leave your channel, but keep your settings in case you decide you want me back
 - !deleteme - I will leave your channel and delete all of your settings; this does not affect your ignored status, 
 so if you did !ignoreme, I will still know that you don't want to be complemented after doing !deleteme, and your 
 twitch username/user id will still be stored in my database. If you don't want this, then also do !unignore me - 
 this will remove any reference of you from my database
-- !refresh - When you change your Twitch username, you must make use of this, as otherwise the bot might not join your (new) chat (unless/when I restart it) (**NOT WORKING YET**)
-- !refreshall - (NOT AVAILABLE TO GENERAL PUBLIC due to potentially high overhead) refreshes the full list of joined channels, and joins renamed users' (new) chats (**NOT WORKING YET**)
 
 - !ignoreme - I will stop complementing you
 - !unignoreme - undo !ignoreme
