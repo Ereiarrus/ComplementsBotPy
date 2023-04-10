@@ -205,6 +205,8 @@ async def is_channel_joined(username: Optional[str] = None, userid: Optional[str
     if not await channel_exists(userid=userid):
         return False
 
+    # Inside the cast we could potentially get 'None', however, this should be treated as a false.
+    #  Luckily, 'bool(None) == False'.
     return bool(await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).get))
 
 
@@ -812,3 +814,21 @@ async def set_username(new_username: str, username: Optional[str] = None, userid
         userid = await run_with_appropriate_awaiting(name_to_id, username)
 
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_USERNAME).set, new_username)
+
+
+async def get_username(username: Optional[str] = None, userid: Optional[str] = None,
+                       name_to_id: Optional[Union[Callable[[str], Optional[str]], Callable[
+                           [str], Awaitable[Optional[str]]]]] = None) -> Optional[str]:
+    """
+    :param username:
+    :param userid:
+    :param name_to_id:
+    :return:
+    """
+    assert username or userid
+    assert userid or name_to_id
+
+    if not userid:
+        userid = await run_with_appropriate_awaiting(name_to_id, username)
+
+    return await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_USERNAME).get)

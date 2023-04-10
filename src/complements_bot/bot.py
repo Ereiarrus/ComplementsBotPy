@@ -348,18 +348,30 @@ class ComplementsBot(commands.Bot):
         Get the bot to join the user's channel and start complementing people in their channel.
         """
 
+        userid: str = await self.name_to_id(ctx.author.name)
+        old_username: Optional[str] = await database.get_username(userid=userid)
+
         async def do_false(ctx: commands.Context) -> None:
             # Have to save to database and update in memory so bot starts working straight away
-            await database.join_channel(username=ctx.author.name, name_to_id=self.name_to_id)
+            was_joined: bool = True
+            if not await database.is_channel_joined(userid=userid):
+                await database.join_channel(userid=userid)
+                was_joined = False
+            if ctx.author.name != old_username:
+                if was_joined:
+                    await self.part_channels([await database.get_username(userid=userid)])
+                await database.set_username(ctx.author.name, userid=userid)
             await self.join_channels([ctx.author.name])
+
+        async def if_check(ctx: commands.Context) -> bool:
+            return (await database.is_channel_joined(userid=userid)
+                    and ctx.author.name == old_username)
 
         await ComplementsBot.cmd_body(
                 ctx,
                 self.is_in_bot_channel,
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_channel_joined(
-                        username=ctx.author.name,
-                        name_to_id=self.name_to_id)),
+                ComplementsBot.DoIfElse(if_check,
                                         f"@{ComplementsBot.F_USER} I am already in your channel!",
                                         f"@{ComplementsBot.F_USER} I have joined your channel!",
                                         None,
@@ -1017,21 +1029,3 @@ class ComplementsBot(commands.Bot):
 
         # won't give 'index out of range' as message can't end on a space due to the strip()
         return full_cmd_msg[first_space_at + 1:]
-
-    @commands.command()
-    async def refresh(self, ctx: commands.Context) -> None:
-        """
-        Allows user to keep the bot updated about their username, in case they decided to change it (otherwise the bot
-        will not be in their new chat); all it does is update the last_know_username of the user
-        """
-        # TODO: make it so that this updates the database with their 'last known username', joins their new chat,
-        #  and leaves their old chat
-
-    @commands.command()
-    async def refreshall(self, ctx: commands.Context) -> None:
-        """
-        Allows owner to do !refresh for all users without having to do it manually one by one
-        """
-        # TODO: make it similar to !refresh, but it refreshes ALL entries, and is only usable by bot owner/bot
-        if self.name_to_id(ctx.author.name) not in (self.user_id, ComplementsBot.OWNER_ID):
-            return
