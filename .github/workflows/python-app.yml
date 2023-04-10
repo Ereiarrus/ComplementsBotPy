@@ -72,7 +72,7 @@ jobs:
       with:
         secrets: ${{ toJSON(secrets) }}
 
-    - name: Copy repository contents via scp
+    - name: Copy repository contents
       uses: appleboy/scp-action@master
       env:
         HOST: ${{ secrets.HOST_IP }}
@@ -83,7 +83,7 @@ jobs:
         source: "."
         target: ${{ secrets.DEPLOY_TARGET_LOCATION }}
 
-    - name: Executing remote command
+    - name: build and run docker container on server
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST_IP }}
@@ -99,4 +99,4 @@ jobs:
           
           chmod +x ./docker_build.sh
           chmod +x ./docker_run.sh          
-          ./docker_run.sh $(./docker_build.sh)
+          ./docker_run.sh

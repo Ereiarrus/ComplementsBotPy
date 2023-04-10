@@ -348,7 +348,9 @@ class ComplementsBot(commands.Bot):
         Get the bot to join the user's channel and start complementing people in their channel.
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        r_userid: Optional[str] = await self.name_to_id(ctx.author.name)
+        assert r_userid
+        userid: str = str(r_userid)
         old_username: Optional[str] = await database.get_username(userid=userid)
 
         async def do_false(ctx: commands.Context) -> None:
