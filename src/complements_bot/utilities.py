@@ -40,7 +40,7 @@ class Awaitables:
     Class that makes making a collection of tasks and then gathering easier
     """
 
-    def __init__(self, tasks: Optional[list[Awaitable | Coroutine]] = None):
+    def __init__(self, tasks: Optional[list[Union[Awaitable, Coroutine]]] = None):
         self._tasks = []
         for task in tasks:
             if isinstance(task, asyncio.Future):
@@ -49,7 +49,7 @@ class Awaitables:
                 self._tasks.append(asyncio.create_task(task))
         self._used = False
 
-    def add_task(self, task: Awaitable | Coroutine) -> None:
+    def add_task(self, task: Union[Awaitable, Coroutine]) -> None:
         """
         :param task: the awaitable we want to add
         Creates a task out of the awaitable using 'asyncio.create_task' and adding it to a list
