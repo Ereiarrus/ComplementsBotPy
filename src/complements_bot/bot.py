@@ -87,8 +87,8 @@ class ComplementsBot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
 
-        joined_channels: list[int] = list(map(int, await database.get_joined_channels()))
-        # joined_channels = ["118034879", "845759020"]
+        # joined_channels: list[int] = list(map(int, await database.get_joined_channels()))
+        joined_channels = [118034879, 845759020]
         max_num_user_reqs: int = 100
         awaitables: Awaitables = Awaitables([])
         chunks = [joined_channels[i: i + max_num_user_reqs] for i in range(0, len(joined_channels), max_num_user_reqs)]
@@ -130,7 +130,7 @@ class ComplementsBot(commands.Bot):
                     f"In channel {message.channel.name}, at {message.timestamp}, "
                     f"{message.author.name} said: {message.content}")
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(message.author.name)
 
         sender: str = message.author.name
         channel: str = message.channel.name
@@ -223,7 +223,7 @@ class ComplementsBot(commands.Bot):
         exists: bool
         if is_tts_muted:
             tts_mute_prefix: str
-            awaitables.append(database.get_tts_mute_prefix(channel, name_to_id=self.name_to_id))
+            awaitables.add_task(database.get_tts_mute_prefix(channel, name_to_id=self.name_to_id))
             (complement, exists), tts_mute_prefix = await awaitables.gather()
             prefix = f"{tts_mute_prefix} {prefix}"
         else:

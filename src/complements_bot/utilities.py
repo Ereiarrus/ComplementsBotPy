@@ -3,8 +3,9 @@ Useful functions that can be used generally anywhere across the program
 """
 
 import asyncio
+import inspect
 import re
-from typing import Awaitable, Callable, Optional, ParamSpec, TypeVar, Union
+from typing import Awaitable, Callable, Optional, ParamSpec, TypeVar, Union, Coroutine
 
 _T = TypeVar("_T")
 _U = ParamSpec("_U")
@@ -39,20 +40,27 @@ class Awaitables:
     """
     Class that makes making a collection of tasks and then gathering easier
     """
+    import inspect
 
-    def __init__(self, tasks: Optional[list[Coroutine]] = None):
+    def __init__(self, tasks: Optional[list[Awaitable | Coroutine]] = None):
         self._tasks = []
         for task in tasks:
-            self._tasks.append(asyncio.create_task(task))
+            if isinstance(task, asyncio.Future):
+                self._tasks.append(task)
+            else:
+                self._tasks.append(asyncio.create_task(task))
         self._used = False
 
-    def add_task(self, task: Coroutine) -> None:
+    def add_task(self, task: Awaitable | Coroutine) -> None:
         """
         :param task: the awaitable we want to add
         Creates a task out of the awaitable using 'asyncio.create_task' and adding it to a list
         """
         if not self._used:
-            self._tasks.append(asyncio.create_task(task))
+            if isinstance(task, asyncio.Future):
+                self._tasks.append(task)
+            else:
+                self._tasks.append(asyncio.create_task(task))
         else:
             raise asyncio.InvalidStateError("All tasks have already been gathered - cannot add new ones.")
 

@@ -239,7 +239,7 @@ async def join_channel(username: Optional[str] = None, userid: Optional[str] = N
     else:
         awaitables.add_task(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).set, True))
 
-    await asyncio.gather(*awaitables)
+    await awaitables.gather()
 
 
 async def leave_channel(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
