@@ -1,7 +1,8 @@
 """
 Holds all commands (and their logic) for how ComplementsBot should complement Twitch chatters
 """
-
+import asyncio
+import itertools
 import os
 import random
 import textwrap
@@ -18,7 +19,6 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN
 # TODO:
 #  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone
 #  when people try complementing the bot, say something different/thank them
-#  optimise 'await' calls
 #  test if an error in building/running the docker container on the VPS causes github actions to fail
 #  |
 #  make a website where users can see all of their info
@@ -87,17 +87,19 @@ class ComplementsBot(commands.Bot):
         Called once when the bot goes online; purely informational
         """
 
-        joined_channels = await database.get_joined_channels()
+        joined_channels: list[int] = list(map(int, await database.get_joined_channels()))
         # joined_channels = ["118034879", "845759020"]
-        max_num_user_reqs = 100
-        # TODO: instead of awaiting inside the loop, create the username lists
-        #  and await for all of them outside (after the loop)
-        for i in range((len(joined_channels) // max_num_user_reqs) + 1):
-            chunk = list(map(int, joined_channels[i * max_num_user_reqs: min((i + 1) * max_num_user_reqs,
-                                                                             len(joined_channels))]))
-            channel_names = list(map(lambda x: x.user.name, await self.fetch_channels(broadcaster_ids=chunk)))
-            await self.join_channels(channel_names)
-        await database.join_channel(username=self.nick, name_to_id=self.name_to_id)
+        max_num_user_reqs: int = 100
+        awaitables: list[Awaitable] = []
+        chunks = [joined_channels[i: i + max_num_user_reqs] for i in range(0, len(joined_channels), max_num_user_reqs)]
+        for chunk in chunks:
+            awaitables.append(self.fetch_channels(broadcaster_ids=chunk))
+
+        channels: list = list(itertools.chain.from_iterable(await asyncio.gather(*awaitables)))
+        channel_names: list[str] = list(map(lambda x: x.user.name, channels))
+        await asyncio.gather(self.join_channels(channel_names),
+                             database.join_channel(username=self.nick, name_to_id=self.name_to_id))
+
         if ComplementsBot.SHOULD_LOG:
             custom_log(f"{self.nick} is online!")
 
@@ -130,24 +132,31 @@ class ComplementsBot(commands.Bot):
 
         sender: str = message.author.name
         channel: str = message.channel.name
-        is_author_ignored: bool = await database.is_user_ignored(username=sender,
-                                                                 name_to_id=self.name_to_id)
-        should_rng_choose: bool = (random.random() * 100) <= await database.get_complement_chance(
-                message.channel.name, name_to_id=self.name_to_id)
-        is_author_bot: bool = await database.is_ignoring_bots(channel,
-                                                              name_to_id=self.name_to_id) and ComplementsBot.is_bot(
-                sender)
+        awaitables: list[Awaitable] = [database.is_user_ignored(username=sender, name_to_id=self.name_to_id),
+                                       database.get_complement_chance(message.channel.name, name_to_id=self.name_to_id),
+                                       database.is_ignoring_bots(channel, name_to_id=self.name_to_id),
+                                       database.get_random_complement_enabled(message.channel.name, name_to_id=self.name_to_id)
+                                       ]
+        is_author_ignored: bool
+        chance: float
+        is_ignoring_bots: bool
+        random_complements_enabled: bool
 
         if message.content[:len(ComplementsBot.CMD_PREFIX)] == ComplementsBot.CMD_PREFIX:
             # Handle commands
-            await self.handle_commands(message)
-        if should_rng_choose \
-                and (not is_author_ignored) \
-                and (not is_author_bot) \
-                and await database.get_random_complement_enabled(message.channel.name, name_to_id=self.name_to_id):
-            comp_msg, exists = await self.complement_msg(
-                    message, message.author.name,
-                    await database.are_random_complements_muted(channel, name_to_id=self.name_to_id))
+            awaitables.append(self.handle_commands(message))
+            is_author_ignored, chance, is_ignoring_bots, random_complements_enabled, _ = await asyncio.gather(*awaitables)
+        else:
+            is_author_ignored, chance, is_ignoring_bots, random_complements_enabled = await asyncio.gather(*awaitables)
+        should_rng_choose: bool = (random.random() * 100) <= chance
+        is_author_bot: bool = is_ignoring_bots and ComplementsBot.is_bot(sender)
+
+        if (should_rng_choose
+                and (not is_author_ignored)
+                and (not is_author_bot)
+                and random_complements_enabled):
+            random_complements_muted: bool = await database.are_random_complements_muted(channel, name_to_id=self.name_to_id)
+            comp_msg, exists = await self.complement_msg(message, message.author.name, random_complements_muted)
             if exists:
                 await message.channel.send(comp_msg)
                 if ComplementsBot.SHOULD_LOG:
@@ -165,10 +174,16 @@ class ComplementsBot(commands.Bot):
 
         channel: str = ctx.channel.name
         custom_complements: list[str] = []
-        if await database.are_custom_complements_enabled(channel, name_to_id=self.name_to_id):
+        custom_complements_enabled: bool
+        default_complements_enabled: bool
+        custom_complements_enabled, default_complements_enabled = \
+            await asyncio.gather(database.are_custom_complements_enabled(channel, name_to_id=self.name_to_id),
+                                 database.are_default_complements_enabled(channel, name_to_id=self.name_to_id))
+
+        if custom_complements_enabled:
             custom_complements = await database.get_custom_complements(channel, name_to_id=self.name_to_id)
         default_complements: list[str] = []
-        if await database.are_default_complements_enabled(channel, name_to_id=self.name_to_id):
+        if default_complements_enabled:
             default_complements = self.complements_list
 
         if len(custom_complements) == 0 and len(default_complements) == 0:
@@ -199,9 +214,17 @@ class ComplementsBot(commands.Bot):
             who = ctx.author.name
         channel: str = ctx.channel.name
         prefix: str = "@"
+
+        awaitables: list[Awaitable] = [self.choose_complement(ctx)]
+        complement: str
+        exists: bool
         if is_tts_muted:
-            prefix = f"{await database.get_tts_mute_prefix(channel, name_to_id=self.name_to_id)} {prefix}"
-        complement, exists = await self.choose_complement(ctx)
+            tts_mute_prefix: str
+            awaitables.append(database.get_tts_mute_prefix(channel, name_to_id=self.name_to_id))
+            (complement, exists), tts_mute_prefix = await asyncio.gather(*awaitables)
+            prefix = f"{tts_mute_prefix} {prefix}"
+        else:
+            complement, exists = (await asyncio.gather(*awaitables))[0]
         return f"{prefix}{who} {complement}", exists
 
     @commands.command()
@@ -219,8 +242,14 @@ class ComplementsBot(commands.Bot):
             who = who[1:]
 
         channel: str = ctx.channel.name
-        if await database.is_user_ignored(username=who, name_to_id=self.name_to_id) or \
-                not await database.get_cmd_complement_enabled(channel, name_to_id=self.name_to_id):
+
+        awaitables: list[Awaitable] = [database.is_user_ignored(username=who, name_to_id=self.name_to_id),
+                                       database.get_cmd_complement_enabled(channel, name_to_id=self.name_to_id)]
+        is_user_ignored: bool
+        cmd_complement_enabled: bool
+        is_user_ignored, cmd_complement_enabled = await asyncio.gather(*awaitables)
+
+        if is_user_ignored or not cmd_complement_enabled:
             return
 
         comp_msg, exists = await self.complement_msg(
