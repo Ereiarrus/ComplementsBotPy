@@ -93,14 +93,13 @@ class Database:
 
 
 async def is_user_ignored(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
-        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) \
-        -> bool:
+        Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> bool:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether the specified user is ignored from getting complements or not
     """
 
@@ -124,8 +123,8 @@ async def ignore(username: Optional[str] = None, userid: Optional[str] = None, n
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: twitch username of the user we want to ignore
+    :param userid: twitch user id of the user we want to ignore
     Adds the user to the ignored users list (so that they can't be complemented)
     """
     assert username or userid
@@ -150,8 +149,8 @@ async def unignore(username: Optional[str] = None, userid: Optional[str] = None,
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Removes the user from the ignored users list (so that they can be complemented)
     """
     assert username or userid
@@ -174,8 +173,8 @@ async def channel_exists(username: Optional[str] = None, userid: Optional[str] =
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether the channel has an entry in the database of ever being joined by the bot
     """
     assert username or userid
@@ -193,8 +192,8 @@ async def is_channel_joined(username: Optional[str] = None, userid: Optional[str
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether the bot is active in the channel
     """
     assert username or userid
@@ -216,8 +215,8 @@ async def join_channel(username: Optional[str] = None, userid: Optional[str] = N
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     The user is added to the database (if not already there) and marked as having the bot active in their chat
     """
     assert username or userid
@@ -238,8 +237,8 @@ async def leave_channel(username: Optional[str] = None, userid: Optional[str] = 
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     The bot is marked as inactive in the user's channel
     """
     assert username or userid
@@ -256,8 +255,8 @@ async def delete_channel(username: Optional[str] = None, userid: Optional[str] =
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Deletes any mention of the channel from the database; does not affect ignored users
     """
     assert username or userid
@@ -298,8 +297,8 @@ async def set_tts_mute_prefix(prefix: str, username: Optional[str] = None, useri
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param prefix: the new prefix for messages so that they are muted on tts
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Changes the character that is prepended to messages so that tts does not pick them up
     """
     assert username or userid
@@ -316,8 +315,8 @@ async def get_tts_mute_prefix(username: Optional[str] = None, userid: Optional[s
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: the currently set prefix that mutes tts
     """
     assert username or userid
@@ -340,8 +339,8 @@ async def set_complement_chance(chance: float, username: Optional[str] = None, u
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param chance: what the new chance (in percentage) of being complemented at random should be
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Updates the chance of being randomly complemented by the bot
     """
     assert username or userid
@@ -358,8 +357,8 @@ async def get_complement_chance(username: Optional[str] = None, userid: Optional
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: the currently set chance (in percents) of being randomly complemented
     """
     assert username or userid
@@ -382,8 +381,8 @@ async def set_cmd_complement_enabled(is_enabled: bool, username: Optional[str] =
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param is_enabled: the new state of whether !complement command can be used
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     updates the status of whether chatters are allowed to complement other using the !complement command
     """
     assert username or userid
@@ -401,8 +400,8 @@ async def get_cmd_complement_enabled(username: Optional[str] = None, userid: Opt
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether chatters may use the !complement command
     """
     assert username or userid
@@ -426,8 +425,8 @@ async def set_random_complement_enabled(is_enabled: bool, username: Optional[str
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param is_enabled: is the bot allowed to complement chatters at random
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Marks in the DB whether the bot may complement chatters at random
     """
     assert username or userid
@@ -446,8 +445,8 @@ async def get_random_complement_enabled(username: Optional[str] = None, userid: 
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: Whether the bot is allowed to randomly complement chatters
     """
     assert username or userid
@@ -471,8 +470,8 @@ async def add_complement(complement: str, username: Optional[str] = None, userid
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param complement: the new custom complement to be added
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Adds a custom complement to the DB
     """
     assert username or userid
@@ -523,8 +522,8 @@ async def remove_complements(username: Optional[str] = None, userid: Optional[st
     :param to_remove: blacklist of custom complements to be removed
     :param to_keep: whitelist of custom complements to be kept
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Removes all complements in 'to_remove', or those not in 'to_keep', with blacklist ('to_remove') taking precedence
     if both specified
     """
@@ -551,8 +550,8 @@ async def remove_all_complements(username: Optional[str] = None, userid: Optiona
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Deletes all of a user's custom complements
     """
     assert username or userid
@@ -569,8 +568,8 @@ async def get_custom_complements(username: Optional[str] = None, userid: Optiona
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: all of a user's custom complements
     """
     assert username or userid
@@ -588,8 +587,8 @@ async def is_cmd_complement_muted(username: Optional[str] = None, userid: Option
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether chatters are allowed to use the !complement command
     """
     assert username or userid
@@ -611,8 +610,8 @@ async def set_cmd_complement_is_muted(is_muted: bool, username: Optional[str] = 
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param is_muted: if command complements (!complement <user>) should be muted by tts
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     allows the changing of the tts muted status of command complements (!complement <user>)
     """
     assert username or userid
@@ -630,8 +629,8 @@ async def are_random_complements_muted(username: Optional[str] = None, userid: O
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether random complements are muted for tts
     """
     assert username or userid
@@ -653,8 +652,8 @@ async def set_random_complements_are_muted(are_muted: bool, username: Optional[s
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param are_muted: new state for if random complements should be muted for the sake of tts
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     allows the changing of the tts muted status of randomly given out complements
     """
     assert username or userid
@@ -672,8 +671,8 @@ async def are_default_complements_enabled(username: Optional[str] = None, userid
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether the bot should be using any of the default complements
     """
     assert username or userid
@@ -696,8 +695,8 @@ async def set_are_default_complements_enabled(are_enabled: bool, username: Optio
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param are_enabled: new status for if the bot is allowed make use of the default complements
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Allows changing of whether the bot is allowed to make use of the default complements
     """
     assert username or userid
@@ -717,8 +716,8 @@ async def set_are_custom_complements_enabled(are_enabled: bool, username: Option
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param are_enabled: the new status for whether the bot is allowed to make use of the custom complements
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Allows the changing of if the bot is allowed to make use of the custom complements
     """
     assert username or userid
@@ -737,8 +736,8 @@ async def are_custom_complements_enabled(username: Optional[str] = None, userid:
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether the bot is allowed to use custom complements
     """
     assert username or userid
@@ -759,8 +758,8 @@ async def is_ignoring_bots(username: Optional[str] = None, userid: Optional[str]
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     :return: whether the bot is allowed to complements other bots
     """
     assert username or userid
@@ -782,8 +781,8 @@ async def set_should_ignore_bots(should_ignore_bots: bool, username: Optional[st
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param should_ignore_bots: the new status for if the bot may complement other bots
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Allows for toggling of whether the bot is allowed to complement other bots
     """
     assert username or userid
@@ -803,8 +802,8 @@ async def set_username(new_username: str, username: Optional[str] = None, userid
     specified; userid is preferred whenever possible due to being guaranteed to never change
     :param new_username: the user's updated last known username
     :param name_to_id: function that allows us to convert a username to a user id
-    :param username: twitch username which we are checking if they are ignored
-    :param userid: twitch user id which we are checking if they are ignored
+    :param username: the username of the user in consideration
+    :param userid: the user id of the user in consideration
     Allows for toggling of whether the bot is allowed to complement other bots
     """
     assert username or userid

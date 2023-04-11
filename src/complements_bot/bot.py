@@ -18,18 +18,13 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN
 # TODO:
 #  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone
 #  when people try complementing the bot, say something different/thank them
-#  joinme, leaveme, deleteme commands will need to also have functionality similar to refresh
+#  optimise 'await' calls
+#  test if an error in building/running the docker container on the VPS causes github actions to fail
 #  |
 #  make a website where users can see all of their info
-#  make a docker container for app
-#  deploy app to server automatically if it passes all tests
-#  set up database with data type rules - on DynamoDB(?)
 #  get the website to also have a tool to convert between userid and username
-#  |
-#  Functions to check out from TwitchIO:
-#  get_channel, part_channels, join_channels, connected_channels, fetch_users, fetch_channel, fetch_channels,
-#  event_channel_joined;
-#  event_command_error
+#  set up database with data type rules - on DynamoDB(?)
+#  allow users to make complement redeems in their channel
 
 
 def custom_log(msg: str) -> None:
