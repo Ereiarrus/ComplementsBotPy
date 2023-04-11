@@ -8,7 +8,7 @@ from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
 from firebase_admin import credentials, db, initialize_app
 
 from src.env_reader import databaseURL
-from .utilities import remove_chars, run_with_appropriate_awaiting
+from .utilities import remove_chars, run_with_appropriate_awaiting, Awaitables
 
 _cred: credentials.Certificate
 try:
@@ -180,11 +180,11 @@ async def channel_exists(username: Optional[str] = None, userid: Optional[str] =
     assert username or userid
     assert userid or name_to_id
 
-    awaitables: list[Awaitable] = [_event_loop.run_in_executor(None, _USERS_DB_REF.get, False, True)]
+    awaitables: Awaitables = Awaitables([_event_loop.run_in_executor(None, _USERS_DB_REF.get, False, True)])
     if not userid:
-        awaitables.append(run_with_appropriate_awaiting(name_to_id, username))
+        awaitables.add_task(run_with_appropriate_awaiting(name_to_id, username))
 
-    results = await asyncio.gather(*awaitables)
+    results = await awaitables.gather()
     users: list[str]
     if userid:
         users = results[0]
@@ -230,14 +230,14 @@ async def join_channel(username: Optional[str] = None, userid: Optional[str] = N
     assert username or userid
     assert userid or name_to_id
 
-    awaitables: list[Awaitable] = []
+    awaitables: Awaitables = Awaitables([])
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
     if not await channel_exists(userid=userid):
-        awaitables.append(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).set, _DEFAULT_USER))
-        awaitables.append(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_USERNAME).set, username))
+        awaitables.add_task(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).set, _DEFAULT_USER))
+        awaitables.add_task(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_USERNAME).set, username))
     else:
-        awaitables.append(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).set, True))
+        awaitables.add_task(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).set, True))
 
     await asyncio.gather(*awaitables)
 

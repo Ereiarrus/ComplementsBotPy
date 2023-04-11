@@ -2,8 +2,9 @@
 Useful functions that can be used generally anywhere across the program
 """
 
+import asyncio
 import re
-from typing import TypeVar, Optional, Awaitable, Callable, Union, ParamSpec
+from typing import Awaitable, Callable, Optional, ParamSpec, TypeVar, Union
 
 _T = TypeVar("_T")
 _U = ParamSpec("_U")
@@ -32,3 +33,40 @@ def remove_chars(some_str: str, regex: str = r"[^a-z0-9]") -> str:
     :return: 'some_str' with 'regex' pattern removed from it
     """
     return re.sub(regex, "", some_str.lower())
+
+
+class Awaitables(list):
+    """
+    Class that makes making a collection of tasks and then gathering easier
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._used = False
+
+    def __class__(cls, *args, **kwargs):
+        # create an instance of cls with the arguments passed in
+        instance = super().__new__()
+        instance.__init__(*args, **kwargs)
+        # set the 'used' attribute to True
+        return instance
+
+    def add_task(self, task: Coroutine) -> None:
+        """
+        :param task: the awaitable we want to add
+        Creates a task out of the awaitable using 'asyncio.create_task' and adding it to a list
+        """
+        if not self._used:
+            self.append(asyncio.create_task(task))
+        else:
+            raise asyncio.InvalidStateError("All tasks have already been gathered - cannot add new ones.")
+
+    def gather(self) -> asyncio.Future:
+        """
+        asyncio.gather on all tasks added to this object; needs to be awaited for actual result
+        """
+        if not self._used:
+            self._used = True
+            return asyncio.gather(*self)
+        else:
+            raise asyncio.InvalidStateError("All tasks have already been gathered.")
