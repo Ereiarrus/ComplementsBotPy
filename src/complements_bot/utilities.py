@@ -35,21 +35,16 @@ def remove_chars(some_str: str, regex: str = r"[^a-z0-9]") -> str:
     return re.sub(regex, "", some_str.lower())
 
 
-class Awaitables(list):
+class Awaitables:
     """
     Class that makes making a collection of tasks and then gathering easier
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, tasks: Optional[list[Coroutine]] = None):
+        self._tasks = []
+        for task in tasks:
+            self._tasks.append(asyncio.create_task(task))
         self._used = False
-
-    def __class__(cls, *args, **kwargs):
-        # create an instance of cls with the arguments passed in
-        instance = super().__new__()
-        instance.__init__(*args, **kwargs)
-        # set the 'used' attribute to True
-        return instance
 
     def add_task(self, task: Coroutine) -> None:
         """
@@ -57,7 +52,7 @@ class Awaitables(list):
         Creates a task out of the awaitable using 'asyncio.create_task' and adding it to a list
         """
         if not self._used:
-            self.append(asyncio.create_task(task))
+            self._tasks.append(asyncio.create_task(task))
         else:
             raise asyncio.InvalidStateError("All tasks have already been gathered - cannot add new ones.")
 
@@ -67,6 +62,6 @@ class Awaitables(list):
         """
         if not self._used:
             self._used = True
-            return asyncio.gather(*self)
+            return asyncio.gather(*self._tasks)
         else:
             raise asyncio.InvalidStateError("All tasks have already been gathered.")
