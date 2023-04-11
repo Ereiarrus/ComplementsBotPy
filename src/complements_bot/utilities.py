@@ -4,7 +4,7 @@ Useful functions that can be used generally anywhere across the program
 
 import asyncio
 import re
-from typing import Awaitable, Callable, Optional, ParamSpec, TypeVar, Union
+from typing import Awaitable, Callable, Optional, ParamSpec, TypeVar, Union, Coroutine
 
 _T = TypeVar("_T")
 _U = ParamSpec("_U")
