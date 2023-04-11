@@ -104,7 +104,7 @@ class ComplementsBot(commands.Bot):
             custom_log(f"{self.nick} is online!")
 
     @staticmethod
-    def is_bot(username) -> bool:
+    def is_bot(username: str) -> bool:
         """
         checks if a username matches that of a known or assumed bot; currently the following count as bots:
             - any username ending in 'bot'
@@ -130,14 +130,16 @@ class ComplementsBot(commands.Bot):
                     f"In channel {message.channel.name}, at {message.timestamp}, "
                     f"{message.author.name} said: {message.content}")
 
-        userid: str = await self.name_to_id(message.author.name)
+        sender_id: str
+        channel_id: str
+        sender_id, channel_id = await asyncio.gather(self.name_to_id(message.author.name),
+                                                     self.name_to_id(message.channel.name))
 
         sender: str = message.author.name
-        channel: str = message.channel.name
-        awaitables: Awaitables = Awaitables([database.is_user_ignored(userid=userid),
-                                             database.get_complement_chance(userid=userid),
-                                             database.is_ignoring_bots(userid=userid),
-                                             database.get_random_complement_enabled(userid=userid)
+        awaitables: Awaitables = Awaitables([database.is_user_ignored(userid=sender_id),
+                                             database.get_complement_chance(userid=channel_id),
+                                             database.is_ignoring_bots(userid=channel_id),
+                                             database.get_random_complement_enabled(userid=channel_id)
                                              ])
         is_author_ignored: bool
         chance: float
@@ -157,7 +159,7 @@ class ComplementsBot(commands.Bot):
                 and (not is_author_ignored)
                 and (not is_author_bot)
                 and random_complements_enabled):
-            random_complements_muted: bool = await database.are_random_complements_muted(userid=userid)
+            random_complements_muted: bool = await database.are_random_complements_muted(userid=channel_id)
             comp_msg, exists = await self.complement_msg(message, message.author.name, random_complements_muted)
             if exists:
                 await message.channel.send(comp_msg)
@@ -174,17 +176,16 @@ class ComplementsBot(commands.Bot):
             are disabled, this would be False)
         """
 
-        channel: str = ctx.channel.name
         custom_complements: list[str] = []
         custom_complements_enabled: bool
         default_complements_enabled: bool
-        userid: str = await self.name_to_id(ctx.author.name)
+        channel_id: str = await self.name_to_id(ctx.channel.name)
         custom_complements_enabled, default_complements_enabled = \
-            await asyncio.gather(database.are_custom_complements_enabled(userid=userid),
-                                 database.are_default_complements_enabled(userid=userid))
+            await asyncio.gather(database.are_custom_complements_enabled(userid=channel_id),
+                                 database.are_default_complements_enabled(userid=channel_id))
 
         if custom_complements_enabled:
-            custom_complements = await database.get_custom_complements(userid=userid)
+            custom_complements = await database.get_custom_complements(userid=channel_id)
         default_complements: list[str] = []
         if default_complements_enabled:
             default_complements = self.complements_list
@@ -244,12 +245,12 @@ class ComplementsBot(commands.Bot):
         if who[0] == "@":
             who = who[1:]
 
-        channel: str = ctx.channel.name
+        sender_id: str
+        channel_id: str
+        sender_id, channel_id = asyncio.gather(self.name_to_id(ctx.author.name), self.name_to_id(ctx.author.name))
 
-        userid: str = await self.name_to_id(ctx.author.name)
-
-        awaitables: Awaitables = Awaitables([database.is_user_ignored(userid=userid),
-                                             database.get_cmd_complement_enabled(userid=userid)])
+        awaitables: Awaitables = Awaitables([database.is_user_ignored(userid=sender_id),
+                                             database.get_cmd_complement_enabled(userid=channel_id)])
         is_user_ignored: bool
         cmd_complement_enabled: bool
         is_user_ignored, cmd_complement_enabled = await awaitables.gather()
@@ -258,12 +259,51 @@ class ComplementsBot(commands.Bot):
             return
 
         comp_msg, exists = await self.complement_msg(
-                ctx.message, who, await database.is_cmd_complement_muted(userid=userid))
+                ctx.message, who, await database.is_cmd_complement_muted(userid=channel_id))
         if exists:
             await ctx.channel.send(comp_msg)
             if ComplementsBot.SHOULD_LOG:
                 custom_log(f"In channel {ctx.channel.name}, at {ctx.message.timestamp}, {ctx.message.author.name} "
                            f"was complemented (by command) with: {comp_msg}")
+
+    @commands.command()
+    async def compunignoreme(self, ctx: commands.Context) -> None:
+        """
+        Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
+        complement using the 'complement' command will work.
+        """
+
+        userid: str = await self.name_to_id(ctx.author.name)
+
+        await ComplementsBot.cmd_body(
+                ctx,
+                lambda x: True,
+                None,
+                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
+                                        None,
+                                        None,
+                                        (lambda ctx: database.unignore(userid=userid)),
+                                        None)
+        )
+
+    @commands.command()
+    async def compignoreme(self, ctx: commands.Context) -> None:
+        """
+        The user of this command will not get any complements sent their way from ComplementsBot
+        """
+
+        userid: str = await self.name_to_id(ctx.author.name)
+
+        await ComplementsBot.cmd_body(
+                ctx,
+                lambda x: True,
+                None,
+                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
+                                        None,
+                                        None,
+                                        None,
+                                        (lambda ctx: database.ignore(userid=userid)))
+        )
 
     # -------------------- bot channel only commands --------------------
 
@@ -495,25 +535,6 @@ class ComplementsBot(commands.Bot):
         )
 
     @commands.command()
-    async def compignoreme(self, ctx: commands.Context) -> None:
-        """
-        The user of this command will not get any complements sent their way from ComplementsBot
-        """
-
-        userid: str = await self.name_to_id(ctx.author.name)
-
-        await ComplementsBot.cmd_body(
-                ctx,
-                lambda x: True,
-                None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
-                                        None,
-                                        None,
-                                        None,
-                                        (lambda ctx: database.ignore(userid=userid)))
-        )
-
-    @commands.command()
     async def unignoreme(self, ctx: commands.Context) -> None:
         """
         Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
@@ -529,26 +550,6 @@ class ComplementsBot(commands.Bot):
                 ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
                                         f"@{ComplementsBot.F_USER} I am no longer ignoring you!",
                                         f"@{ComplementsBot.F_USER} I am not ignoring you!",
-                                        (lambda ctx: database.unignore(userid=userid)),
-                                        None)
-        )
-
-    @commands.command()
-    async def compunignoreme(self, ctx: commands.Context) -> None:
-        """
-        Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
-        complement using the 'complement' command will work.
-        """
-
-        userid: str = await self.name_to_id(ctx.author.name)
-
-        await ComplementsBot.cmd_body(
-                ctx,
-                lambda x: True,
-                None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
-                                        None,
-                                        None,
                                         (lambda ctx: database.unignore(userid=userid)),
                                         None)
         )
@@ -582,7 +583,7 @@ class ComplementsBot(commands.Bot):
                            "https://github.com/Ereiarrus/ComplementsBotPy/blob/main/complements_list.txt"
         )
 
-    # -------------------- any channel, but must be by owner --------------------
+    # --------------------  must be by streamer/mods --------------------
 
     def is_by_broadcaster_or_mod(self, ctx: commands.Context) -> bool:
         """
@@ -634,7 +635,7 @@ class ComplementsBot(commands.Bot):
         Prevent chatter from being able to use the !complement command in user's channel
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -656,7 +657,7 @@ class ComplementsBot(commands.Bot):
         Allow chatters in user's chat to use the !complement command
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -678,7 +679,7 @@ class ComplementsBot(commands.Bot):
         Prevent the bot from randomly complementing chatters in user's chat
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -699,7 +700,7 @@ class ComplementsBot(commands.Bot):
         Allow the bot to randomly complement chatters in user's chat
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -781,7 +782,7 @@ class ComplementsBot(commands.Bot):
         phrase: str = remove_chars(msg[msg.find(" ") + 1:], regex=r"[^a-z0-9]")
         user: str = ctx.channel.name
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
         to_remove_comps, to_keep_comps = database.complements_to_remove(
                 await database.get_custom_complements(userid=userid), phrase)
         await database.remove_complements(userid=userid, to_keep=to_keep_comps)
@@ -836,7 +837,7 @@ class ComplementsBot(commands.Bot):
         Mutes TTS for complements sent with !complement command
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -857,7 +858,7 @@ class ComplementsBot(commands.Bot):
         Mutes TTS for complements given out randomly
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -878,7 +879,7 @@ class ComplementsBot(commands.Bot):
         Unmutes TTS for complements sent with !complement command
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -899,7 +900,7 @@ class ComplementsBot(commands.Bot):
         Unmutes TTS for complements given out randomly
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -920,7 +921,7 @@ class ComplementsBot(commands.Bot):
         All custom complements will be added to the pool that we choose complements for chatters from
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -941,7 +942,7 @@ class ComplementsBot(commands.Bot):
         All default complements will be added to the pool that we choose complements for chatters from
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -963,7 +964,7 @@ class ComplementsBot(commands.Bot):
             delete the custom complements.
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -984,7 +985,7 @@ class ComplementsBot(commands.Bot):
         All default complements will be removed from the pool that we choose complements for chatters from
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -1005,7 +1006,7 @@ class ComplementsBot(commands.Bot):
         Chatters that count as bots might be complemented by ComplementsBot
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -1026,7 +1027,7 @@ class ComplementsBot(commands.Bot):
         Chatters that count as bots will not be complemented by ComplementsBot
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -1041,20 +1042,18 @@ class ComplementsBot(commands.Bot):
                 )
         )
 
-    # TODO: this command currently does not work due
-    #  to the check for if the coommand was sent in the bot's channel
-    #  of the leaveme command
     @commands.command(aliases=["compleaveme"])
     async def compleave(self, ctx: commands.Context) -> None:
         """
         Allows the user to kick ComplementsBot out of their channel from their own channel chat
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = await self.name_to_id(ctx.channel.name)
 
         async def do_true(ctx: commands.Context) -> None:
             # Update database and in realtime for "instant" effect
-            awaitables: Awaitables = Awaitables([database.leave_channel(userid=userid), self.part_channels([ctx.author.name])])
+            awaitables: Awaitables = Awaitables([database.leave_channel(userid=userid),
+                                                 self.part_channels([ctx.channel.name])])
             await awaitables.gather()
 
         await ComplementsBot.cmd_body(
