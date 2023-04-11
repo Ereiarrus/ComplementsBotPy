@@ -3,9 +3,8 @@ Useful functions that can be used generally anywhere across the program
 """
 
 import asyncio
-import inspect
 import re
-from typing import Awaitable, Callable, Optional, ParamSpec, TypeVar, Union, Coroutine
+from typing import Awaitable, Callable, Optional, ParamSpec, TypeVar, Union
 
 _T = TypeVar("_T")
 _U = ParamSpec("_U")
@@ -40,7 +39,6 @@ class Awaitables:
     """
     Class that makes making a collection of tasks and then gathering easier
     """
-    import inspect
 
     def __init__(self, tasks: Optional[list[Awaitable | Coroutine]] = None):
         self._tasks = []
