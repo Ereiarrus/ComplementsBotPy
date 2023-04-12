@@ -6,7 +6,7 @@ import itertools
 import os
 import random
 import textwrap
-from typing import Awaitable, Callable, Coroutine, Optional, Tuple, Union
+from typing import Awaitable, Callable, Optional, Tuple, Union
 
 from twitchio import Message
 from twitchio.ext import commands
@@ -130,10 +130,15 @@ class ComplementsBot(commands.Bot):
                     f"In channel {message.channel.name}, at {message.timestamp}, "
                     f"{message.author.name} said: {message.content}")
 
+        sender_id_raw: Optional[str]
+        channel_id_raw: Optional[str]
+        sender_id_raw, channel_id_raw = await asyncio.gather(self.name_to_id(message.author.name),
+                                                             self.name_to_id(message.channel.name))
+        assert sender_id_raw
+        assert channel_id_raw
         sender_id: str
         channel_id: str
-        sender_id, channel_id = await asyncio.gather(self.name_to_id(message.author.name),
-                                                     self.name_to_id(message.channel.name))
+        sender_id, channel_id = str(sender_id_raw), str(channel_id_raw)
 
         sender: str = message.author.name
         awaitables: Awaitables = Awaitables([database.is_user_ignored(userid=sender_id),
@@ -179,7 +184,7 @@ class ComplementsBot(commands.Bot):
         custom_complements: list[str] = []
         custom_complements_enabled: bool
         default_complements_enabled: bool
-        channel_id: str = await self.name_to_id(ctx.channel.name)
+        channel_id: str = str(await self.name_to_id(ctx.channel.name))
         custom_complements_enabled, default_complements_enabled = \
             await asyncio.gather(database.are_custom_complements_enabled(userid=channel_id),
                                  database.are_default_complements_enabled(userid=channel_id))
@@ -245,9 +250,14 @@ class ComplementsBot(commands.Bot):
         if who[0] == "@":
             who = who[1:]
 
+        sender_id_raw: Optional[str]
+        channel_id_raw: Optional[str]
+        sender_id_raw, channel_id_raw = await asyncio.gather(self.name_to_id(ctx.author.name), self.name_to_id(ctx.channel.name))
+        assert sender_id_raw
+        assert channel_id_raw
         sender_id: str
         channel_id: str
-        sender_id, channel_id = asyncio.gather(self.name_to_id(ctx.author.name), self.name_to_id(ctx.author.name))
+        sender_id, channel_id = str(sender_id_raw), str(channel_id_raw)
 
         awaitables: Awaitables = Awaitables([database.is_user_ignored(userid=sender_id),
                                              database.get_cmd_complement_enabled(userid=channel_id)])
@@ -273,7 +283,7 @@ class ComplementsBot(commands.Bot):
         complement using the 'complement' command will work.
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = str(await self.name_to_id(ctx.author.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -292,7 +302,7 @@ class ComplementsBot(commands.Bot):
         The user of this command will not get any complements sent their way from ComplementsBot
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = str(await self.name_to_id(ctx.author.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -427,7 +437,7 @@ class ComplementsBot(commands.Bot):
         Also used to reset channel name if streamer changed their username
         """
 
-        r_userid: Optional[str] = await self.name_to_id(ctx.author.name)
+        r_userid: Optional[str] = str(await self.name_to_id(ctx.author.name))
         assert r_userid
         userid: str = str(r_userid)
         old_username: Optional[str] = await database.get_username(userid=userid)
@@ -469,7 +479,7 @@ class ComplementsBot(commands.Bot):
         Bot leaves the user's channel and no longer complements chatters there.
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = str(await self.name_to_id(ctx.author.name))
 
         async def do_true(ctx: commands.Context) -> None:
             # Update database and in realtime for "instant" effect
@@ -495,7 +505,7 @@ class ComplementsBot(commands.Bot):
         Same as the 'leaveme' command, but on top, also delete any records of the user (e.g. custom complements)
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = str(await self.name_to_id(ctx.author.name))
 
         async def do_true(ctx: commands.Context) -> None:
             # Remove any user records from database and leave their channel NOW
@@ -521,7 +531,7 @@ class ComplementsBot(commands.Bot):
         The user of this command will not get any complements sent their way from ComplementsBot
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = str(await self.name_to_id(ctx.author.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -541,7 +551,7 @@ class ComplementsBot(commands.Bot):
         complement using the 'complement' command will work.
         """
 
-        userid: str = await self.name_to_id(ctx.author.name)
+        userid: str = str(await self.name_to_id(ctx.author.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -635,7 +645,7 @@ class ComplementsBot(commands.Bot):
         Prevent chatter from being able to use the !complement command in user's channel
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -657,7 +667,7 @@ class ComplementsBot(commands.Bot):
         Allow chatters in user's chat to use the !complement command
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -679,7 +689,7 @@ class ComplementsBot(commands.Bot):
         Prevent the bot from randomly complementing chatters in user's chat
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -700,7 +710,7 @@ class ComplementsBot(commands.Bot):
         Allow the bot to randomly complement chatters in user's chat
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -782,7 +792,7 @@ class ComplementsBot(commands.Bot):
         phrase: str = remove_chars(msg[msg.find(" ") + 1:], regex=r"[^a-z0-9]")
         user: str = ctx.channel.name
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
         to_remove_comps, to_keep_comps = database.complements_to_remove(
                 await database.get_custom_complements(userid=userid), phrase)
         await database.remove_complements(userid=userid, to_keep=to_keep_comps)
@@ -837,7 +847,7 @@ class ComplementsBot(commands.Bot):
         Mutes TTS for complements sent with !complement command
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -858,7 +868,7 @@ class ComplementsBot(commands.Bot):
         Mutes TTS for complements given out randomly
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -879,7 +889,7 @@ class ComplementsBot(commands.Bot):
         Unmutes TTS for complements sent with !complement command
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -900,7 +910,7 @@ class ComplementsBot(commands.Bot):
         Unmutes TTS for complements given out randomly
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -921,7 +931,7 @@ class ComplementsBot(commands.Bot):
         All custom complements will be added to the pool that we choose complements for chatters from
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -942,7 +952,7 @@ class ComplementsBot(commands.Bot):
         All default complements will be added to the pool that we choose complements for chatters from
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -964,7 +974,7 @@ class ComplementsBot(commands.Bot):
             delete the custom complements.
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -985,7 +995,7 @@ class ComplementsBot(commands.Bot):
         All default complements will be removed from the pool that we choose complements for chatters from
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -1006,7 +1016,7 @@ class ComplementsBot(commands.Bot):
         Chatters that count as bots might be complemented by ComplementsBot
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -1027,7 +1037,7 @@ class ComplementsBot(commands.Bot):
         Chatters that count as bots will not be complemented by ComplementsBot
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -1048,7 +1058,7 @@ class ComplementsBot(commands.Bot):
         Allows the user to kick ComplementsBot out of their channel from their own channel chat
         """
 
-        userid: str = await self.name_to_id(ctx.channel.name)
+        userid: str = str(await self.name_to_id(ctx.channel.name))
 
         async def do_true(ctx: commands.Context) -> None:
             # Update database and in realtime for "instant" effect
