@@ -362,6 +362,7 @@ disable = [
     "R0913", # Too many arguments (at most 5 allowed) (too-many-arguments)
     "R0904", # Too many public methods (at most 20 allowed) (too-many-public-methods)
     "C0302", # Too many lines in module (at most 1000 allowed) (too-many-lines)
+    "R0914", # Too many local variables (at most 15 allowed) (too-many-locals)
 ]
 
 # Enable the message, report, category or checker with the given id(s). You can

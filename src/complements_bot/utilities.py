@@ -70,5 +70,5 @@ class Awaitables:
         if not self._used:
             self._used = True
             return asyncio.gather(*self._tasks)
-        else:
-            raise asyncio.InvalidStateError("All tasks have already been gathered.")
+
+        raise asyncio.InvalidStateError("All tasks have already been gathered.")

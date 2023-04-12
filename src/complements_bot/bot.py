@@ -252,7 +252,8 @@ class ComplementsBot(commands.Bot):
 
         sender_id_raw: Optional[str]
         channel_id_raw: Optional[str]
-        sender_id_raw, channel_id_raw = await asyncio.gather(self.name_to_id(ctx.author.name), self.name_to_id(ctx.channel.name))
+        sender_id_raw, channel_id_raw = await asyncio.gather(self.name_to_id(ctx.author.name),
+                                                             self.name_to_id(ctx.channel.name))
         assert sender_id_raw
         assert channel_id_raw
         sender_id: str
