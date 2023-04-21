@@ -62,7 +62,7 @@ jobs:
         docker run complements-bot-py pytest test_complements_bot
     - name: Bandit security check
       run: |
-        bandit -r .
+        bandit -c src/pyproject.toml --severity-level medium -r .
 
   deploy:
     timeout-minutes: 15

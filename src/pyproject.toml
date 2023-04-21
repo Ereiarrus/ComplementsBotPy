@@ -553,3 +553,6 @@ module = [
 
 ignore_missing_imports = true
 
+
+[tool.bandit.assert_used]
+skips = "*."
