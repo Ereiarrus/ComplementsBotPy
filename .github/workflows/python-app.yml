@@ -60,6 +60,9 @@ jobs:
     - name: Test with pytest
       run: |
         docker run complements-bot-py pytest test_complements_bot
+    - name: Bandit security check
+      run: |
+        bandit -r .
 
   deploy:
     timeout-minutes: 15
