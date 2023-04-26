@@ -217,7 +217,7 @@ async def is_channel_joined(username: Optional[str] = None, userid: Optional[str
     return bool(await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).get))
 
 
-async def join_channel(username: Optional[str] = None, userid: Optional[str] = None, name_to_id: Optional[
+async def join_channel(username: str, userid: Optional[str] = None, name_to_id: Optional[
         Union[Callable[[str], Optional[str]], Callable[[str], Awaitable[Optional[str]]]]] = None) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
@@ -227,7 +227,7 @@ async def join_channel(username: Optional[str] = None, userid: Optional[str] = N
     :param userid: the user id of the user in consideration
     The user is added to the database (if not already there) and marked as having the bot active in their chat
     """
-    assert username or userid
+    assert username
     assert userid or name_to_id
 
     awaitables: Awaitables = Awaitables([])

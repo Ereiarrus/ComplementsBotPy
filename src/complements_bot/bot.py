@@ -449,7 +449,7 @@ class ComplementsBot(commands.Bot):
             awaitables: Awaitables = Awaitables([])
             was_joined: bool = True
             if not await database.is_channel_joined(userid=userid):
-                awaitables.add_task(database.join_channel(userid=userid))
+                awaitables.add_task(database.join_channel(userid=userid, username=ctx.author.name))
                 was_joined = False
             if ctx.author.name != old_username:
                 if was_joined:
