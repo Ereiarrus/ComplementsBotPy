@@ -438,22 +438,19 @@ class ComplementsBot(commands.Bot):
         Also used to reset channel name if streamer changed their username
         """
 
-        r_userid: Optional[str] = str(await self.name_to_id(ctx.author.name))
-        assert r_userid
-        userid: str = str(r_userid)
+        raw_userid: Optional[str] = str(await self.name_to_id(ctx.author.name))
+        assert raw_userid
+        userid: str = str(raw_userid)
         old_username: Optional[str] = await database.get_username(userid=userid)
 
         async def do_false(ctx: commands.Context) -> None:
             # Have to save to database and update in memory so bot starts working straight away
 
             awaitables: Awaitables = Awaitables([])
-            was_joined: bool = True
             if not await database.is_channel_joined(userid=userid):
                 awaitables.add_task(database.join_channel(userid=userid, username=ctx.author.name))
-                was_joined = False
-            if ctx.author.name != old_username:
-                if was_joined:
-                    awaitables.add_task(self.part_channels([old_username]))
+            elif ctx.author.name != old_username:
+                awaitables.add_task(self.part_channels([old_username]))
                 awaitables.add_task(database.set_username(ctx.author.name, userid=userid))
             awaitables.add_task(self.join_channels([ctx.author.name]))
             await awaitables.gather()

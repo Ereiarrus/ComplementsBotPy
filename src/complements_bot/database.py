@@ -3,12 +3,13 @@ The API through which items in our database are accessed
 """
 
 import asyncio
+from datetime import datetime
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
 
 from firebase_admin import credentials, db, initialize_app
 
 from src.env_reader import databaseURL
-from .utilities import remove_chars, run_with_appropriate_awaiting, Awaitables
+from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
 
 _cred: credentials.Certificate
 try:
@@ -51,6 +52,7 @@ _COMMAND_COMPLEMENT_MUTED: str = "command_complement_muted"
 _RANDOM_COMPLEMENT_MUTED: str = "random_complement_muted"
 _DEFAULT_COMPLEMENTS_ENABLED: str = "default_complements_enabled"
 _CUSTOM_COMPLEMENTS_ENABLED: str = "custom_complements_enabled"
+_CREATED_AT: str = "created_at"
 _USERNAME: str = "last_known_username"  # only stored so that the old channel can be left/parted and avoid its overhead
 
 _DEFAULT_USER: Dict[str, Any] = {_COMPLEMENT_CHANCE: _DEFAULT_COMPLEMENT_CHANCE,
@@ -227,7 +229,6 @@ async def join_channel(username: str, userid: Optional[str] = None, name_to_id: 
     :param userid: the user id of the user in consideration
     The user is added to the database (if not already there) and marked as having the bot active in their chat
     """
-    assert username
     assert userid or name_to_id
 
     awaitables: Awaitables = Awaitables([])
@@ -236,6 +237,8 @@ async def join_channel(username: str, userid: Optional[str] = None, name_to_id: 
     if not await channel_exists(userid=userid):
         awaitables.add_task(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).set, _DEFAULT_USER))
         awaitables.add_task(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_USERNAME).set, username))
+        awaitables.add_task(_event_loop.run_in_executor(
+                None, _USERS_DB_REF.child(userid).child(_CREATED_AT).set, str(datetime.utcnow())))
     else:
         awaitables.add_task(_event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_IS_JOINED).set, True))
 

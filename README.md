@@ -28,7 +28,7 @@ The following commands work anywhere that I have joined:
 
 Say these commands in my channel chat (https://www.twitch.tv/complementsbot):
 
-- !joinme - I will join your channel; if you change your Twitch username, you will have to use this again before I can 
+- !joinme - I will join your channel; if you change your Twitch username, you might need to use this again before I can 
 chat in your channel again. Don't worry, all of your custom settings (such as complement chance, 
 custom complements etc.) will be restored for your new name - no data is lost.
 - !leaveme - I will leave your channel, but keep your settings in case you decide you want me back
