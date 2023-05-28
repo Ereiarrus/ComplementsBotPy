@@ -15,4 +15,4 @@ else
   docker stop "$old_container_id"
 fi
 
-docker run -dP complements-bot-py
+docker run -dP --restart=unless-stopped complements-bot-py
