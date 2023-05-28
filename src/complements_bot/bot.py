@@ -584,7 +584,7 @@ class ComplementsBot(commands.Bot):
         await ComplementsBot.cmd_body(
                 ctx,
                 self.is_in_bot_channel,
-                always_msg=f"@{ComplementsBot.F_USER} "
+                always_msg=f"! @{ComplementsBot.F_USER} "
                            "For most up-to-date information on commands, please have a look at "
                            "https://github.com/Ereiarrus/ComplementsBotPy#readme "
                            "and for most up-to-date complements, have a look at "
