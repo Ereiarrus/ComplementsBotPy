@@ -38,26 +38,30 @@ def custom_log(msg: str) -> None:
 
 
 def catch_exceptions_decorator(func):
+    """
+    :param func:
+    :return:
+    """
     if asyncio.iscoroutinefunction(func):
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             try:
                 return await func(*args, **kwargs)
-            except Exception as e:
-                tb_lines = traceback.format_exception(type(e), e, e.__traceback__)
+            except Exception as exep:  # pylint: disable=broad-except
+                tb_lines = traceback.format_exception(type(exep), exep, exep.__traceback__)
                 tb_text = ''.join(tb_lines)
-                custom_log(tb_text)  # Or do whatever you want with tb_text.
+                custom_log(tb_text)
         return async_wrapper
-    else:
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                tb_lines = traceback.format_exception(type(e), e, e.__traceback__)
-                tb_text = ''.join(tb_lines)
-                custom_log(tb_text)  # Or do whatever you want with tb_text.
-        return wrapper
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):  # pylint: disable=inconsistent-return-statements
+        try:
+            return func(*args, **kwargs)
+        except Exception as exep:  # pylint: disable=broad-except
+            tb_lines = traceback.format_exception(type(exep), exep, exep.__traceback__)
+            tb_text = ''.join(tb_lines)
+            custom_log(tb_text)
+    return wrapper
 
 
 class ComplementsBot(commands.Bot):
