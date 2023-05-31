@@ -23,7 +23,8 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN
 #  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone
 #  when people try complementing the bot, say something different/thank them
 #  test if an error in building/running the docker container on the VPS causes github actions to fail
-#  use asyncio.create_task() instead of calling a coroutine as if it is a function - create_task() starts the task up straight away, whereas calling it as a function only creates a coroutine that will start only once awaited
+#  use asyncio.create_task() instead of calling a coroutine as if it is a function - create_task() starts the task up straight
+#       away, whereas calling it as a function only creates a coroutine that will start only once awaited
 #  |
 #  make a website where users can see all of their info
 #  get the website to also have a tool to convert between userid and username
