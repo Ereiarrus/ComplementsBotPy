@@ -14,7 +14,7 @@ else
   docker stop "$old_container_id"
 fi
 
-container_id="$(docker run -dP --restart=unless-stopped -v ./status.txt:./status.txt --log-opt max-size=50m --log-opt max-file=3 complements-bot-py)"
+container_id="$(docker run -dP --restart=unless-stopped -v ./status.txt:/status.txt --log-opt max-size=50m --log-opt max-file=3 complements-bot-py)"
 
 container_id_file=./container_id.txt
 (echo "$container_id") >> "$container_id_file"
