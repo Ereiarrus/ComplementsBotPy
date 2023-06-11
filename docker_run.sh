@@ -14,4 +14,4 @@ else
   docker stop "$old_container_id"
 fi
 
-docker run -dP --restart=unless-stopped complements-bot-py
+docker run -dP --restart=unless-stopped --log-opt max-size=100m --log-opt max-file=3 complements-bot-py
