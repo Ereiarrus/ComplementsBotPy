@@ -14,4 +14,17 @@ else
   docker stop "$old_container_id"
 fi
 
-docker run -dP --restart=unless-stopped --log-opt max-size=100m --log-opt max-file=3 complements-bot-py
+container_id="$(docker run -dP --restart=unless-stopped -v ./status.txt:./status.txt --log-opt max-size=50m --log-opt max-file=3 complements-bot-py)"
+
+container_id_file=./container_id.txt
+(echo "$container_id") >> "$container_id_file"
+
+date +%s >> "$STATUS_FILE"
+
+threshold=$((60 * 60 * 2))
+while [ "$(cat $container_id_file)" == "$container_id" ]; do
+    if [ $(($(date +%s) - $(cat "$STATUS_FILE"))) -gt $threshold ]; then
+        docker restart "$container_id"
+    fi
+    sleep $((29 * 60))
+done &

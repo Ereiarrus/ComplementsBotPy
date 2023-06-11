@@ -8,7 +8,7 @@ from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, Union
 
 from firebase_admin import credentials, db, initialize_app
 
-from src.env_reader import databaseURL
+from src.env_reader import DATABASE_URL
 from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
 
 _cred: credentials.Certificate
@@ -16,7 +16,7 @@ try:
     _cred = credentials.Certificate("src/.firebase_config.json")
 except IOError:
     _cred = credentials.Certificate(".firebase_config.json")
-initialize_app(_cred, {'databaseURL': databaseURL})
+initialize_app(_cred, {'databaseURL': DATABASE_URL})
 
 REF: db.Reference = db.reference('/')
 IGNORED_DB_REF: db.Reference = REF.child('Ignored')
