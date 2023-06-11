@@ -1,8 +1,6 @@
 """
 Holds all commands (and their logic) for how ComplementsBot should complement Twitch chatters
 """
-# import sys
-import traceback
 import asyncio
 import aiofiles
 import time

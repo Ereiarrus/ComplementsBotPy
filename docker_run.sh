@@ -27,4 +27,4 @@ while [ "$(cat $container_id_file)" == "$container_id" ]; do
         docker restart "$container_id"
     fi
     sleep $((29 * 60))
-done &
+done >/dev/null 2>&1 &
