@@ -2,16 +2,16 @@
 Holds all commands (and their logic) for how ComplementsBot should complement Twitch chatters
 """
 import asyncio
-import aiofiles
 import time
 import itertools
 import os
 import random
 import textwrap
+import aiofiles
 from typing import Awaitable, Callable, Optional, Tuple, Union
 
 from twitchio import Message
-from twitchio.ext import commands
+from twitchio.ext import commands, routines
 
 from . import database
 from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
@@ -124,11 +124,13 @@ class ComplementsBot(commands.Bot):
             custom_log(f"{self.nick} is online!")
 
     @staticmethod
+    @routines.routine(hours=1)
     async def write_status():
-        while True:
-            async with aiofiles.open(STATUS_FILE, mode='w') as f:
-                await f.write(str(time.time()))
-            await asyncio.sleep(60 * 60)
+        """
+        :return:
+        """
+        async with aiofiles.open(STATUS_FILE, mode='w') as f:
+            await f.write(str(time.time()))
 
     @staticmethod
     def is_bot(username: str) -> bool:
