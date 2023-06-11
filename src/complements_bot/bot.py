@@ -8,7 +8,6 @@ import itertools
 import os
 import random
 import textwrap
-from functools import wraps
 from typing import Awaitable, Callable, Optional, Tuple, Union
 
 from twitchio import Message
