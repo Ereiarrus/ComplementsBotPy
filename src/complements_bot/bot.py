@@ -51,7 +51,8 @@ def custom_log(msg: str) -> None:
     Any messages which we want to log should be passed through this method
     """
 
-    print(msg, file=sys.stderr)
+    # print(msg, file=sys.stderr)
+    pass
 
 
 def catch_exceptions_decorator(func):
