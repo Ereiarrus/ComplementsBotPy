@@ -7,8 +7,8 @@ import itertools
 import os
 import random
 import textwrap
-import aiofiles
 from typing import Awaitable, Callable, Optional, Tuple, Union
+import aiofiles
 
 from twitchio import Message
 from twitchio.ext import commands, routines
@@ -127,10 +127,11 @@ class ComplementsBot(commands.Bot):
     @routines.routine(hours=1)
     async def write_status():
         """
-        :return:
+        write status of the bot - outside program checks to make sure it writes something, and
+        if it doesn't the docker container gets restarted
         """
-        async with aiofiles.open(STATUS_FILE, mode='w') as f:
-            await f.write(str(time.time()))
+        async with aiofiles.open(STATUS_FILE, mode='w') as file:
+            await file.write(str(time.time()))
 
     @staticmethod
     def is_bot(username: str) -> bool:
