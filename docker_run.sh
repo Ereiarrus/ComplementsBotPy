@@ -1,5 +1,10 @@
 #!/bin/bash
 
+STATUS_FILE=$1
+if [ -z "$STATUS_FILE"  ]; then
+  STATUS_FILE=./status.txt
+fi
+
 old_container_id="$(./docker_build.sh)"
 build_status="$?"
 
