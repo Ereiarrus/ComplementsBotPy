@@ -17,9 +17,9 @@ fi
 container_id="$(docker run -dP --restart=unless-stopped -v ./status.txt:/status.txt --log-opt max-size=50m --log-opt max-file=3 complements-bot-py)"
 
 container_id_file=./container_id.txt
-(echo "$container_id") >> "$container_id_file"
+(echo "$container_id") > "$container_id_file"
 
-date +%s >> "$STATUS_FILE"
+date +%s > "$STATUS_FILE"
 
 threshold=$((60 * 60 * 2))
 while [ "$(cat $container_id_file)" == "$container_id" ]; do
