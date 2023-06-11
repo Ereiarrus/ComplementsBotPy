@@ -20,7 +20,20 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN
 
 
 # TODO:
-#  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone
+#  why does complements bot crash every now and then?
+#  Write tests
+#  If failed to join channel (or left channel due to lost connection?), try rejoining it every few hours
+#  (paid feature - paid per message that has to go through the OpenAI API) integrate OpenAI API calls that generate
+#       complements based on streamer's existing complements (or default ones) + last few messages from chat
+#  Disabled for first x-hundred users; post advert every some amount of time (that they can pay to get rid of); advert can be
+#       either from some sponsor that perhaps wants to advertise through the bot, or advertising my stream/the bot itself
+#  Make all dates be stored explicitly in UTC
+#  allow streamers to toggle which commands can/cannot be used by mods/VIPs/subs/everyone -
+#       broadcaster and me can do anything; need lists for commands that certain user groups can use:
+#       - list for viewers
+#       - list for VIPs
+#       - list for Mods (mods can do anything VIPs can, plus extra)
+#       - list for subs (+ 2 extra lists for sub tiers?)
 #  when people try complementing the bot, say something different/thank them
 #  test if an error in building/running the docker container on the VPS causes github actions to fail
 #  use asyncio.create_task() instead of calling a coroutine as if it is a function - create_task() starts the task up straight
