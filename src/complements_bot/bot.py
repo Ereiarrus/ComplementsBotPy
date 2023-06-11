@@ -21,6 +21,7 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN
 
 # TODO:
 #  why does complements bot crash every now and then?
+#       Temporarily have it ping something, and if it doesn't ping enough, restart docker container?:
 #  Write tests
 #  If failed to join channel (or left channel due to lost connection?), try rejoining it every few hours
 #  (paid feature - paid per message that has to go through the OpenAI API) integrate OpenAI API calls that generate
