@@ -1,7 +1,7 @@
 """
 Holds all commands (and their logic) for how ComplementsBot should complement Twitch chatters
 """
-import sys
+# import sys
 import traceback
 import asyncio
 import itertools
@@ -109,7 +109,7 @@ class ComplementsBot(commands.Bot):
             for line in complements_file:
                 self.complements_list.append(line.strip())
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def name_to_id(self, username: str) -> Optional[str]:
         """
         :param username: the username of the user whose user id we want
@@ -120,7 +120,7 @@ class ComplementsBot(commands.Bot):
             return str(res[0].id)
         return None
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def id_to_name(self, uid: str) -> Optional[str]:
         """
         :param uid: the user id of the user whose username we want
@@ -131,7 +131,7 @@ class ComplementsBot(commands.Bot):
             return res[0].name
         return None
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def event_ready(self) -> None:
         """
         Called once when the bot goes online; purely informational
@@ -154,7 +154,7 @@ class ComplementsBot(commands.Bot):
             custom_log(f"{self.nick} is online!")
 
     @staticmethod
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     def is_bot(username: str) -> bool:
         """
         checks if a username matches that of a known or assumed bot; currently the following count as bots:
@@ -165,7 +165,7 @@ class ComplementsBot(commands.Bot):
         return (len(username) >= 3 and username[-3:].lower() == 'bot' or
                 username in ("streamlabs", "streamelements"))
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def event_message(self, message: Message) -> None:
         """
         Runs every time a message is sent in chat. This also includes any commands.
@@ -224,7 +224,7 @@ class ComplementsBot(commands.Bot):
                     custom_log(f"In channel {message.channel.name}, at {message.timestamp}, {message.author.name} "
                                f"was complemented (randomly) with: {comp_msg}")
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def choose_complement(self, ctx: Message) -> Tuple[str, bool]:
         """
         Chooses a complement with which to complement a user. This is based on the default complements, custom
@@ -258,7 +258,7 @@ class ComplementsBot(commands.Bot):
             return default_complements[index], True
         return custom_complements[index - default_complements_length], True
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def complement_msg(self, ctx: Message, who: Optional[str] = None,
                              is_tts_muted: bool = True) -> \
             Tuple[str, bool]:
@@ -372,7 +372,7 @@ class ComplementsBot(commands.Bot):
 
     # -------------------- bot channel only commands --------------------
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def is_in_bot_channel(self, ctx: commands.Context) -> bool:
         """
         Checks if the context was created in the bot's channel (or the creator's)
@@ -381,7 +381,7 @@ class ComplementsBot(commands.Bot):
         return await self.name_to_id(ctx.channel.name) in (str(self.user_id), ComplementsBot.OWNER_ID)
 
     @staticmethod
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def send_and_log(ctx: commands.Context, msg: Optional[str]) -> None:
         """
         Send the message to the channel of ctx and also logs it
@@ -433,7 +433,7 @@ class ComplementsBot(commands.Bot):
                 lambda ctx: None)
 
     @staticmethod
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     async def cmd_body(ctx: commands.Context,
                        permission_check: Union[
                            Callable[[commands.Context], bool], Callable[[commands.Context], Awaitable[bool]]],
@@ -650,7 +650,7 @@ class ComplementsBot(commands.Bot):
 
     # --------------------  must be by streamer/mods --------------------
 
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     def is_by_broadcaster_or_mod(self, ctx: commands.Context) -> bool:
         """
         Checks if the user who created the context is the streamer or a mod in the channel
@@ -1135,7 +1135,7 @@ class ComplementsBot(commands.Bot):
         )
 
     @staticmethod
-    @catch_exceptions_decorator
+    # @catch_exceptions_decorator
     def isolate_args(full_cmd_msg: str) -> str:
         """
         :param full_cmd_msg: the command message which includes the command name itself
