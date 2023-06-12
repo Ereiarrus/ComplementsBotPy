@@ -120,12 +120,8 @@ class ComplementsBot(commands.Bot):
         if ComplementsBot.SHOULD_LOG:
             custom_log(f"{self.nick} is online!")
 
-        await asyncio.sleep(120)
-        async with aiofiles.open(STATUS_FILE, mode='w') as file:
-            await file.write(str(time.time()))
-
     @staticmethod
-    @routines.routine(hours=1)
+    @routines.routine(minutes=30)
     async def write_status():
         """
         write status of the bot - outside program checks to make sure it writes something, and
