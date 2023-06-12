@@ -117,11 +117,12 @@ class ComplementsBot(commands.Bot):
         channel_names: list[str] = list(map(lambda x: x.user.name, channels))
         await asyncio.gather(self.join_channels(channel_names),
                              database.join_channel(username=self.nick, name_to_id=self.name_to_id))
-
-        self.loop.create_task(self.write_status())
-
         if ComplementsBot.SHOULD_LOG:
             custom_log(f"{self.nick} is online!")
+
+        await asyncio.sleep(120)
+        async with aiofiles.open(STATUS_FILE, mode='w') as file:
+            await file.write(str(time.time()))
 
     @staticmethod
     @routines.routine(hours=1)

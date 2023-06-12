@@ -4,5 +4,4 @@ FROM python:3.10-alpine
 WORKDIR /src
 COPY src .
 RUN pip install -r requirements.txt
-RUN pip install pytest
-RUN pip install bandit
+RUN pip install pytest bandit
