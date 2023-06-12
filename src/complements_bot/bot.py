@@ -117,6 +117,9 @@ class ComplementsBot(commands.Bot):
         channel_names: list[str] = list(map(lambda x: x.user.name, channels))
         await asyncio.gather(self.join_channels(channel_names),
                              database.join_channel(username=self.nick, name_to_id=self.name_to_id))
+
+        self.write_status.start()
+
         if ComplementsBot.SHOULD_LOG:
             custom_log(f"{self.nick} is online!")
 
