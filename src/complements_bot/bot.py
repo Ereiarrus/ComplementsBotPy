@@ -524,7 +524,10 @@ class ComplementsBot(commands.Bot):
                 self.is_in_bot_channel,
                 None,
                 ComplementsBot.DoIfElse((lambda ctx: database.is_channel_joined(userid=userid)),
-                                        f"@{ComplementsBot.F_USER} I have left your channel.",
+                                        f"@{ComplementsBot.F_USER} I have left your channel; I would appreciate it if "
+                                        f"you let me know why you asked me to leave! You can contact me in one of three ways: "
+                                        f"DM ComplementsBot right here on Twitch; DM Ereiarrus on Twitch"
+                                        f"(https://www.twitch.tv/ereiarrus) or Discord Ereiarrus#2900. Thank you!",
                                         f"@{ComplementsBot.F_USER} I have not joined your channel.",
                                         do_true,
                                         None
@@ -550,7 +553,10 @@ class ComplementsBot(commands.Bot):
                 self.is_in_bot_channel,
                 None,
                 ComplementsBot.DoIfElse((lambda ctx: database.channel_exists(userid=userid)),
-                                        f"@{ComplementsBot.F_USER} I have deleted your channel data.",
+                                        f"@{ComplementsBot.F_USER} I have deleted your channel data; I would appreciate it if "
+                                        f"you let me know why you asked me to leave! You can contact me in one of three ways: "
+                                        f"DM ComplementsBot right here on Twitch; DM Ereiarrus on Twitch"
+                                        f"(https://www.twitch.tv/ereiarrus) or Discord Ereiarrus#2900. Thank you!",
                                         f"@{ComplementsBot.F_USER} your channel does not exists in my records.",
                                         do_true,
                                         None
