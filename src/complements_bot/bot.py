@@ -19,8 +19,8 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN, STATUS_FILE
 
 
 # TODO:
-#  why does complements bot crash every now and then?
-#       Temporarily have it ping something, and if it doesn't ping enough, restart docker container?:
+#  why does complements bot crash every now and then? currently have it set up so that if no activity is detected after an
+#       hour, it restarts itself
 #  Write tests
 #  If failed to join channel (or left channel due to lost connection?), try rejoining it every few hours
 #  (paid feature - paid per message that has to go through the OpenAI API) integrate OpenAI API calls that generate
@@ -34,10 +34,14 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN, STATUS_FILE
 #       - list for VIPs
 #       - list for Mods (mods can do anything VIPs can, plus extra)
 #       - list for subs (+ 2 extra lists for sub tiers?)
+#       once this is implemented, can I merge the logic for commands like 'compleaveme' and 'leaveme'?
 #  when people try complementing the bot, say something different/thank them
 #  test if an error in building/running the docker container on the VPS causes github actions to fail
 #  use asyncio.create_task() instead of calling a coroutine as if it is a function - create_task() starts the task up straight
 #       away, whereas calling it as a function only creates a coroutine that will start only once awaited
+#  add caching when random complement gets generated - create a stream of n random complements from the user's list;
+#       this is in case twitch API usage goes too high
+#  create discord integration, so the bot can be used on discord as well
 #  |
 #  make a website where users can see all of their info
 #  get the website to also have a tool to convert between userid and username
