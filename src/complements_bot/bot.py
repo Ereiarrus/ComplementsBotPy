@@ -128,7 +128,7 @@ class ComplementsBot(commands.Bot):
             custom_log(f"{self.nick} is online!")
 
     @staticmethod
-    @routines.routine(minutes=1)
+    @routines.routine(minutes=30)
     async def write_status():
         """
         write status of the bot - outside program checks to make sure it writes something, and
