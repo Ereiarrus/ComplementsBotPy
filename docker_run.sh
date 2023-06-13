@@ -29,7 +29,7 @@ container_id_file=./container_id.txt
 
 date +%s > "$STATUS_FILE"
 
-threshold=$((60 * 60))
+threshold=$((60))
 while [ "$(cat $container_id_file)" == "$container_id" ]; do
     if [ $(($(date +%s) - $(cat "$STATUS_FILE"))) -gt $threshold ]; then
         (echo "$container_id at $(date +%s) -  Detected situation where docker container was working, but bot was not!") >> ./while_loop_log.txt
