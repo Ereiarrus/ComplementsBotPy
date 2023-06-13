@@ -98,7 +98,7 @@ jobs:
           echo "TMI_TOKEN=${{ secrets.TMI_TOKEN }}" > src/.env
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> src/.env
           echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> src/.env
-          echo "CLIENT_SECRET=${{ secrets.STATUS_FILE }}" >> src/.env
+          echo "STATUS_FILE=${{ secrets.STATUS_FILE }}" >> src/.env
           
           chmod +x ./docker_build.sh
           chmod +x ./docker_run.sh "${{ secrets.STATUS_FILE }}"
