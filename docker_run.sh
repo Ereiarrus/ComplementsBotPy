@@ -37,4 +37,4 @@ while [ "$(cat $container_id_file)" == "$container_id" ]; do
         docker restart "$container_id"
     fi
     sleep $((14 * 60))
-done >/dev/null 2>&1 &
+done >>./while_loop_log.txt 2>>./while_loop_log.txt &
