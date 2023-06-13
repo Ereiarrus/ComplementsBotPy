@@ -135,7 +135,7 @@ class ComplementsBot(commands.Bot):
         if it doesn't the docker container gets restarted
         """
         async with aiofiles.open(STATUS_FILE, mode='w') as file:
-            await file.write(str(time.time()))
+            await file.write(str(int(time.time())))
 
     @staticmethod
     def is_bot(username: str) -> bool:
