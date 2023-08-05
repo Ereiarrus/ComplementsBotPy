@@ -16,7 +16,10 @@ if [ "$build_status" != 0 ]; then
 fi
 
 if [ -z "$old_container_id" ]; then
-  docker stop "$(docker ps -q --filter ancestor=complements-bot-py)" || true
+  previous_container="$(docker ps -q --filter ancestor=complements-bot-py)"
+  if [ -n "$previous_container" ]; then
+    docker stop previous_container
+  fi
 else
   docker stop "$old_container_id" > /dev/null 2>&1
 fi
