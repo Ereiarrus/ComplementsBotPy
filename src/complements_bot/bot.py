@@ -293,8 +293,9 @@ class ComplementsBot(commands.Bot):
         """
 
         who: str = self.isolate_args(ctx.message.content)
-        if len(who) > 0 and who[0] == "@":
-            who = who[1:]
+        if len(who) > 0:
+            if who[0] == "@":
+                who = who[1:]
         else:
             who = ctx.message.author.name
 
