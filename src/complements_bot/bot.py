@@ -295,6 +295,8 @@ class ComplementsBot(commands.Bot):
         who: str = self.isolate_args(ctx.message.content)
         if len(who) > 0 and who[0] == "@":
             who = who[1:]
+        else:
+            who = ctx.message.author.name
 
         sender_id_raw: Optional[str]
         channel_id_raw: Optional[str]
