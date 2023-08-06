@@ -2,20 +2,20 @@
 Holds all commands (and their logic) for how ComplementsBot should complement Twitch chatters
 """
 import asyncio
-import time
 import itertools
 import os
 import random
 import textwrap
+import time
 from typing import Awaitable, Callable, Optional, Tuple, Union
-import aiofiles
 
+import aiofiles
 from twitchio import Message
 from twitchio.ext import commands, routines
 
 from . import database
 from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
-from ..env_reader import CLIENT_SECRET, TMI_TOKEN, STATUS_FILE
+from ..env_reader import CLIENT_SECRET, STATUS_FILE, TMI_TOKEN
 
 
 # TODO:
@@ -199,14 +199,14 @@ class ComplementsBot(commands.Bot):
                 and (not is_author_bot)
                 and random_complements_enabled):
             random_complements_muted: bool = await database.are_random_complements_muted(userid=channel_id)
-            comp_msg, exists = await self.complement_msg(message, message.author.name, random_complements_muted)
+            comp_msg, exists = await self.complement_msg(message.author.name, message.channel.name, random_complements_muted)
             if exists:
                 await message.channel.send(comp_msg)
                 if ComplementsBot.SHOULD_LOG:
                     custom_log(f"In channel {message.channel.name}, at {message.timestamp}, {message.author.name} "
                                f"was complemented (randomly) with: {comp_msg}")
 
-    async def choose_complement(self, ctx: Message) -> Tuple[str, bool]:
+    async def choose_complement(self, channel: str) -> Tuple[str, bool]:
         """
         Chooses a complement with which to complement a user. This is based on the default complements, custom
             complements, and the status of whether either of these two are enabled or disabled for that channel.
@@ -218,7 +218,7 @@ class ComplementsBot(commands.Bot):
         custom_complements: list[str] = []
         custom_complements_enabled: bool
         default_complements_enabled: bool
-        channel_id: str = str(await self.name_to_id(ctx.channel.name))
+        channel_id: str = str(await self.name_to_id(channel))
         custom_complements_enabled, default_complements_enabled = \
             await asyncio.gather(database.are_custom_complements_enabled(userid=channel_id),
                                  database.are_default_complements_enabled(userid=channel_id))
@@ -239,26 +239,21 @@ class ComplementsBot(commands.Bot):
             return default_complements[index], True
         return custom_complements[index - default_complements_length], True
 
-    async def complement_msg(self, ctx: Message, who: Optional[str] = None,
-                             is_tts_muted: bool = True) -> \
-            Tuple[str, bool]:
+    async def complement_msg(self, who: str, channel: str, is_tts_muted: bool = True) -> Tuple[str, bool]:
         """
         Format the complement message correctly. This includes any TTS mute prefixes and an '@' in front of the user's
             name if not included to notify them of the complement.
-        :param ctx: contains the message and all info (such as the sender)
         :param who: the name of the person that the complement is aimed at
+        :param channel: the channel name where the message was sent
         :param is_tts_muted: whether the channel mutes TTS for this complement
         :return complement: the complement chosen, prepended with who it's aimed at and perhaps a TTS muting symbol
         :return exists: whether there are any valid complements (for example, if  both custom and default complements
             are disabled, this would be False
         """
 
-        if who is None:
-            who = ctx.author.name
-        channel: str = ctx.channel.name
         prefix: str = "@"
 
-        awaitables: Awaitables = Awaitables([self.choose_complement(ctx)])
+        awaitables: Awaitables = Awaitables([self.choose_complement(channel)])
         complement: str
         exists: bool
         if is_tts_muted:
@@ -304,7 +299,7 @@ class ComplementsBot(commands.Bot):
             return
 
         comp_msg, exists = await self.complement_msg(
-                ctx.message, who, await database.is_cmd_complement_muted(userid=channel_id))
+                who, ctx.channel.name, await database.is_cmd_complement_muted(userid=channel_id))
         if exists:
             await ctx.channel.send(comp_msg)
             if ComplementsBot.SHOULD_LOG:
