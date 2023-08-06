@@ -3,6 +3,7 @@ Holds all commands (and their logic) for how ComplementsBot should complement Tw
 """
 import asyncio
 import itertools
+import logging
 import os
 import random
 import textwrap
@@ -11,17 +12,20 @@ from typing import Awaitable, Callable, Optional, Tuple, Union
 
 import aiofiles
 from twitchio import Message
-from twitchio.ext import commands, routines
+from twitchio.ext import commands, routines  # , eventsub
 
 from . import database
 from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
+from ..app.app import run_app_and_bot
 from ..env_reader import CLIENT_SECRET, STATUS_FILE, TMI_TOKEN
+
+logger = logging.getLogger(__name__)
 
 
 # TODO:
 #  why does complements bot crash every now and then? currently have it set up so that if no activity is detected after an
 #       hour, it restarts itself
-#  Write tests
+#  Write tests - LOL what ever are tests?
 #  If failed to join channel (or left channel due to lost connection?), try rejoining it every few hours
 #  (paid feature - paid per message that has to go through the OpenAI API) integrate OpenAI API calls that generate
 #       complements based on streamer's existing complements (or default ones) + last few messages from chat
@@ -54,7 +58,7 @@ def custom_log(msg: str) -> None:
     Any messages which we want to log should be passed through this method
     """
 
-    print(msg)
+    logger.info(msg)
 
 
 class ComplementsBot(commands.Bot):
@@ -83,6 +87,19 @@ class ComplementsBot(commands.Bot):
                   encoding="utf-8") as complements_file:
             for line in complements_file:
                 self.complements_list.append(line.strip())
+
+    def run(self):
+        try:
+            task = self.loop.create_task(run_app_and_bot(self))
+            self.loop.run_until_complete(task)
+            self.loop.run_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            if not self._closing.is_set():
+                self.loop.run_until_complete(self.close())
+
+            self.loop.close()
 
     async def name_to_id(self, username: str) -> Optional[str]:
         """

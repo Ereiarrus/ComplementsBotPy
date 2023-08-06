@@ -7,7 +7,7 @@ docker_build_out="$?"
 
 if [ "$docker_build_out" != 0 ]
   then
-  >&2 echo "Error $docker_build_out - Docker container could not be built:"
+  >&2 echo "Error $docker_build_out - Docker container could not be built: "
   cat "./stderr.log" 1>&2
   exit "$docker_build_out"
 fi
