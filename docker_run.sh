@@ -27,8 +27,8 @@ fi
 container_id="$(\
   docker run \
   -d \
-  -p 5000:5000 \
-  -P \
+  -p 50995:50995 \
+  -p 50994:50994 \
   --restart=unless-stopped \
   -v "$STATUS_FILE":/status.txt \
   -v ./app.log:/app.log \
