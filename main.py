@@ -11,7 +11,7 @@ logging_config = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': './app.log',
+            'filename': '/complements-bot-py/app.log',
             'maxBytes': 50e6,
             'backupCount': 3,
             'formatter': 'detailed',
