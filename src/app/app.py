@@ -30,7 +30,7 @@ async def run_hypercorn_app():
     Start the app
     """
     config = Config()
-    config.bind = ["127.0.0.1:50995"]
+    config.bind = ["0.0.0.0:50995"]
     config.workers = 1
     config.loglevel = "info"
     await serve(app, config)
