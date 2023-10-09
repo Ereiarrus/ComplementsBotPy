@@ -3,7 +3,6 @@ Holds all commands (and their logic) for how ComplementsBot should complement Tw
 """
 import asyncio
 import itertools
-import logging
 import os
 import random
 import textwrap
