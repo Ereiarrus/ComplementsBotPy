@@ -6,10 +6,11 @@ ENV PYTHONPATH /complements-bot-py
 COPY src ./src
 COPY main.py .
 RUN rm -rf ./src/test_complements_bot
-RUN pip install cython
-RUN pip install -r ./src/requirements.txt
 RUN apk add python3-dev
-RUN apk add build-base
+RUN apk add
+RUN pip install cython==3.0.3
+RUN pip install flake8==6.0.0
+RUN pip install -r ./src/requirements.txt
 RUN python -m cython -3 --embed -o main.c main.py
 RUN gcc -Os -I /usr/include/python3.10 -o main main.c -lpython3.10 -lpthread -lm -lutil -ldl
 EXPOSE 50994/tcp
