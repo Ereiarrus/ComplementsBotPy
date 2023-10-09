@@ -12,6 +12,7 @@ pylint = "~=2.15.9"
 flake8 = "~=6.0.0"
 typing = "*"
 mypy = "==1.0.1"
+cython = "*"
 
 [dev-packages]
 
