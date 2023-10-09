@@ -19,9 +19,6 @@ from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
 from ..app.app import run_app_and_bot
 from ..env_reader import CLIENT_SECRET, STATUS_FILE, TMI_TOKEN
 
-logger = logging.getLogger(__name__)
-
-
 # TODO:
 #  why does complements bot crash every now and then? currently have it set up so that if no activity is detected after an
 #       hour, it restarts itself
@@ -58,7 +55,7 @@ def custom_log(msg: str) -> None:
     Any messages which we want to log should be passed through this method
     """
 
-    logger.info(msg)
+    print(msg)
 
 
 class ComplementsBot(commands.Bot):
