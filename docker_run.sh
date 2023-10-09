@@ -32,6 +32,5 @@ docker run \
 --log-opt max-size=50m \
 --log-opt max-file=3 \
 --log-driver local \
---name complements-bot-py-container \
 complements-bot-py \
 
