@@ -8,8 +8,10 @@ COPY main.py .
 RUN rm -rf ./src/test_complements_bot
 RUN apk add python3-dev
 RUN apk add
+RUN apk add --no-cache build-base
 RUN pip install cython==3.0.3
 RUN pip install flake8==6.0.0
+RUN pip install --upgrade pip
 RUN pip install -r ./src/requirements.txt
 RUN python -m cython -3 --embed -o main.c main.py
 RUN gcc -Os -I /usr/include/python3.10 -o main main.c -lpython3.10 -lpthread -lm -lutil -ldl
