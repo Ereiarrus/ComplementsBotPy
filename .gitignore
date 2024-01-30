@@ -1,7 +1,8 @@
 .firebase_config.json
 src/.*firebase_config.json
-testing.py
+testing*
 err_log.txt
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

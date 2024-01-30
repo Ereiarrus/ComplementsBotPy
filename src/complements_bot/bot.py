@@ -6,22 +6,22 @@ import itertools
 import os
 import random
 import textwrap
-import time
 from typing import Awaitable, Callable, Optional, Tuple, Union
 
-import aiofiles
 from twitchio import Message
-from twitchio.ext import commands, routines  # , eventsub
+from twitchio.ext import commands  # , routines , eventsub
 
 from . import database
 from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
 from ..app.app import run_app_and_bot
-from ..env_reader import CLIENT_SECRET, STATUS_FILE, TMI_TOKEN
+from ..env_reader import CLIENT_SECRET, TMI_TOKEN
+
+# logger = logging.getLogger(__name__)
 
 # TODO:
 #  why does complements bot crash every now and then? currently have it set up so that if no activity is detected after an
 #       hour, it restarts itself
-#  Write tests - LOL what ever are tests?
+#  Write tests - LOL what even are tests?
 #  If failed to join channel (or left channel due to lost connection?), try rejoining it every few hours
 #  (paid feature - paid per message that has to go through the OpenAI API) integrate OpenAI API calls that generate
 #       complements based on streamer's existing complements (or default ones) + last few messages from chat
@@ -135,20 +135,8 @@ class ComplementsBot(commands.Bot):
         await asyncio.gather(self.join_channels(channel_names),
                              database.join_channel(username=self.nick, name_to_id=self.name_to_id))
 
-        self.write_status.start()
-
         if ComplementsBot.SHOULD_LOG:
             custom_log(f"{self.nick} is online!")
-
-    @staticmethod
-    @routines.routine(minutes=30)
-    async def write_status():
-        """
-        write status of the bot - outside program checks to make sure it writes something, and
-        if it doesn't the docker container gets restarted
-        """
-        async with aiofiles.open(STATUS_FILE, mode='w') as file:
-            await file.write(str(int(time.time())))
 
     @staticmethod
     def is_bot(username: str) -> bool:

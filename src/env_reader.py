@@ -39,4 +39,3 @@ def is_env_read(var_str: str) -> Optional[str]:
 TMI_TOKEN: Optional[str] = is_env_read('TMI_TOKEN')
 CLIENT_SECRET: Optional[str] = is_env_read('CLIENT_SECRET')
 DATABASE_URL: Optional[str] = is_env_read('DATABASE_URL')
-STATUS_FILE: Optional[str] = is_env_read('STATUS_FILE')
