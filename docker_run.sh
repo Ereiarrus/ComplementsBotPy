@@ -1,8 +1,6 @@
 #!/bin/bash
 
 
-restarter="$(pgrep restart_24.sh)"
-kill "$restarter"
 #restarter_kill_status="$?"
 #if [ "$restarter_kill_status" != 0 ]; then
 #  >&2 echo "error on killing restarter script"
@@ -22,6 +20,8 @@ if [ -z "$old_container_id" ]; then
     docker stop previous_container
   fi
 else
+  restarter="$(pgrep restart_24.sh)"
+  kill "$restarter"
   docker stop "$old_container_id" > /dev/null 2>&1
 fi
 
