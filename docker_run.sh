@@ -1,17 +1,10 @@
 #!/bin/bash
 
 
-STATUS_FILE=$1
-if [ -z "$STATUS_FILE"  ]; then
-  STATUS_FILE=./status.txt
-fi
-
-
 old_container_id="$(./docker_build.sh)"
 build_status="$?"
-
-
 if [ "$build_status" != 0 ]; then
+  >&2 echo "error on docker build"
   exit "$build_status"
 fi
 
@@ -24,13 +17,17 @@ else
   docker stop "$old_container_id" > /dev/null 2>&1
 fi
 
-docker run \
--d \
--p 50995:50995 \
--p 50994:50994 \
---restart=unless-stopped \
---log-opt max-size=50m \
---log-opt max-file=3 \
---log-driver local \
-complements-bot-py \
+container_id="$(docker run \
+  -d \
+  --restart=unless-stopped \
+  --log-opt max-size=50m \
+  --log-opt max-file=3 \
+  complements-bot-py \
+)"
+run_status="$?"
+if [ "$run_status" != 0 ]; then
+  >&2 echo "error on docker run"
+  exit "$run_status"
+fi
 
+nohup ./restart_24.sh "$container_id" 1>&2  2>/restart.log &

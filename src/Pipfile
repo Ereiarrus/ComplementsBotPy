@@ -4,17 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-twitchio = "~=2.5.0"
-firebase-admin = "~=6.0.1"
-websockets = "*"
-requests = "*"
-pylint = "~=2.15.9"
-flake8 = "~=6.0.0"
-typing = "*"
-mypy = "==1.0.1"
+twitchio = "~=2.8.2"
+firebase-admin = "~=6.4.0"
+hypercorn = "~=0.16.0"
+quart = "~=0.19.4"
 
 [dev-packages]
+mypy = "*"
+flake8 = "*"
+pylint = "*"
+types-aiofiles = "*"
+pytest = "*"
+bandit = "*"
 
 [requires]
-python_version = "3.10"
-python_full_version = "3.10.6"
+python_version = "3.12"

@@ -114,8 +114,8 @@ Donations to my PayPal are appreciated, but never necessary: me.he.jey+ereiarrus
 I followed https://dev.to/ninjabunny9000/let-s-make-a-twitch-bot-with-python-2nd8 to get started,
 along with looking at https://github.com/TwitchIO/TwitchIO for examples to build upon:
 
-- Make sure you have Python installed (Python 3.10.6 was used): https://www.python.org/downloads/
-- Run pipenv: pipenv --python 3.10
+- Make sure you have Python installed (Python 3.12 was used): https://www.python.org/downloads/
+- Run pipenv: pipenv --python 3.12
 - pipenv install twitchio
 
 Make sure create a .env file in the src directory with the following variables:
@@ -123,10 +123,9 @@ Make sure create a .env file in the src directory with the following variables:
 - TMI_TOKEN= get your token from https://twitchapps.com/tmi/
 - DATABASE_URL= the URL to your realtime database as shown in firebase
 - CLIENT_SECRET= go to https://dev.twitch.tv/console/apps, click 'Manage', and generate a 'New Secret'.
-- STATUS_FILE=./status.txt
 
 (alternatively, you can set these as environment variables, and do export for each one: 
-`export TMI_TOKEN; export DATABASE_URL; export CLIENT_SECRET; export STATUS_FILE`).
+`export TMI_TOKEN; export DATABASE_URL; export CLIENT_SECRET;`).
 
 Also put these environment variables as repository secrets on GitHub, and either as a file or environment variables on your server.
 
@@ -157,7 +156,7 @@ DATABASE_URL, DEPLOY_TARGET_LOCATION, FIREBASE_CONFIG, HOST_IP, SSH_KEY, TMI_TOK
 ### Running program on a server
 
 - git pull the repository
-- make sure python is installed (ideally with the same version as used for the program, in this case 3.10.6); also ensure pip was installed with it
+- make sure python is installed (ideally with the same version as used for the program, in this case 3.12); also ensure pip was installed with it
 - install requirements: python3 -m pip install -r requirements.txt
 - make .env and .firebase_config files to match your local ones (NEVER PUSH THEM TO GITHUB!)
 - start up the program either directly in the background: `python3 main.py > /dev/null 2>&1 &`, or as a daemon: `setsid python3 main.py >/dev/null 2>&1 < /dev/null &`

@@ -1,6 +1,6 @@
 .firebase_config.json
 src/.*firebase_config.json
-testing.py
+testing*
 err_log.txt
 
 # Byte-compiled / optimized / DLL files
