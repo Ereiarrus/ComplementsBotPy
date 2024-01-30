@@ -1,6 +1,14 @@
 #!/bin/bash
 
 
+restarter="$(pgrep restart_24.sh)"
+kill "$restarter"
+#restarter_kill_status="$?"
+#if [ "$restarter_kill_status" != 0 ]; then
+#  >&2 echo "error on killing restarter script"
+#  exit "$restarter_kill_status"
+#fi
+
 old_container_id="$(./docker_build.sh)"
 build_status="$?"
 if [ "$build_status" != 0 ]; then
