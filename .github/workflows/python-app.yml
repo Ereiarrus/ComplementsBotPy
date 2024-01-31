@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/python-init
+    - uses: oNaiPs/secrets-to-env-action@v1
       with:
         secrets: ${{ toJSON(secrets) }}
 
@@ -42,7 +42,7 @@ jobs:
     needs: [build]
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/python-init
+    - uses: oNaiPs/secrets-to-env-action@v1
       with:
         secrets: ${{ toJSON(secrets) }}
 
@@ -71,7 +71,7 @@ jobs:
     if: github.ref == 'refs/heads/main'  # Only deploy if this was a push to main
     steps:
     - uses: actions/checkout@v3
-    - uses: ./.github/actions/python-init
+    - uses: oNaiPs/secrets-to-env-action@v1
       with:
         secrets: ${{ toJSON(secrets) }}
 
@@ -101,4 +101,5 @@ jobs:
           
           chmod +x ./docker_build.sh
           chmod +x ./docker_run.sh
+          chmod +x ./restart_24.sh
           ./docker_run.sh

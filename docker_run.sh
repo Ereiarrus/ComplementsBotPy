@@ -1,12 +1,6 @@
 #!/bin/bash
 
 
-#restarter_kill_status="$?"
-#if [ "$restarter_kill_status" != 0 ]; then
-#  >&2 echo "error on killing restarter script"
-#  exit "$restarter_kill_status"
-#fi
-
 old_container_id="$(./docker_build.sh)"
 build_status="$?"
 if [ "$build_status" != 0 ]; then
@@ -38,4 +32,4 @@ if [ "$run_status" != 0 ]; then
   exit "$run_status"
 fi
 
-nohup ./restart_24.sh "$container_id" 1>&2  2>/restart.log &
+nohup ./restart_24.sh "$container_id" 1>&2  2>./restart.log &
