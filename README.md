@@ -37,6 +37,7 @@ so if you did !ignoreme, I will still know that you don't want to be complemente
 twitch username/user id will still be stored in my database. If you don't want this, then also do !unignore me - 
 this will remove any reference of you from my database
 - !userid - returns the twitch user's ID from their username; if no name specified, returns ID of caller
+- !username - returns the twitch user's name from their ID
 
 - !ignoreme - I will stop complementing you
 - !unignoreme - undo !ignoreme
