@@ -288,6 +288,19 @@ class ComplementsBot(commands.Bot):
         The user of this command is allowed to prepend an optional '@' to the user's name with no change to the
             behaviour of the command.
         """
+        to_send = await self.complement_h(ctx)
+        if to_send:
+            await ctx.channel.send(to_send)
+            custom_log(
+                    f"In {ctx.channel.name} at {ctx.message.timestamp}, {ctx.message.author.name} "
+                    f"was complemented (by command) with: {to_send}",
+                    ComplementsBot.SHOULD_LOG
+            )
+
+    async def complement_h(self, ctx: commands.Context) -> Optional[str]:
+        """
+        helper for complement()
+        """
 
         who: str = self.isolate_args(ctx.message.content)
         if len(who) > 0:
@@ -315,15 +328,16 @@ class ComplementsBot(commands.Bot):
         if is_user_ignored or not cmd_complement_enabled:
             return
 
-        comp_msg, exists = await self.complement_msg(
-                who, ctx.channel.name, await database.is_cmd_complement_muted(userid=channel_id))
-        if exists:
-            await ctx.channel.send(comp_msg)
-            custom_log(
-                    f"In channel {ctx.channel.name}, at {ctx.message.timestamp}, {ctx.message.author.name} "
-                    f"was complemented (by command) with: {comp_msg}",
-                    ComplementsBot.SHOULD_LOG
-            )
+        comp_msg: Optional[str]
+        comp_msg: bool
+        comp_msg, complement_exists = await self.complement_msg(
+                who,
+                ctx.channel.name,
+                await database.is_cmd_complement_muted(userid=channel_id)
+        )
+        if complement_exists:
+            comp_msg = None if not complement_exists else comp_msg
+        return comp_msg
 
     @commands.command()
     async def compunignoreme(self, ctx: commands.Context) -> None:
