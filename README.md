@@ -36,6 +36,7 @@ custom complements etc.) will be restored for your new name - no data is lost.
 so if you did !ignoreme, I will still know that you don't want to be complemented after doing !deleteme, and your 
 twitch username/user id will still be stored in my database. If you don't want this, then also do !unignore me - 
 this will remove any reference of you from my database
+- !userid - returns the twitch user's ID from their username; if no name specified, returns ID of caller
 
 - !ignoreme - I will stop complementing you
 - !unignoreme - undo !ignoreme

@@ -582,6 +582,23 @@ class ComplementsBot(commands.Bot):
         )
 
     @commands.command()
+    async def userid(self, ctx: commands.Context) -> None:
+        """
+        Get the twitch user's ID from their username
+        """
+
+        userid: str = str(await self.name_to_id(self.isolate_args(ctx.message.content)))
+        userid = userid or await self.name_to_id(ctx.author.name)
+
+        await ComplementsBot.cmd_body(
+                ctx,
+                self.is_in_bot_channel,
+                None,
+                None,
+                userid
+        )
+
+    @commands.command()
     async def unignoreme(self, ctx: commands.Context) -> None:
         """
         Undoes the 'ignoreme' command; the user of the command will occasionally receive complements, and a direct
