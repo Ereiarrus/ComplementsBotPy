@@ -192,7 +192,7 @@ class ComplementsBot(commands.Bot):
             is_author_ignored, chance, is_ignoring_bots, random_complements_enabled, _ = await awaitables.gather()
         else:
             is_author_ignored, chance, is_ignoring_bots, random_complements_enabled = await awaitables.gather()
-        should_rng_choose: bool = (random.random() * 100) <= chance
+        should_rng_choose: bool = (100 - chance) <= 100 * random.random() < 100
         is_author_bot: bool = is_ignoring_bots and ComplementsBot.is_bot(sender)
 
         if (should_rng_choose
