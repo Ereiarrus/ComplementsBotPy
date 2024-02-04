@@ -587,8 +587,8 @@ class ComplementsBot(commands.Bot):
         Get the twitch user's ID from their username
         """
 
-        userid: str = str(await self.name_to_id(self.isolate_args(ctx.message.content)))
-        userid = userid or await self.name_to_id(ctx.author.name)
+        userid: Optional[str] = await self.name_to_id(self.isolate_args(ctx.message.content))
+        userid = userid or (await self.name_to_id(ctx.author.name))
 
         await ComplementsBot.cmd_body(
                 ctx,
@@ -604,7 +604,7 @@ class ComplementsBot(commands.Bot):
         Get the twitch user's ID from their username
         """
 
-        username: str = str(await self.id_to_name(self.isolate_args(ctx.message.content)))
+        username: Optional[str] = await self.id_to_name(self.isolate_args(ctx.message.content))
 
         await ComplementsBot.cmd_body(
                 ctx,
