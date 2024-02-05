@@ -883,9 +883,7 @@ class ComplementsBot(commands.Bot):
         Due to Twitch having a maximum message length, these might have to be sent over more than one message, so it is
             split to make sure all complements are visible.
         """
-        custom_log("entered listcomplements()", ComplementsBot.SHOULD_LOG)
         for msg in (await self.listcomplements_h(ctx)):
-            custom_log("listcomplements() loop", ComplementsBot.SHOULD_LOG)
             await ComplementsBot.send_and_log(ctx, msg)
 
     async def listcomplements_h(self, ctx: commands.Context) -> Iterable[str]:
@@ -893,26 +891,18 @@ class ComplementsBot(commands.Bot):
         listcomplements() helper
         """
 
-        custom_log("entered listcomplements_h() - 1", ComplementsBot.SHOULD_LOG)
         if not self.is_by_broadcaster_or_mod(ctx):
-            custom_log("entered listcomplements_h() - 2", ComplementsBot.SHOULD_LOG)
             return []
-        custom_log("entered listcomplements_h() - 3", ComplementsBot.SHOULD_LOG)
 
         user: str = ctx.channel.name
         custom_complements: list[str] = await database.get_custom_complements(user, name_to_id=self.name_to_id)
-        custom_log("entered listcomplements_h() - 4", ComplementsBot.SHOULD_LOG)
         comps_msg: str = '"' + '", "'.join(custom_complements) + '"'
 
         msgs: list[str] = textwrap.wrap(f"@{user} complements: {comps_msg}", ComplementsBot.DEFAULT_MAX_MSG_LEN)
-        custom_log("entered listcomplements_h() - 5", ComplementsBot.SHOULD_LOG)
 
         if len(custom_complements) > 0:
-            custom_log("entered listcomplements_h() - 6 - ", ComplementsBot.SHOULD_LOG)
-            custom_log("[" + ",\n".join(msgs) + "]")
             return msgs
 
-        custom_log("entered listcomplements_h() - 7", ComplementsBot.SHOULD_LOG)
         return [f"@{user} No complements found."]
 
     @commands.command(aliases=["removecomp"])
