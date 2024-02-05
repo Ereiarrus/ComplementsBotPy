@@ -706,8 +706,8 @@ class ComplementsBot(commands.Bot):
         (the bot itself and creator also has this permission)
         """
 
-        return ctx.author.is_broadcaster or ctx.author.is_mod or ctx.author.name in (
-            self.nick, ComplementsBot.OWNER_NICK)
+        return ctx.author.is_broadcaster or ctx.author.is_mod or \
+            ctx.author.name in (self.nick, ComplementsBot.OWNER_NICK)
 
     @commands.command()
     async def setchance(self, ctx: commands.Context) -> None:
@@ -716,7 +716,7 @@ class ComplementsBot(commands.Bot):
         The number given can be any valid float number, with anything 100 or above guaranteeing a complement, and 0 and
             below guaranteeing no complement.
         """
-        await ComplementsBot.send_and_log(ctx, await self.setchance_h(ctx))
+        await ComplementsBot.send_and_log(ctx, (await self.setchance_h(ctx)))
 
     async def setchance_h(self, ctx: commands.Context) -> Optional[str]:
         """
@@ -848,7 +848,7 @@ class ComplementsBot(commands.Bot):
         """
         Add a complement for user's chat only that might be chosen to complement the user's chatters
         """
-        await ComplementsBot.send_and_log(ctx, await self.addcomplement_h(ctx))
+        await ComplementsBot.send_and_log(ctx, (await self.addcomplement_h(ctx)))
 
     @commands.command(aliases=["addcomp"])
     async def addcomplement_h(self, ctx: commands.Context) -> Optional[str]:
@@ -877,7 +877,9 @@ class ComplementsBot(commands.Bot):
         Due to Twitch having a maximum message length, these might have to be sent over more than one message, so it is
             split to make sure all complements are visible.
         """
-        for msg in await self.listcomplements_h(ctx):
+        custom_log("entered listcomplements()", ComplementsBot.SHOULD_LOG)
+        for msg in (await self.listcomplements_h(ctx)):
+            custom_log("listcomplements() loop", ComplementsBot.SHOULD_LOG)
             await ComplementsBot.send_and_log(ctx, msg)
 
     @commands.command(aliases=["listcomps"])
@@ -886,17 +888,25 @@ class ComplementsBot(commands.Bot):
         listcomplements() helper
         """
 
+        custom_log("entered listcomplements_h() - 1", ComplementsBot.SHOULD_LOG)
         if not self.is_by_broadcaster_or_mod(ctx):
+            custom_log("entered listcomplements_h() - 2", ComplementsBot.SHOULD_LOG)
             return []
+        custom_log("entered listcomplements_h() - 3", ComplementsBot.SHOULD_LOG)
 
         user: str = ctx.channel.name
         custom_complements: list[str] = await database.get_custom_complements(user, name_to_id=self.name_to_id)
+        custom_log("entered listcomplements_h() - 4", ComplementsBot.SHOULD_LOG)
         comps_msg: str = '"' + '", "'.join(custom_complements) + '"'
 
         msgs: list[str] = textwrap.wrap(f"@{user} complements: {comps_msg}", ComplementsBot.DEFAULT_MAX_MSG_LEN)
+        custom_log("entered listcomplements_h() - 5", ComplementsBot.SHOULD_LOG)
 
         if len(custom_complements) > 0:
+            custom_log("entered listcomplements_h() - 6", ComplementsBot.SHOULD_LOG)
             return msgs
+
+        custom_log("entered listcomplements_h() - 7", ComplementsBot.SHOULD_LOG)
         return [f"@{user} No complements found."]
 
     @commands.command(aliases=["removecomp"])
@@ -909,7 +919,7 @@ class ComplementsBot(commands.Bot):
             complements containing as a substring what the user wanted to remove are removed from the user's custom
             complements list.
         """
-        for send_msg in await self.removecomplement_h(ctx):
+        for send_msg in (await self.removecomplement_h(ctx)):
             await ComplementsBot.send_and_log(ctx, send_msg)
 
     async def removecomplement_h(self, ctx: commands.Context) -> Iterable[str]:
@@ -923,10 +933,14 @@ class ComplementsBot(commands.Bot):
         msg: str = ctx.message.content.strip()
         phrase: str = remove_chars(msg[msg.find(" ") + 1:], regex=r"[^a-z0-9]")
         user: str = ctx.channel.name
+        to_remove_comps: list[str]
+        to_keep_comps: list[str]
 
         userid: str = str(await self.name_to_id(ctx.channel.name))
         to_remove_comps, to_keep_comps = database.complements_to_remove(
-                await database.get_custom_complements(userid=userid), phrase)
+                await database.get_custom_complements(userid=userid),
+                phrase
+        )
         await database.remove_complements(userid=userid, to_keep=to_keep_comps)
 
         removed_comps_msg: str = '"' + '", "'.join(to_remove_comps) + '"'
@@ -958,7 +972,7 @@ class ComplementsBot(commands.Bot):
         """
         Set the character/string to put in front of a message to mute TTS
         """
-        await ComplementsBot.send_and_log(ctx, await self.setmutettsprefix_h(ctx))
+        await ComplementsBot.send_and_log(ctx, (await self.setmutettsprefix_h(ctx)))
 
     async def setmutettsprefix_h(self, ctx: commands.Context) -> Optional[str]:
         """
