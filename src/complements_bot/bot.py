@@ -745,9 +745,8 @@ class ComplementsBot(commands.Bot):
             return to_send
 
         assert chance
-        to_send = f"@{channel} complement chance set to {chance}!"
         await database.set_complement_chance(chance, channel, name_to_id=self.name_to_id)
-        return to_send
+        return f"@{channel} complement chance set to {chance}!"
 
     @commands.command(aliases=["disablecommandcomplement", "disablecommandcomp", "disablecmdcomp"])
     async def disablecmdcomplement(self, ctx: commands.Context) -> None:
@@ -860,7 +859,7 @@ class ComplementsBot(commands.Bot):
                    f"{ComplementsBot.MAX_COMPLEMENT_LENGTH} characters long."
 
         await database.add_complement(complement, user, name_to_id=self.name_to_id)
-        return f"@{user} new complements added: '{complement}'"
+        return f"@{user} new complement added: '{complement}'"
 
     @commands.command(aliases=["listcomps"])
     async def listcomplements(self, ctx: commands.Context) -> None:
