@@ -910,7 +910,8 @@ class ComplementsBot(commands.Bot):
         custom_log("entered listcomplements_h() - 5", ComplementsBot.SHOULD_LOG)
 
         if len(custom_complements) > 0:
-            custom_log("entered listcomplements_h() - 6", ComplementsBot.SHOULD_LOG)
+            custom_log("entered listcomplements_h() - 6 - ", ComplementsBot.SHOULD_LOG)
+            custom_log("[" + ",\n".join(msgs) + "]")
             return msgs
 
         custom_log("entered listcomplements_h() - 7", ComplementsBot.SHOULD_LOG)

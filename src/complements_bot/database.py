@@ -795,9 +795,15 @@ async def set_should_ignore_bots(should_ignore_bots: bool, username: Optional[st
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_SHOULD_IGNORE_BOTS).set, should_ignore_bots)
 
 
-async def set_username(new_username: str, username: Optional[str] = None, userid: Optional[str] = None,
-                       name_to_id: Optional[Union[Callable[[str], Optional[str]], Callable[
-                           [str], Awaitable[Optional[str]]]]] = None) -> None:
+async def set_username(
+        new_username: str,
+        username: Optional[str] = None,
+        userid: Optional[str] = None,
+        name_to_id: Optional[Union[
+            Callable[[str], Optional[str]],
+            Callable[[str], Awaitable[Optional[str]]]
+        ]] = None
+) -> None:
     """
     At least one of 'username' or 'userid' must be specified, and if userid is not specified, name_to_id must be
     specified; userid is preferred whenever possible due to being guaranteed to never change
@@ -816,9 +822,14 @@ async def set_username(new_username: str, username: Optional[str] = None, userid
     await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_USERNAME).set, new_username)
 
 
-async def get_username(username: Optional[str] = None, userid: Optional[str] = None,
-                       name_to_id: Optional[Union[Callable[[str], Optional[str]], Callable[
-                           [str], Awaitable[Optional[str]]]]] = None) -> Optional[str]:
+async def get_username(
+        username: Optional[str] = None,
+        userid: Optional[str] = None,
+        name_to_id: Optional[Union[
+            Callable[[str], Optional[str]],
+            Callable[[str], Awaitable[Optional[str]]]
+        ]] = None
+) -> Optional[str]:
     """
     :param username:
     :param userid:
