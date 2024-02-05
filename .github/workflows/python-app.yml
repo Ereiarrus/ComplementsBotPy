@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-undefined:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
@@ -25,13 +25,61 @@ jobs:
     - name: Check for syntax errors or undefined names
       run: |
         docker run complements-bot-py flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  build-flake8:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: oNaiPs/secrets-to-env-action@v1
+      with:
+        secrets: ${{ toJSON(secrets) }}
+
+    - name: set up Docker
+      run: |
+        sudo bash ./install_docker.sh
+
+        cat Dockerfile.compile > Dockerfile
+        docker build -t complements-bot-py .
     - name: Lint with flake8
       run: |
         # The GitHub editor is 127 chars wide
         docker run complements-bot-py flake8 . --count --max-complexity=10 --max-line-length=127 --statistics
+
+  build-pylint:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: oNaiPs/secrets-to-env-action@v1
+      with:
+        secrets: ${{ toJSON(secrets) }}
+
+    - name: set up Docker
+      run: |
+        sudo bash ./install_docker.sh
+
+        cat Dockerfile.compile > Dockerfile
+        docker build -t complements-bot-py .
     - name: Lint with pylint
       run: |
         docker run complements-bot-py pylint src
+
+  build-mypy:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: oNaiPs/secrets-to-env-action@v1
+      with:
+        secrets: ${{ toJSON(secrets) }}
+
+    - name: set up Docker
+      run: |
+        sudo bash ./install_docker.sh
+
+        cat Dockerfile.compile > Dockerfile
+        docker build -t complements-bot-py .
     - name: Typecheck with mypy
       run: |
         docker run complements-bot-py mypy .
@@ -39,7 +87,7 @@ jobs:
   test:
     timeout-minutes: 15
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [build-undefined, build-flake8, build-pylint, build-mypy]
     steps:
     - uses: actions/checkout@v3
     - uses: oNaiPs/secrets-to-env-action@v1
