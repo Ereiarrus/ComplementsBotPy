@@ -5,6 +5,7 @@ import asyncio
 import itertools
 import os
 import random
+import sys
 import textwrap
 from typing import Awaitable, Callable, Iterable, Optional, Tuple, Union
 
@@ -55,7 +56,7 @@ def custom_log(msg: str, should_log: bool = True) -> None:
     Any messages which we want to log should be passed through this method
     """
     if should_log:
-        print(msg)
+        print(msg, file=sys.stderr)
 
 
 class ComplementsBot(commands.Bot):
@@ -1205,7 +1206,7 @@ class ComplementsBot(commands.Bot):
                 ComplementsBot.DoIfElse(
                         (lambda _: database.is_channel_joined(userid=userid)),
                         f"@{ComplementsBot.F_USER} I have left your channel.",
-                        f"@{ComplementsBot.F_USER} I have not joined your channel.",
+                        None,
                         do_true,
                         None
                 )
