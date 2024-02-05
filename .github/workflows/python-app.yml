@@ -84,7 +84,7 @@ jobs:
       run: |
         docker run complements-bot-py mypy .
 
-  test:
+  pytest:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     needs: [build-undefined, build-flake8, build-pylint, build-mypy]
@@ -108,6 +108,28 @@ jobs:
     - name: Test with pytest
       run: |
         docker run complements-bot-py pytest test_complements_bot
+
+  bandit-security-check:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    needs: [build-undefined, build-flake8, build-pylint, build-mypy]
+    steps:
+    - uses: actions/checkout@v3
+    - uses: oNaiPs/secrets-to-env-action@v1
+      with:
+        secrets: ${{ toJSON(secrets) }}
+
+    - name: set up Docker
+      run: |
+        sudo bash ./install_docker.sh
+
+        echo "$FIREBASE_CONFIG" > src/.firebase_config.json
+        echo "TMI_TOKEN=$TMI_TOKEN" > src/.env
+        echo "DATABASE_URL=$DATABASE_URL" >> src/.env
+        echo "CLIENT_SECRET=$CLIENT_SECRET" >> src/.env
+
+        cat Dockerfile.test > Dockerfile
+        bash ./docker_build.sh
     - name: Bandit security check
       run: |
         docker run complements-bot-py bandit -c pyproject.toml --severity-level medium -r .
@@ -115,7 +137,7 @@ jobs:
   deploy:
     timeout-minutes: 15
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [pytest, bandit-security-check]
     if: github.ref == 'refs/heads/main'  # Only deploy if this was a push to main
     steps:
     - uses: actions/checkout@v3
