@@ -325,7 +325,7 @@ class ComplementsBot(commands.Bot):
         cmd_complement_enabled: bool
         is_user_ignored, cmd_complement_enabled = await awaitables.gather()
 
-        if is_user_ignored or not cmd_complement_enabled:
+        if is_user_ignored or (not cmd_complement_enabled and not self.is_by_broadcaster_or_mod(ctx)):
             return None
 
         comp_msg: Optional[str]
@@ -748,7 +748,15 @@ class ComplementsBot(commands.Bot):
         await database.set_complement_chance(chance, channel, name_to_id=self.name_to_id)
         return f"@{channel} complement chance set to {chance}!"
 
-    @commands.command(aliases=["disablecommandcomplement", "disablecommandcomp", "disablecmdcomp"])
+    @commands.command(aliases=[
+        "disablecmdcomplements",
+        "disablecommandcomplement",
+        "disablecommandcomp",
+        "disablecmdcomp",
+        "disablecommandcomplements",
+        "disablecommandcomps",
+        "disablecmdcomps"
+    ])
     async def disablecmdcomplement(self, ctx: commands.Context) -> None:
         """
         Prevent chatter from being able to use the !complement command in user's channel

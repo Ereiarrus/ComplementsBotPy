@@ -19,7 +19,7 @@ able to get the bot to join your chat on your own (i.e. you will have to contact
 
 The following commands work anywhere that I have joined:
 
-- !complement \<username\> - If username present, complement that user; otherwise, get a complement yourself!
+- !complement \<username\> - If username provided, complement that user; otherwise, get a complement yourself! Note that even if command complements are disabled (!disablecmdcomplement), mods and the broadcaster are still able to use this.
 
 - !compignoreme - I will stop complementing you (see !ignoreme in '[ComplementsBot chat only](#ComplementsBot chat only)'); note that this command gives no feedback whether it was successful
 - !compunignoreme - undo !compignoreme/!ignoreme (see in '[ComplementsBot chat only](#ComplementsBot chat only)'); note that this command gives no feedback whether it was successful
