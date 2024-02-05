@@ -6,7 +6,7 @@ import itertools
 import os
 import random
 import textwrap
-from typing import Awaitable, Callable, Optional, Tuple, Union
+from typing import Awaitable, Callable, Iterable, Optional, Tuple, Union
 
 from twitchio import Message
 from twitchio.ext import commands  # , routines , eventsub
@@ -15,6 +15,7 @@ from . import database
 from .utilities import Awaitables, remove_chars, run_with_appropriate_awaiting
 from ..app.app import run_app_and_bot
 from ..env_reader import CLIENT_SECRET, TMI_TOKEN
+
 
 # logger = logging.getLogger(__name__)
 
@@ -49,12 +50,12 @@ from ..env_reader import CLIENT_SECRET, TMI_TOKEN
 #  allow users to make complement redeems in their channel
 
 
-def custom_log(msg: str) -> None:
+def custom_log(msg: str, should_log: bool = True) -> None:
     """
     Any messages which we want to log should be passed through this method
     """
-
-    print(msg)
+    if should_log:
+        print(msg)
 
 
 class ComplementsBot(commands.Bot):
@@ -135,8 +136,7 @@ class ComplementsBot(commands.Bot):
         await asyncio.gather(self.join_channels(channel_names),
                              database.join_channel(username=self.nick, name_to_id=self.name_to_id))
 
-        if ComplementsBot.SHOULD_LOG:
-            custom_log(f"{self.nick} is online!")
+        custom_log(f"{self.nick} is online!", ComplementsBot.SHOULD_LOG)
 
     @staticmethod
     def is_bot(username: str) -> bool:
@@ -150,6 +150,16 @@ class ComplementsBot(commands.Bot):
                 username in ("streamlabs", "streamelements"))
 
     async def event_message(self, message: Message) -> None:
+        to_send = await self.event_message_h(message)
+        if to_send:
+            await message.channel.send(to_send)
+            custom_log(
+                    f"In channel {message.channel.name} at {message.timestamp}, {message.author.name} "
+                    f"was complemented (randomly) with: {to_send}",
+                    ComplementsBot.SHOULD_LOG
+            )
+
+    async def event_message_h(self, message: Message) -> Optional[str]:
         """
         Runs every time a message is sent in chat. This also includes any commands.
         Decides if the person who sent the message in chat should be complemented based on: complement chance, their
@@ -159,28 +169,29 @@ class ComplementsBot(commands.Bot):
 
         if message.echo:
             # make sure the bot ignores itself
-            return
-        if ComplementsBot.SHOULD_LOG:
-            custom_log(
-                    f"In channel {message.channel.name}, at {message.timestamp}, "
-                    f"{message.author.name} said: {message.content}")
+            return None
+        custom_log(
+                f"In channel {message.channel.name} at {message.timestamp} {message.author.name} said: {message.content}",
+                ComplementsBot.SHOULD_LOG
+        )
 
-        sender_id_raw: Optional[str]
-        channel_id_raw: Optional[str]
-        sender_id_raw, channel_id_raw = await asyncio.gather(self.name_to_id(message.author.name),
-                                                             self.name_to_id(message.channel.name))
-        assert sender_id_raw
-        assert channel_id_raw
-        sender_id: str
-        channel_id: str
-        sender_id, channel_id = str(sender_id_raw), str(channel_id_raw)
+        sender_id: Optional[str]
+        channel_id: Optional[str]
+        sender_id, channel_id = await asyncio.gather(
+                self.name_to_id(message.author.name),
+                self.name_to_id(message.channel.name)
+        )
+        assert sender_id
+        assert channel_id
+        sender_id, channel_id = str(sender_id), str(channel_id)
 
         sender: str = message.author.name
-        awaitables: Awaitables = Awaitables([database.is_user_ignored(userid=sender_id),
-                                             database.get_complement_chance(userid=channel_id),
-                                             database.is_ignoring_bots(userid=channel_id),
-                                             database.get_random_complement_enabled(userid=channel_id)
-                                             ])
+        awaitables: Awaitables = Awaitables([
+            database.is_user_ignored(userid=sender_id),
+            database.get_complement_chance(userid=channel_id),
+            database.is_ignoring_bots(userid=channel_id),
+            database.get_random_complement_enabled(userid=channel_id)
+        ])
         is_author_ignored: bool
         chance: float
         is_ignoring_bots: bool
@@ -195,17 +206,19 @@ class ComplementsBot(commands.Bot):
         should_rng_choose: bool = (100 - chance) <= 100 * random.random() < 100
         is_author_bot: bool = is_ignoring_bots and ComplementsBot.is_bot(sender)
 
+        comp_msg: Optional[str] = None
         if (should_rng_choose
                 and (not is_author_ignored)
                 and (not is_author_bot)
                 and random_complements_enabled):
             random_complements_muted: bool = await database.are_random_complements_muted(userid=channel_id)
-            comp_msg, exists = await self.complement_msg(message.author.name, message.channel.name, random_complements_muted)
-            if exists:
-                await message.channel.send(comp_msg)
-                if ComplementsBot.SHOULD_LOG:
-                    custom_log(f"In channel {message.channel.name}, at {message.timestamp}, {message.author.name} "
-                               f"was complemented (randomly) with: {comp_msg}")
+            comp_msg, complement_exists = await self.complement_msg(
+                    message.author.name,
+                    message.channel.name,
+                    random_complements_muted
+            )
+            comp_msg = None if not complement_exists else comp_msg
+        return comp_msg
 
     async def choose_complement(self, channel: str) -> Tuple[str, bool]:
         """
@@ -248,23 +261,23 @@ class ComplementsBot(commands.Bot):
         :param channel: the channel name where the message was sent
         :param is_tts_muted: whether the channel mutes TTS for this complement
         :return complement: the complement chosen, prepended with who it's aimed at and perhaps a TTS muting symbol
-        :return exists: whether there are any valid complements (for example, if  both custom and default complements
-            are disabled, this would be False
+        :return complement_exists: whether there are any valid complements (for example, if  both custom and default
+            complements are disabled, this would be False)
         """
 
         prefix: str = "@"
 
         awaitables: Awaitables = Awaitables([self.choose_complement(channel)])
         complement: str
-        exists: bool
+        complement_exists: bool
         if is_tts_muted:
             tts_mute_prefix: str
             awaitables.add_task(database.get_tts_mute_prefix(channel, name_to_id=self.name_to_id))
-            (complement, exists), tts_mute_prefix = await awaitables.gather()
+            (complement, complement_exists), tts_mute_prefix = await awaitables.gather()
             prefix = f"{tts_mute_prefix} {prefix}"
         else:
-            complement, exists = (await awaitables.gather())[0]
-        return f"{prefix}{who} {complement}", exists
+            complement, complement_exists = (await awaitables.gather())[0]
+        return f"{prefix}{who} {complement}", complement_exists
 
     @commands.command()
     async def complement(self, ctx: commands.Context) -> None:
@@ -274,6 +287,19 @@ class ComplementsBot(commands.Bot):
         Assumes that anything typed after the command is a username, even if it has spaces in it.
         The user of this command is allowed to prepend an optional '@' to the user's name with no change to the
             behaviour of the command.
+        """
+        to_send = await self.complement_h(ctx)
+        if to_send:
+            await ctx.channel.send(to_send)
+            custom_log(
+                    f"In {ctx.channel.name} at {ctx.message.timestamp}, {ctx.message.author.name} "
+                    f"was complemented (by command) with: {to_send}",
+                    ComplementsBot.SHOULD_LOG
+            )
+
+    async def complement_h(self, ctx: commands.Context) -> Optional[str]:
+        """
+        helper for complement()
         """
 
         who: str = self.isolate_args(ctx.message.content)
@@ -300,15 +326,18 @@ class ComplementsBot(commands.Bot):
         is_user_ignored, cmd_complement_enabled = await awaitables.gather()
 
         if is_user_ignored or not cmd_complement_enabled:
-            return
+            return None
 
-        comp_msg, exists = await self.complement_msg(
-                who, ctx.channel.name, await database.is_cmd_complement_muted(userid=channel_id))
-        if exists:
-            await ctx.channel.send(comp_msg)
-            if ComplementsBot.SHOULD_LOG:
-                custom_log(f"In channel {ctx.channel.name}, at {ctx.message.timestamp}, {ctx.message.author.name} "
-                           f"was complemented (by command) with: {comp_msg}")
+        comp_msg: Optional[str]
+        complement_exists: bool
+        comp_msg, complement_exists = await self.complement_msg(
+                who,
+                ctx.channel.name,
+                await database.is_cmd_complement_muted(userid=channel_id)
+        )
+        if complement_exists:
+            comp_msg = None if not complement_exists else comp_msg
+        return comp_msg
 
     @commands.command()
     async def compunignoreme(self, ctx: commands.Context) -> None:
@@ -323,10 +352,10 @@ class ComplementsBot(commands.Bot):
                 ctx,
                 lambda x: True,
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
+                ComplementsBot.DoIfElse((lambda _: database.is_user_ignored(userid=userid)),
                                         None,
                                         None,
-                                        (lambda ctx: database.unignore(userid=userid)),
+                                        (lambda _: database.unignore(userid=userid)),
                                         None)
         )
 
@@ -342,11 +371,11 @@ class ComplementsBot(commands.Bot):
                 ctx,
                 lambda x: True,
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
+                ComplementsBot.DoIfElse((lambda _: database.is_user_ignored(userid=userid)),
                                         None,
                                         None,
                                         None,
-                                        (lambda ctx: database.ignore(userid=userid)))
+                                        (lambda _: database.ignore(userid=userid)))
         )
 
     # -------------------- bot channel only commands --------------------
@@ -368,8 +397,7 @@ class ComplementsBot(commands.Bot):
             return
 
         await ctx.channel.send(msg)
-        if ComplementsBot.SHOULD_LOG:
-            custom_log(msg)
+        custom_log(msg, ComplementsBot.SHOULD_LOG)
 
     class DoIfElse:
         """
@@ -404,10 +432,10 @@ class ComplementsBot(commands.Bot):
 
             self.do_true: Union[Callable[[commands.Context], Awaitable[None]], Callable[
                 [commands.Context], None]] = do_true or (
-                lambda ctx: None)
+                lambda _: None)
             self.do_false: Union[Callable[[commands.Context], None], Callable[
                 [commands.Context], Awaitable[None]]] = do_false or (
-                lambda ctx: None)
+                lambda _: None)
 
     @staticmethod
     async def cmd_body(ctx: commands.Context,
@@ -522,15 +550,16 @@ class ComplementsBot(commands.Bot):
                 ctx,
                 self.is_in_bot_channel,
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_channel_joined(userid=userid)),
-                                        f"@{ComplementsBot.F_USER} I have left your channel; I would appreciate it if "
-                                        f"you let me know why you asked me to leave! You can contact me in one of three ways: "
-                                        f"DM ComplementsBot right here on Twitch; DM Ereiarrus on Twitch"
-                                        f"(https://www.twitch.tv/ereiarrus) or Discord Ereiarrus#2900. Thank you!",
-                                        f"@{ComplementsBot.F_USER} I have not joined your channel.",
-                                        do_true,
-                                        None
-                                        )
+                ComplementsBot.DoIfElse(
+                        (lambda _: database.is_channel_joined(userid=userid)),
+                        f"@{ComplementsBot.F_USER} I have left your channel; I would appreciate it if "
+                        f"you let me know why you asked me to leave! You can contact me in one of three ways: "
+                        f"DM ComplementsBot right here on Twitch; DM Ereiarrus on Twitch"
+                        f"(https://www.twitch.tv/ereiarrus) or Discord Ereiarrus#2900. Thank you!",
+                        f"@{ComplementsBot.F_USER} I have not joined your channel.",
+                        do_true,
+                        None
+                )
         )
 
     @commands.command()
@@ -551,15 +580,16 @@ class ComplementsBot(commands.Bot):
                 ctx,
                 self.is_in_bot_channel,
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.channel_exists(userid=userid)),
-                                        f"@{ComplementsBot.F_USER} I have deleted your channel data; I would appreciate it if "
-                                        f"you let me know why you asked me to leave! You can contact me in one of three ways: "
-                                        f"DM ComplementsBot right here on Twitch; DM Ereiarrus on Twitch"
-                                        f"(https://www.twitch.tv/ereiarrus) or Discord Ereiarrus#2900. Thank you!",
-                                        f"@{ComplementsBot.F_USER} your channel does not exists in my records.",
-                                        do_true,
-                                        None
-                                        )
+                ComplementsBot.DoIfElse(
+                        (lambda _: database.channel_exists(userid=userid)),
+                        f"@{ComplementsBot.F_USER} I have deleted your channel data; I would appreciate it if "
+                        f"you let me know why you asked me to leave! You can contact me in one of three ways: "
+                        f"DM ComplementsBot right here on Twitch; DM Ereiarrus on Twitch"
+                        f"(https://www.twitch.tv/ereiarrus) or Discord Ereiarrus#2900. Thank you!",
+                        f"@{ComplementsBot.F_USER} your channel does not exists in my records.",
+                        do_true,
+                        None
+                )
         )
 
     @commands.command()
@@ -574,11 +604,13 @@ class ComplementsBot(commands.Bot):
                 ctx,
                 self.is_in_bot_channel,
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
-                                        f"@{ComplementsBot.F_USER} I am already ignoring you.",
-                                        f"@{ComplementsBot.F_USER} I am now ignoring you.",
-                                        None,
-                                        (lambda ctx: database.ignore(userid=userid)))
+                ComplementsBot.DoIfElse(
+                        (lambda _: database.is_user_ignored(userid=userid)),
+                        f"@{ComplementsBot.F_USER} I am already ignoring you.",
+                        f"@{ComplementsBot.F_USER} I am now ignoring you.",
+                        None,
+                        (lambda _: database.ignore(userid=userid))
+                )
         )
 
     @commands.command()
@@ -627,11 +659,13 @@ class ComplementsBot(commands.Bot):
                 ctx,
                 self.is_in_bot_channel,
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_user_ignored(userid=userid)),
-                                        f"@{ComplementsBot.F_USER} I am no longer ignoring you!",
-                                        f"@{ComplementsBot.F_USER} I am not ignoring you!",
-                                        (lambda ctx: database.unignore(userid=userid)),
-                                        None)
+                ComplementsBot.DoIfElse(
+                        (lambda _: database.is_user_ignored(userid=userid)),
+                        f"@{ComplementsBot.F_USER} I am no longer ignoring you!",
+                        f"@{ComplementsBot.F_USER} I am not ignoring you!",
+                        (lambda _: database.unignore(userid=userid)),
+                        None
+                )
         )
 
     @commands.command()
@@ -681,15 +715,21 @@ class ComplementsBot(commands.Bot):
         The number given can be any valid float number, with anything 100 or above guaranteeing a complement, and 0 and
             below guaranteeing no complement.
         """
+        await ComplementsBot.send_and_log(ctx, await self.setchance_h(ctx))
+
+    async def setchance_h(self, ctx: commands.Context) -> Optional[str]:
+        """
+        setchance() helper
+        """
 
         if not self.is_by_broadcaster_or_mod(ctx):
-            return
+            return None
 
         channel: str = ctx.channel.name
-        to_send: str
+        to_send: Optional[str] = None
         exception: bool = False
         chance_str: str = self.isolate_args(ctx.message.content)
-        chance: float
+        chance: Optional[float] = None
         try:
             chance = float(chance_str)
         except ValueError:
@@ -701,13 +741,13 @@ class ComplementsBot(commands.Bot):
             to_send = f"@{channel} You did not enter a number. Please try again."
             exception = True
         if exception:
-            await ComplementsBot.send_and_log(ctx, to_send)
-            return
+            assert to_send
+            return to_send
 
+        assert chance
         to_send = f"@{channel} complement chance set to {chance}!"
-        awaitables: Awaitables = Awaitables([database.set_complement_chance(chance, channel, name_to_id=self.name_to_id),
-                                             ComplementsBot.send_and_log(ctx, to_send)])
-        await awaitables.gather()
+        await database.set_complement_chance(chance, channel, name_to_id=self.name_to_id)
+        return to_send
 
     @commands.command(aliases=["disablecommandcomplement", "disablecommandcomp", "disablecmdcomp"])
     async def disablecmdcomplement(self, ctx: commands.Context) -> None:
@@ -722,11 +762,11 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.get_cmd_complement_enabled(userid=userid)),
+                        (lambda _: database.get_cmd_complement_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} your viewers will no longer be able to make use of the "
                         f"!complement command.",
                         f"@{ComplementsBot.F_USER} your viewers already cannot make use of the !complement command.",
-                        (lambda ctx: database.set_cmd_complement_enabled(False, userid=userid)),
+                        (lambda _: database.set_cmd_complement_enabled(False, userid=userid)),
                         None
                 )
         )
@@ -744,12 +784,12 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.get_cmd_complement_enabled(userid=userid)),
+                        (lambda _: database.get_cmd_complement_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} your viewers can already make use of the !complement command!",
 
                         f"@{ComplementsBot.F_USER} your viewers will now be able to make use of the !complement command!",
                         None,
-                        (lambda ctx: database.set_cmd_complement_enabled(True, userid=userid))
+                        (lambda _: database.set_cmd_complement_enabled(True, userid=userid))
                 )
         )
 
@@ -766,10 +806,10 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.get_random_complement_enabled(userid=userid)),
+                        (lambda _: database.get_random_complement_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} your viewers will no longer randomly receive complements.",
                         f"@{ComplementsBot.F_USER} your viewers already do not randomly receive complements.",
-                        (lambda ctx: database.set_random_complement_enabled(False, userid=userid)),
+                        (lambda _: database.set_random_complement_enabled(False, userid=userid)),
                         None
                 )
         )
@@ -787,11 +827,11 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.get_random_complement_enabled(userid=userid)),
+                        (lambda _: database.get_random_complement_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} I already randomly send out complements!",
                         f"@{ComplementsBot.F_USER} your viewers will now randomly receive complements!",
                         None,
-                        (lambda ctx: database.set_random_complement_enabled(True, userid=userid))
+                        (lambda _: database.set_random_complement_enabled(True, userid=userid))
                 )
         )
 
@@ -800,24 +840,27 @@ class ComplementsBot(commands.Bot):
         """
         Add a complement for user's chat only that might be chosen to complement the user's chatters
         """
+        await ComplementsBot.send_and_log(ctx, await self.addcomplement_h(ctx))
+
+    @commands.command(aliases=["addcomp"])
+    async def addcomplement_h(self, ctx: commands.Context) -> Optional[str]:
+        """
+        addcomplement() helper
+        """
 
         if not self.is_by_broadcaster_or_mod(ctx):
-            return
+            return None
 
         msg: str = ctx.message.content.strip()
         # Anything after the space after '!addcomplement' is counted as being the complement
         complement: str = msg[msg.find(" ") + 1:]
         user: str = ctx.channel.name
         if len(complement) > ComplementsBot.MAX_COMPLEMENT_LENGTH:
-            to_send: str = f"@{user} complement is too long. It may not be over " \
-                           f"{ComplementsBot.MAX_COMPLEMENT_LENGTH} characters long."
-            await ComplementsBot.send_and_log(ctx, to_send)
-            return
+            return f"@{user} complement is too long. It may not be over " \
+                   f"{ComplementsBot.MAX_COMPLEMENT_LENGTH} characters long."
 
-        awaitables: Awaitables = \
-            Awaitables([database.add_complement(complement, user, name_to_id=self.name_to_id),
-                        ComplementsBot.send_and_log(ctx, f"@{user} new complements added: '{complement}'")])
-        await awaitables.gather()
+        await database.add_complement(complement, user, name_to_id=self.name_to_id)
+        return f"@{user} new complements added: '{complement}'"
 
     @commands.command(aliases=["listcomps"])
     async def listcomplements(self, ctx: commands.Context) -> None:
@@ -826,9 +869,17 @@ class ComplementsBot(commands.Bot):
         Due to Twitch having a maximum message length, these might have to be sent over more than one message, so it is
             split to make sure all complements are visible.
         """
+        for msg in await self.listcomplements_h(ctx):
+            await ComplementsBot.send_and_log(ctx, msg)
+
+    @commands.command(aliases=["listcomps"])
+    async def listcomplements_h(self, ctx: commands.Context) -> Iterable[str]:
+        """
+        listcomplements() helper
+        """
 
         if not self.is_by_broadcaster_or_mod(ctx):
-            return
+            return []
 
         user: str = ctx.channel.name
         custom_complements: list[str] = await database.get_custom_complements(user, name_to_id=self.name_to_id)
@@ -836,13 +887,9 @@ class ComplementsBot(commands.Bot):
 
         msgs: list[str] = textwrap.wrap(f"@{user} complements: {comps_msg}", ComplementsBot.DEFAULT_MAX_MSG_LEN)
 
-        msg: str
         if len(custom_complements) > 0:
-            for msg in msgs:
-                await ComplementsBot.send_and_log(ctx, msg)
-        else:
-            msg = f"@{user} No complements found."
-            await ComplementsBot.send_and_log(ctx, msg)
+            return msgs
+        return [f"@{user} No complements found."]
 
     @commands.command(aliases=["removecomp"])
     async def removecomplement(self, ctx: commands.Context) -> None:
@@ -854,9 +901,16 @@ class ComplementsBot(commands.Bot):
             complements containing as a substring what the user wanted to remove are removed from the user's custom
             complements list.
         """
+        for send_msg in await self.removecomplement_h(ctx):
+            await ComplementsBot.send_and_log(ctx, send_msg)
+
+    async def removecomplement_h(self, ctx: commands.Context) -> Iterable[str]:
+        """
+        removecomplement() helper
+        """
 
         if not self.is_by_broadcaster_or_mod(ctx):
-            return
+            return []
 
         msg: str = ctx.message.content.strip()
         phrase: str = remove_chars(msg[msg.find(" ") + 1:], regex=r"[^a-z0-9]")
@@ -873,13 +927,9 @@ class ComplementsBot(commands.Bot):
         msgs: list[str] = textwrap.wrap(f"@{user} complement/s removed: {removed_comps_msg}",
                                         ComplementsBot.DEFAULT_MAX_MSG_LEN)
 
-        send_msg: str
         if len(to_remove_comps) > 0:
-            for send_msg in msgs:
-                await ComplementsBot.send_and_log(ctx, send_msg)
-        else:
-            send_msg = f"@{user} No complements with that phrase found."
-            await ComplementsBot.send_and_log(ctx, send_msg)
+            return msgs
+        return [f"@{user} No complements with that phrase found."]
 
     @commands.command(aliases=["removeallcomps"])
     async def removeallcomplements(self, ctx: commands.Context) -> None:
@@ -892,24 +942,29 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 (lambda ctx: database.remove_all_complements(ctx.channel.name, name_to_id=self.name_to_id)),
                 None,
-                f"@{ComplementsBot.F_USER} all of your custom complements have been removed.")
+                f"@{ComplementsBot.F_USER} all of your custom complements have been removed."
+        )
 
     @commands.command()
     async def setmutettsprefix(self, ctx: commands.Context) -> None:
         """
         Set the character/string to put in front of a message to mute TTS
         """
+        await ComplementsBot.send_and_log(ctx, await self.setmutettsprefix_h(ctx))
+
+    async def setmutettsprefix_h(self, ctx: commands.Context) -> Optional[str]:
+        """
+        setmutettsprefix() helper
+        """
 
         if not self.is_by_broadcaster_or_mod(ctx):
-            return
+            return None
 
         msg: str = ctx.message.content
         msg = msg.strip()
         prefix: str = msg[msg.find(" ") + 1:]
-        awaitables: Awaitables = \
-            Awaitables([database.set_tts_mute_prefix(prefix, ctx.channel.name, name_to_id=self.name_to_id),
-                        ComplementsBot.send_and_log(ctx, f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'.")])
-        await awaitables.gather()
+        await database.set_tts_mute_prefix(prefix, ctx.channel.name, name_to_id=self.name_to_id)
+        return f"@{ctx.author.name} mute TTS prefix changed to '{prefix}'."
 
     @commands.command(aliases=["mutecommandcomplement", "mutecommandcomp", "mutecmdcomp"])
     async def mutecmdcomplement(self, ctx: commands.Context) -> None:
@@ -924,11 +979,11 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.is_cmd_complement_muted(userid=userid)),
+                        (lambda _: database.is_cmd_complement_muted(userid=userid)),
                         f"@{ComplementsBot.F_USER} command complements are already muted!",
                         f"@{ComplementsBot.F_USER} command complements are now muted.",
                         None,
-                        (lambda ctx: database.set_cmd_complement_is_muted(True, userid=userid))
+                        (lambda _: database.set_cmd_complement_is_muted(True, userid=userid))
                 )
         )
 
@@ -945,11 +1000,11 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.are_random_complements_muted(userid=userid)),
+                        (lambda _: database.are_random_complements_muted(userid=userid)),
                         f"@{ComplementsBot.F_USER} random complements are already muted!",
                         f"@{ComplementsBot.F_USER} random complements are now muted.",
                         None,
-                        (lambda ctx: database.set_random_complements_are_muted(True, userid=userid))
+                        (lambda _: database.set_random_complements_are_muted(True, userid=userid))
                 )
         )
 
@@ -966,10 +1021,10 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.is_cmd_complement_muted(userid=userid)),
+                        (lambda _: database.is_cmd_complement_muted(userid=userid)),
                         f"@{ComplementsBot.F_USER} command complements are no longer muted!",
                         f"@{ComplementsBot.F_USER} command complements are already unmuted!",
-                        (lambda ctx: database.set_cmd_complement_is_muted(False, userid=userid)),
+                        (lambda _: database.set_cmd_complement_is_muted(False, userid=userid)),
                         None
                 )
         )
@@ -987,10 +1042,10 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.are_random_complements_muted(userid=userid)),
+                        (lambda _: database.are_random_complements_muted(userid=userid)),
                         f"@{ComplementsBot.F_USER} random complements are no longer muted!",
                         f"@{ComplementsBot.F_USER} random complements are already unmuted!",
-                        (lambda ctx: database.set_random_complements_are_muted(False, userid=userid)),
+                        (lambda _: database.set_random_complements_are_muted(False, userid=userid)),
                         None
                 )
         )
@@ -1008,11 +1063,11 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.are_custom_complements_enabled(userid=userid)),
+                        (lambda _: database.are_custom_complements_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} custom complements are already enabled!",
                         f"@{ComplementsBot.F_USER} custom complements are now enabled!",
                         None,
-                        (lambda ctx: database.set_are_custom_complements_enabled(True, userid=userid))
+                        (lambda _: database.set_are_custom_complements_enabled(True, userid=userid))
                 )
         )
 
@@ -1029,11 +1084,11 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.are_default_complements_enabled(userid=userid)),
+                        (lambda _: database.are_default_complements_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} default complements are already enabled!",
                         f"@{ComplementsBot.F_USER} default complements are now enabled!",
                         None,
-                        (lambda ctx: database.set_are_default_complements_enabled(True, userid=userid))
+                        (lambda _: database.set_are_default_complements_enabled(True, userid=userid))
                 )
         )
 
@@ -1051,10 +1106,10 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.are_custom_complements_enabled(userid=userid)),
+                        (lambda _: database.are_custom_complements_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} custom complements are now disabled.",
                         f"@{ComplementsBot.F_USER} custom complements are already disabled.",
-                        (lambda ctx: database.set_are_custom_complements_enabled(False, userid=userid)),
+                        (lambda _: database.set_are_custom_complements_enabled(False, userid=userid)),
                         None
                 )
         )
@@ -1072,10 +1127,10 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.are_default_complements_enabled(userid=userid)),
+                        (lambda _: database.are_default_complements_enabled(userid=userid)),
                         f"@{ComplementsBot.F_USER} default complements are now disabled.",
                         f"@{ComplementsBot.F_USER} default complements are already disabled!",
-                        (lambda ctx: database.set_are_default_complements_enabled(False, userid=userid)),
+                        (lambda _: database.set_are_default_complements_enabled(False, userid=userid)),
                         None
                 )
         )
@@ -1093,10 +1148,10 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.is_ignoring_bots(userid=userid)),
+                        (lambda _: database.is_ignoring_bots(userid=userid)),
                         f"@{ComplementsBot.F_USER} bots have a chance of being complemented!",
                         f"@{ComplementsBot.F_USER} bots can already get complements!",
-                        (lambda ctx: database.set_should_ignore_bots(False, userid=userid)),
+                        (lambda _: database.set_should_ignore_bots(False, userid=userid)),
                         None
                 )
         )
@@ -1114,11 +1169,11 @@ class ComplementsBot(commands.Bot):
                 self.is_by_broadcaster_or_mod,
                 None,
                 ComplementsBot.DoIfElse(
-                        (lambda ctx: database.is_ignoring_bots(userid=userid)),
+                        (lambda _: database.is_ignoring_bots(userid=userid)),
                         f"@{ComplementsBot.F_USER} bots are already not getting complements.",
                         f"@{ComplementsBot.F_USER} bots will no longer get complemented.",
                         None,
-                        (lambda ctx: database.set_should_ignore_bots(True, userid=userid))
+                        (lambda _: database.set_should_ignore_bots(True, userid=userid))
                 )
         )
 
@@ -1140,12 +1195,13 @@ class ComplementsBot(commands.Bot):
                 ctx,
                 (lambda ctx: ctx.author.name == ctx.channel.name),
                 None,
-                ComplementsBot.DoIfElse((lambda ctx: database.is_channel_joined(userid=userid)),
-                                        f"@{ComplementsBot.F_USER} I have left your channel.",
-                                        f"@{ComplementsBot.F_USER} I have not joined your channel.",
-                                        do_true,
-                                        None
-                                        )
+                ComplementsBot.DoIfElse(
+                        (lambda _: database.is_channel_joined(userid=userid)),
+                        f"@{ComplementsBot.F_USER} I have left your channel.",
+                        f"@{ComplementsBot.F_USER} I have not joined your channel.",
+                        do_true,
+                        None
+                )
         )
 
     @staticmethod
