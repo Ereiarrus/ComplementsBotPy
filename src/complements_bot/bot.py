@@ -406,13 +406,20 @@ class ComplementsBot(commands.Bot):
         """
 
         def __init__(self,
-                     if_check: Union[Callable[[commands.Context], Awaitable[bool]], Callable[[commands.Context], bool]],
+                     if_check: Union[
+                         Callable[[commands.Context], Awaitable[bool]],
+                         Callable[[commands.Context], bool]
+                     ],
                      true_msg: Optional[str],
                      false_msg: Optional[str],
                      do_true: Optional[Union[
-                         Callable[[commands.Context], Awaitable[None]], Callable[[commands.Context], None]]] = None,
-                     do_false: Optional[Union[Callable[[commands.Context], Awaitable[None]], Callable[
-                         [commands.Context], None]]] = None) -> None:
+                         Callable[[commands.Context], Awaitable[None]],
+                         Callable[[commands.Context], None]
+                     ]] = None,
+                     do_false: Optional[Union[
+                         Callable[[commands.Context], Awaitable[None]],
+                         Callable[[commands.Context], None]
+                     ]] = None) -> None:
             """
             :param if_check: what the condition for entering 'if' statement is
             :param do_true: what to do when the if_check succeeds (done before sending message to chat);

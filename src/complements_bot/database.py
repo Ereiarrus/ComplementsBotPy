@@ -338,9 +338,9 @@ async def get_tts_mute_prefix(username: Optional[str] = None, userid: Optional[s
 
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
-    prefix = (await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_MUTE_PREFIX).get)
-              or _DEFAULT_TTS_IGNORE_PREFIX)
-    return prefix
+    prefix: Optional[str] = await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_MUTE_PREFIX).get)
+    prefix = _DEFAULT_TTS_IGNORE_PREFIX if prefix is None else prefix
+    return str(prefix)
 
 
 async def set_complement_chance(chance: float, username: Optional[str] = None, userid: Optional[str] = None,
@@ -378,9 +378,10 @@ async def get_complement_chance(username: Optional[str] = None, userid: Optional
 
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
-    chance = (await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_COMPLEMENT_CHANCE).get)
-              or _DEFAULT_COMPLEMENT_CHANCE)
-    return chance
+    chance: Optional[float] = \
+        await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_COMPLEMENT_CHANCE).get)
+    chance = _DEFAULT_COMPLEMENT_CHANCE if chance is None else chance
+    return float(chance)
 
 
 async def set_cmd_complement_enabled(is_enabled: bool, username: Optional[str] = None, userid: Optional[str] = None,
@@ -419,9 +420,10 @@ async def get_cmd_complement_enabled(username: Optional[str] = None, userid: Opt
 
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
-    is_enabled = (await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_COMMAND_COMPLEMENT_ENABLED).get)
-                  or _DEFAULT_COMMAND_COMPLEMENT_ENABLED)
-    return is_enabled
+    is_enabled: Optional[bool] = \
+        await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_COMMAND_COMPLEMENT_ENABLED).get)
+    is_enabled = _DEFAULT_COMMAND_COMPLEMENT_ENABLED if is_enabled is None else is_enabled
+    return bool(is_enabled)
 
 
 async def set_random_complement_enabled(is_enabled: bool, username: Optional[str] = None, userid: Optional[str] = None,
@@ -460,9 +462,10 @@ async def get_random_complement_enabled(username: Optional[str] = None, userid: 
 
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
-    is_enabled = (await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_RANDOM_COMPLEMENT_ENABLED).get)
-                  or _DEFAULT_RANDOM_COMPLEMENT_ENABLED)
-    return is_enabled
+    is_enabled: Optional[bool] = \
+        await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_RANDOM_COMPLEMENT_ENABLED).get)
+    is_enabled = _DEFAULT_RANDOM_COMPLEMENT_ENABLED if is_enabled is None else is_enabled
+    return bool(is_enabled)
 
 
 async def add_complement(complement: str, username: Optional[str] = None, userid: Optional[str] = None,
@@ -683,8 +686,9 @@ async def are_default_complements_enabled(username: Optional[str] = None, userid
 
     if not userid:
         userid = await run_with_appropriate_awaiting(name_to_id, username)
-    is_enabled = (await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_DEFAULT_COMPLEMENTS_ENABLED).get)
-                  or _DEFAULT_DEFAULT_COMPLEMENTS_ENABLED)
+    is_enabled: Optional[bool] = \
+        await _event_loop.run_in_executor(None, _USERS_DB_REF.child(userid).child(_DEFAULT_COMPLEMENTS_ENABLED).get)
+    is_enabled = _DEFAULT_DEFAULT_COMPLEMENTS_ENABLED if is_enabled is None else is_enabled
     return bool(is_enabled)
 
 
