@@ -857,7 +857,6 @@ class ComplementsBot(commands.Bot):
         """
         await ComplementsBot.send_and_log(ctx, (await self.addcomplement_h(ctx)))
 
-    @commands.command(aliases=["addcomp"])
     async def addcomplement_h(self, ctx: commands.Context) -> Optional[str]:
         """
         addcomplement() helper
@@ -889,7 +888,6 @@ class ComplementsBot(commands.Bot):
             custom_log("listcomplements() loop", ComplementsBot.SHOULD_LOG)
             await ComplementsBot.send_and_log(ctx, msg)
 
-    @commands.command(aliases=["listcomps"])
     async def listcomplements_h(self, ctx: commands.Context) -> Iterable[str]:
         """
         listcomplements() helper
