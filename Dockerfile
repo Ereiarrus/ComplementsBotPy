@@ -2,7 +2,7 @@
 
 FROM python:3.12-alpine3.19
 WORKDIR /complements-bot-py
-ENV PYTHONPATH /complements-bot-py
+ENV PYTHONPATH=/complements-bot-py
 RUN pip install pipenv
 RUN apk update
 RUN apk add gcc
