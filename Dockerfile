@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.12-alpine3.19
+FROM python:3.12-alpine3.20
 WORKDIR /complements-bot-py
 ENV PYTHONPATH=/complements-bot-py
 RUN pip install pipenv
